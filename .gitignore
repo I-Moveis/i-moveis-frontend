@@ -1,0 +1,85 @@
+# IDE and Editor
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs (Flutter/Dart)
+build/
+dist/
+out/
+coverage/
+
+# Cache
+.dart_tool/
+.pub-cache/
+.pub/
+.flutter-plugins-dependencies
+
+# Flutter specific
+.app/
+.packages
+.packages.flutter
+pubspec.lock
+
+# Platform-specific build artifacts (inside app/)
+app/build/
+app/android/build/
+app/android/.gradle/
+app/android/gradlew
+app/android/gradlew.bat
+app/android/local.properties
+app/ios/build/
+app/ios/Pods/
+app/ios/Podfile.lock
+app/ios/Flutter/Flutter.podspec
+app/linux/build/
+app/linux/.cmake/
+app/macos/build/
+app/macos/Pods/
+app/macos/Podfile.lock
+app/web/build/
+
+# Agent and AI configurations (local/generated)
+.agents/
+.claude/
+
+# OS files
+*.class
+*.log
+*.swp
+*.pyc
+.history
+.svn/
+migrate_working_dir/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*~
+
+# Skills lock file (can be regenerated)
+skills-lock.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.iml
+
+# Generated files
+app/.metadata

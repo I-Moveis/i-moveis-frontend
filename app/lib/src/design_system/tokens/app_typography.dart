@@ -1,0 +1,233 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// Design tokens: Typography scale
+///
+/// Extracted typography from the 7 references translated to Google Fonts equivalents:
+/// 1. p5aholic.me (Display) -> Anton / Bebas Neue equivalent
+/// 2. obake.blue (Primary) -> PP Neue Machina -> 'Syne' (wide, modern, geometric)
+/// 3. LQVE (Secondary/Headline) -> Suisse Int'l -> 'Space Grotesk'
+/// 4. ILY GIRL (Body) -> Aventa -> 'Manrope' (highly legible, quiet)
+/// 5. MGO Overture (Numbers) -> Oroban Masuria -> 'Space Mono'
+abstract final class AppTypography {
+  
+  // Font Families evaluated at runtime
+  static String? get _displayFont => GoogleFonts.syne().fontFamily;
+  static String? get _headlineFont => GoogleFonts.spaceGrotesk().fontFamily;
+  static String? get _bodyFont => GoogleFonts.manrope().fontFamily;
+  static String? get _monoFont => GoogleFonts.spaceMono().fontFamily;
+
+  // ═══════════════════════════════════════════════════════════════
+  //  DISPLAY — THE STATEMENT (Syne)
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get displayMassive => TextStyle(
+    fontFamily: _displayFont,
+    fontSize: 72,
+    fontWeight: FontWeight.w800,
+    height: 0.9,
+    letterSpacing: -4.0,
+  );
+
+  static TextStyle get displayLarge => TextStyle(
+    fontFamily: _displayFont,
+    fontSize: 48,
+    fontWeight: FontWeight.w700,
+    height: 0.95,
+    letterSpacing: -2.5,
+  );
+
+  static TextStyle get displayMedium => TextStyle(
+    fontFamily: _displayFont,
+    fontSize: 36,
+    fontWeight: FontWeight.w700,
+    height: 1.0,
+    letterSpacing: -1.5,
+  );
+
+  static TextStyle get displaySmall => TextStyle(
+    fontFamily: _displayFont,
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    height: 1.05,
+    letterSpacing: -1.0,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  HEADLINE — SECTION LEVEL (Space Grotesk)
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get headlineLarge => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    height: 1.15,
+    letterSpacing: -0.5,
+  );
+
+  static TextStyle get headlineMedium => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+    letterSpacing: -0.3,
+  );
+
+  static TextStyle get headlineSmall => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+    letterSpacing: -0.2,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  TITLE (Space Grotesk)
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get titleLarge => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+    letterSpacing: 0,
+  );
+
+  static TextStyle get titleMedium => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+    letterSpacing: 0,
+  );
+
+  static TextStyle get titleSmall => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+    letterSpacing: 0,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  BODY — QUIET AND READABLE (Manrope)
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get bodyLarge => TextStyle(
+    fontFamily: _bodyFont,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0.1,
+  );
+
+  static TextStyle get bodyMedium => TextStyle(
+    fontFamily: _bodyFont,
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0.1,
+  );
+
+  static TextStyle get bodySmall => TextStyle(
+    fontFamily: _bodyFont,
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0.15,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  LABEL — WIDE TRACKING (Space Grotesk)
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get labelLarge => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: 1.5,
+  );
+
+  static TextStyle get labelMedium => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: 2.0,
+  );
+
+  static TextStyle get labelSmall => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 9,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+    letterSpacing: 2.5,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  MONO / NUMBERS (Space Mono)
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get monoDisplay => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 64,
+    fontWeight: FontWeight.w400,
+    height: 0.9,
+    letterSpacing: -3.0,
+  );
+
+  static TextStyle get monoLarge => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 32,
+    fontWeight: FontWeight.w400,
+    height: 1.0,
+    letterSpacing: -1.0,
+  );
+
+  static TextStyle get monoIndex => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 22,
+    fontWeight: FontWeight.w400,
+    height: 1.0,
+    letterSpacing: 0.88,
+  );
+
+  static TextStyle get mono => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0,
+  );
+
+  static TextStyle get monoSmall => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  CONSTANTS & EXTRAS
+  // ═══════════════════════════════════════════════════════════════
+
+  static TextStyle get navLabel => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.0,
+    letterSpacing: 3.0,
+  );
+
+  static TextStyle get sectionMarker => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 9,
+    fontWeight: FontWeight.w700,
+    height: 1.0,
+    letterSpacing: 4.0,
+  );
+
+  static TextStyle get displayHero => displayMassive;
+}

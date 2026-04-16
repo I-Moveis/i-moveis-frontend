@@ -1,65 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:app/src/design_system/design_system.dart';
 
-/// Listing analytics page — views, favorites, proposals metrics.
+/// Listing analytics — cozy metrics with CountUpText.
 class ListingAnalyticsPage extends StatelessWidget {
   const ListingAnalyticsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return BrutalistPageScaffold(
+      builder: (context, isDark, entrance, pulse) {
+        final fade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)));
+        final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Desempenho do anúncio')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Métricas', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _MetricCard(icon: Icons.visibility, label: 'Visualizações', value: '142')),
-                const SizedBox(width: 12),
-                Expanded(child: _MetricCard(icon: Icons.favorite, label: 'Favoritos', value: '23')),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _MetricCard(icon: Icons.description, label: 'Propostas', value: '5')),
-                const SizedBox(width: 12),
-                Expanded(child: _MetricCard(icon: Icons.calendar_today, label: 'Visitas', value: '8')),
-              ],
-            ),
-          ],
-        ),
-      ),
+        return Opacity(opacity: fade.value, child: CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
+          SliverToBoxAdapter(child: BrutalistAppBar(title: 'Analytics')),
+          SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Wrap(spacing: AppSpacing.sm, children: ['7 dias', '30 dias', 'Total'].map((l) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.1), borderRadius: AppRadius.borderFull),
+              child: Text(l, style: AppTypography.titleSmallBold.copyWith(color: accentColor)),
+            )).toList()),
+            const SizedBox(height: AppSpacing.xxl),
+            Row(children: [
+              AppMetricCard(icon: Icons.visibility_outlined, value: 142, label: 'Visualizações'),
+              const SizedBox(width: AppSpacing.md),
+              AppMetricCard(icon: Icons.favorite_outline, value: 23, label: 'Favoritos'),
+            ]),
+            const SizedBox(height: AppSpacing.md),
+            Row(children: [
+              AppMetricCard(icon: Icons.description_outlined, value: 5, label: 'Propostas'),
+              const SizedBox(width: AppSpacing.md),
+              AppMetricCard(icon: Icons.calendar_today_outlined, value: 8, label: 'Visitas'),
+            ]),
+            const SizedBox(height: AppSpacing.massive),
+          ]))),
+        ]));
+      },
     );
   }
-}
 
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.icon, required this.label, required this.value});
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, size: 32, color: theme.colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(value, style: theme.textTheme.headlineMedium),
-            Text(label, style: theme.textTheme.labelSmall),
-          ],
-        ),
-      ),
-    );
-  }
 }

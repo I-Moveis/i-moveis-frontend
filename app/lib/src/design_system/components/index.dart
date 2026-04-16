@@ -17,6 +17,11 @@ export 'app_avatar.dart';
 export 'app_badge.dart';
 export 'app_list_tile.dart';
 export 'app_bottom_sheet.dart';
+export 'app_section_header.dart';
+export 'app_stat_row.dart';
+export 'app_metric_card.dart';
+export 'app_menu_group.dart';
+export 'app_property_card.dart';
 
 // ─── Creative Components ───────────────────────────────────────
 export 'cinematic_hero.dart';
@@ -30,6 +35,11 @@ export 'glass_button.dart';
 export 'minimal_nav.dart';
 export 'bullet_nav.dart';
 export 'creative_nav.dart';
+
+// ─── Brutalist Elegance Shared ─────────────────────────────────
+export 'brutalist_page_scaffold.dart';
+export 'brutalist_app_bar.dart';
+export 'brutalist_stepper.dart';
 
 // ─── Specialized Components ────────────────────────────────────
 export 'project_list_item.dart';

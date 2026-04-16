@@ -13,11 +13,17 @@ abstract final class AppSpacing {
   /// 4px - Minimum spacing
   static const xs = 4.0;
 
+  /// 6px - Small-medium inline gap
+  static const xsSm = 6.0;
+
   /// 8px - Tight component spacing
   static const sm = 8.0;
 
   /// 12px - Default inner padding
   static const md = 12.0;
+
+  /// 14px - Row/cell vertical padding
+  static const mdLg = 14.0;
 
   /// 16px - Default component spacing
   static const lg = 16.0;

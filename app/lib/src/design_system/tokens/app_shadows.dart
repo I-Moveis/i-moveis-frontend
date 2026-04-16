@@ -76,4 +76,14 @@ abstract final class AppShadows {
 
   static const cosmicBloom = <BoxShadow>[];
   static const starlight = <BoxShadow>[];
+
+  /// Dynamic glow for gradient buttons (auth/onboarding shimmer buttons).
+  static List<BoxShadow> buttonGlow(Color glowColor) => [
+        BoxShadow(
+          color: glowColor,
+          blurRadius: 20,
+          offset: const Offset(0, 4),
+          spreadRadius: -4,
+        ),
+      ];
 }

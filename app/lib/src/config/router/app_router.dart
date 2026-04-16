@@ -118,14 +118,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/chat',
                 builder: (_, _) => const ConversationsPage(),
-                routes: [
-                  GoRoute(
-                    path: ':conversationId',
-                    builder: (_, state) => ChatPage(
-                      conversationId: state.pathParameters['conversationId']!,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -165,6 +157,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+
+      // ── Chat detail (full screen, outside shell) ──────────────
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/chat/:conversationId',
+        builder: (_, state) => ChatPage(
+          conversationId: state.pathParameters['conversationId']!,
+        ),
       ),
 
       // ── Property detail (full screen, outside shell) ─────────

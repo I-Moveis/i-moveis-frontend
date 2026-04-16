@@ -1,93 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/src/design_system/design_system.dart';
 
-/// Profile tab — user info, menu items, settings.
+/// Profile tab — cozy profile with grouped menu sections.
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return BrutalistPageScaffold(
+      builder: (context, isDark, entrance, pulse) {
+        final fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
+        );
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
-      body: ListView(
-        children: [
-          const SizedBox(height: 24),
-          Center(
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Icon(Icons.person, size: 40, color: theme.colorScheme.primary),
+        final titleColor = BrutalistPalette.title(isDark);
+        final mutedColor = BrutalistPalette.muted(isDark);
+        final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+
+        return Opacity(opacity: fade.value, child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [SliverToBoxAdapter(child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+            child: Column(children: [
+              const SizedBox(height: AppSpacing.xl),
+
+              // Avatar + info
+              Container(
+                width: 72, height: 72,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: accentColor.withValues(alpha: 0.1)),
+                child: Icon(Icons.person_rounded, size: 32, color: accentColor.withValues(alpha: 0.6)),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Usuário', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.xxs),
+              Text('usuario@email.com', style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
+              const SizedBox(height: AppSpacing.xl),
+              GestureDetector(
+                onTap: () => context.go('/profile/edit'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    borderRadius: AppRadius.borderFull,
+                    border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+                  ),
+                  child: Text('Editar perfil', style: AppTypography.titleSmall.copyWith(color: mutedColor)),
                 ),
-                const SizedBox(height: 12),
-                Text('Usuário', style: theme.textTheme.titleLarge),
-                Text('usuario@email.com', style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () => context.go('/profile/edit'),
-                  child: const Text('Editar perfil'),
+              ),
+              const SizedBox(height: AppSpacing.xxxl),
+
+              // Atividade
+              AppSectionHeader(title: 'Atividade'),
+              const SizedBox(height: AppSpacing.md),
+              AppMenuGroup(items: [
+                AppMenuGroupItem(icon: Icons.description_outlined, label: 'Minhas propostas', onTap: () {}),
+                AppMenuGroupItem(icon: Icons.calendar_today_outlined, label: 'Minhas visitas', onTap: () {}),
+                AppMenuGroupItem(icon: Icons.article_outlined, label: 'Meus contratos', onTap: () {}),
+              ]),
+
+              const SizedBox(height: AppSpacing.xxl),
+
+              // Imóveis
+              AppSectionHeader(title: 'Imóveis'),
+              const SizedBox(height: AppSpacing.md),
+              AppMenuGroup(items: [
+                AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus imóveis', onTap: () => context.go('/profile/my-properties')),
+                AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar imóvel', onTap: () => context.go('/profile/my-properties/create')),
+              ]),
+
+              const SizedBox(height: AppSpacing.xxl),
+
+              // Sistema
+              AppSectionHeader(title: 'Sistema'),
+              const SizedBox(height: AppSpacing.md),
+              AppMenuGroup(items: [
+                AppMenuGroupItem(icon: Icons.settings_outlined, label: 'Configurações', onTap: () => context.go('/profile/settings')),
+                AppMenuGroupItem(icon: Icons.support_agent_outlined, label: 'Suporte', onTap: () {}),
+              ]),
+
+              const SizedBox(height: AppSpacing.xxl),
+
+              // Logout
+              GestureDetector(
+                onTap: () => context.go('/login'),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.06),
+                    borderRadius: AppRadius.borderLg,
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
+                  ),
+                  child: Center(child: Text('Sair', style: AppTypography.titleSmallBold.copyWith(color: AppColors.error))),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Minhas propostas'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_today_outlined),
-            title: const Text('Minhas visitas'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.article_outlined),
-            title: const Text('Meus contratos'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.home_outlined),
-            title: const Text('Meus imóveis'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/profile/my-properties'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.add_circle_outline),
-            title: const Text('Anunciar imóvel'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/profile/my-properties/create'),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: const Text('Configurações'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/profile/settings'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.support_agent_outlined),
-            title: const Text('Suporte'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          const Divider(),
-          ListTile(
-            leading: Icon(Icons.logout, color: theme.colorScheme.error),
-            title: Text('Sair', style: TextStyle(color: theme.colorScheme.error)),
-            onTap: () => context.go('/login'),
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
+              ),
+              const SizedBox(height: AppSpacing.massive),
+            ]),
+          ))],
+        ));
+      },
     );
   }
+
 }

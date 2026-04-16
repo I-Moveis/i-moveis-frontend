@@ -230,4 +230,151 @@ abstract final class AppTypography {
   );
 
   static TextStyle get displayHero => displayMassive;
+
+  // ═══════════════════════════════════════════════════════════════
+  //  EMPHASIS VARIANTS — bolder weights for interactive/highlight use
+  // ═══════════════════════════════════════════════════════════════
+
+  /// headlineMedium but bolder (w700) — price highlights, key metrics
+  static TextStyle get headlineMediumBold => headlineMedium.copyWith(fontWeight: FontWeight.w700);
+
+  /// titleLarge but semi-bold (w600) — card titles, list item names
+  static TextStyle get titleLargeBold => titleLarge.copyWith(fontWeight: FontWeight.w600);
+
+  /// titleMedium but semi-bold (w600) — avatar initials, sub-card titles
+  static TextStyle get titleMediumBold => titleMedium.copyWith(fontWeight: FontWeight.w600);
+
+  /// titleSmall but semi-bold (w600) — chips, action labels, section labels
+  static TextStyle get titleSmallBold => titleSmall.copyWith(fontWeight: FontWeight.w600);
+
+  /// bodySmall but semi-bold (w600) — inline badges, bold captions
+  static TextStyle get bodySmallBold => bodySmall.copyWith(fontWeight: FontWeight.w600);
+
+  /// Tiny tag/badge — 10px semi-bold for role tags, status badges
+  static TextStyle get tagBadge => TextStyle(
+    fontFamily: _bodyFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.7,
+    letterSpacing: 0.15,
+  );
+
+  /// Caption tiny — 10px for secondary metadata
+  static TextStyle get captionTiny => TextStyle(
+    fontFamily: _bodyFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0.15,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  BRAND / AUTH — recurring patterns in splash, onboarding, auth
+  // ═══════════════════════════════════════════════════════════════
+
+  /// Brand title — displayLarge tightened for logo contexts
+  static TextStyle get displayBrand => displayLarge.copyWith(letterSpacing: -2.0);
+
+  /// Brand subtitle — wide-spaced display for "ALUGUEL" type text
+  static TextStyle get displaySubtitle => displayMedium.copyWith(
+    fontWeight: FontWeight.w400,
+    letterSpacing: 8.0,
+  );
+
+  /// Animated section index — mono at 80px (splash/auth "00"/"01")
+  static TextStyle get monoHero => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 80,
+    fontWeight: FontWeight.w400,
+    height: 0.9,
+    letterSpacing: -4.0,
+  );
+
+  /// Giant decorative number — mono at 120px (photo gallery)
+  static TextStyle get monoGiant => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 120,
+    fontWeight: FontWeight.w400,
+    height: 0.9,
+    letterSpacing: -3.0,
+  );
+
+  /// Mono input field — 14px with subtle spacing (auth text fields)
+  static TextStyle get monoInput => TextStyle(
+    fontFamily: _monoFont,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.7,
+    letterSpacing: 0.5,
+  );
+
+  /// Mono small with wide spacing — photo counters
+  static TextStyle get monoSmallWide => monoSmall.copyWith(letterSpacing: 1.0);
+
+  /// CTA button label — bold, wide-spaced (gradient buttons)
+  static TextStyle get buttonLabel => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+    letterSpacing: 3.0,
+  );
+
+  /// Input field label — small caps above text fields
+  static TextStyle get inputLabel => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: 3.0,
+  );
+
+  /// Property card tag — compact label for "NOVO", "DESTAQUE"
+  static TextStyle get propertyTag => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 9,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: 0.5,
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  //  MORE WEIGHT VARIANTS
+  // ═══════════════════════════════════════════════════════════════
+
+  /// headlineLarge but bolder (w700) — rank numbers
+  static TextStyle get headlineLargeBold => headlineLarge.copyWith(fontWeight: FontWeight.w700);
+
+  /// titleMedium accent (w700) — price emphasis
+  static TextStyle get titleMediumAccent => titleMedium.copyWith(fontWeight: FontWeight.w700);
+
+  /// titleSmall accent (w700) — price/value text
+  static TextStyle get titleSmallAccent => titleSmall.copyWith(fontWeight: FontWeight.w700);
+
+  /// Section action label — labelLarge with widest spacing
+  static TextStyle get labelAction => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+    letterSpacing: 4.0,
+  );
+
+  /// Nav bar label (active)
+  static TextStyle get navLabelActive => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    height: 1.0,
+    letterSpacing: 0.3,
+  );
+
+  /// Nav bar label (inactive)
+  static TextStyle get navLabelInactive => TextStyle(
+    fontFamily: _headlineFont,
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    height: 1.0,
+    letterSpacing: 0.0,
+  );
 }

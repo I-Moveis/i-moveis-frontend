@@ -1,95 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/src/design_system/design_system.dart';
 
-/// Admin dashboard — platform overview with metrics.
+/// Admin dashboard — cozy metrics and quick access.
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return BrutalistPageScaffold(
+      builder: (context, isDark, entrance, pulse) {
+        final fade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)));
+        final titleColor = BrutalistPalette.title(isDark);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Painel Admin'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.go('/login'),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Visão geral', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _StatCard(label: 'Usuários', value: '1.234', icon: Icons.people)),
-                const SizedBox(width: 12),
-                Expanded(child: _StatCard(label: 'Imóveis', value: '567', icon: Icons.apartment)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _StatCard(label: 'Contratos', value: '89', icon: Icons.article)),
-                const SizedBox(width: 12),
-                Expanded(child: _StatCard(label: 'Pendentes', value: '12', icon: Icons.pending_actions)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text('Acesso rápido', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 12),
-            ListTile(
-              leading: const Icon(Icons.people_outline),
-              title: const Text('Gerenciar usuários'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/admin/users'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home_outlined),
-              title: const Text('Moderar anúncios'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/admin/listings'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.article_outlined),
-              title: const Text('Gerenciar contratos'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/admin/contracts'),
-            ),
-          ],
-        ),
-      ),
+        return Opacity(opacity: fade.value, child: CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
+          SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const SizedBox(height: AppSpacing.xl),
+            Row(children: [
+              Expanded(child: Text('Painel admin', style: AppTypography.headlineLarge.copyWith(color: titleColor))),
+              GestureDetector(onTap: () => context.go('/login'), child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                decoration: BoxDecoration(borderRadius: AppRadius.borderFull, border: Border.all(color: AppColors.error.withValues(alpha: 0.2))),
+                child: Text('Sair', style: AppTypography.titleSmall.copyWith(color: AppColors.error)),
+              )),
+            ]),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // Metrics
+            AppSectionHeader(title: 'Métricas'),
+            const SizedBox(height: AppSpacing.md),
+            Row(children: [
+              AppMetricCard(icon: Icons.people_outline, value: 1234, label: 'Usuários'),
+              const SizedBox(width: AppSpacing.md),
+              AppMetricCard(icon: Icons.home_outlined, value: 567, label: 'Imóveis'),
+            ]),
+            const SizedBox(height: AppSpacing.md),
+            Row(children: [
+              AppMetricCard(icon: Icons.article_outlined, value: 89, label: 'Contratos'),
+              const SizedBox(width: AppSpacing.md),
+              AppMetricCard(icon: Icons.pending_outlined, value: 12, label: 'Pendentes'),
+            ]),
+
+            const SizedBox(height: AppSpacing.xxl),
+
+            // Quick access
+            AppSectionHeader(title: 'Acesso rápido'),
+            const SizedBox(height: AppSpacing.md),
+            AppMenuGroup(items: [
+              AppMenuGroupItem(icon: Icons.people_outline, label: 'Gerenciar usuários', onTap: () => context.push('/admin/users')),
+              AppMenuGroupItem(icon: Icons.home_outlined, label: 'Moderar anúncios', onTap: () => context.push('/admin/listings')),
+              AppMenuGroupItem(icon: Icons.article_outlined, label: 'Gerenciar contratos', onTap: () => context.push('/admin/contracts')),
+            ]),
+            const SizedBox(height: AppSpacing.massive),
+          ]))),
+        ]));
+      },
     );
   }
-}
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.value, required this.icon});
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, size: 28, color: theme.colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(value, style: theme.textTheme.headlineMedium),
-            Text(label, style: theme.textTheme.labelSmall),
-          ],
-        ),
-      ),
-    );
-  }
 }

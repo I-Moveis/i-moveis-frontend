@@ -158,19 +158,6 @@ class _RegisterPageState extends State<RegisterPage>
     super.dispose();
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  WARM PASTEL ACCENT PALETTE
-  // ═══════════════════════════════════════════════════════════════
-  static const _warmYellow = AppColors.pastelYellow;
-  static const _warmPeach = AppColors.pastelPeach;
-  static const _warmOrange = Color(0xFFFFB878);
-  static const _warmBrown = Color(0xFFD4A574);
-  static const _warmAmber = Color(0xFFE8C47C);
-
-  static const _deepOrange = Color(0xFFCC8844);
-  static const _deepBrown = Color(0xFFAA7744);
-  static const _deepAmber = Color(0xFFBB8833);
-
   void _handleRegister() {
     setState(() => _isLoading = true);
     Future.delayed(const Duration(milliseconds: 1800), () {
@@ -259,12 +246,10 @@ class _RegisterPageState extends State<RegisterPage>
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.glass : const Color(0x08000000),
+              color: BrutalistPalette.glassBg(isDark),
               borderRadius: AppRadius.borderSm,
               border: Border.all(
-                color: isDark
-                    ? AppColors.glassBorder
-                    : const Color(0x14000000),
+                color: BrutalistPalette.glassBorderColor(isDark),
                 width: 1,
               ),
             ),
@@ -274,18 +259,13 @@ class _RegisterPageState extends State<RegisterPage>
                 Icon(
                   Icons.arrow_back_rounded,
                   size: 16,
-                  color: isDark
-                      ? AppColors.whiteMuted
-                      : AppColors.lightTextTertiary,
+                  color: BrutalistPalette.muted(isDark),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   'VOLTAR',
                   style: AppTypography.labelSmall.copyWith(
-                    color: isDark
-                        ? AppColors.whiteMuted
-                        : AppColors.lightTextTertiary,
-                    letterSpacing: 2.5,
+                    color: BrutalistPalette.muted(isDark),
                   ),
                 ),
               ],
@@ -300,9 +280,9 @@ class _RegisterPageState extends State<RegisterPage>
   //  HEADER — 02, CRIAR, CONTA, section marker
   // ═══════════════════════════════════════════════════════════════
   Widget _buildHeader(bool isDark) {
-    final accentPeach = isDark ? _warmPeach : _deepOrange;
-    final accentAmber = isDark ? _warmAmber : _deepAmber;
-    final titleColor = isDark ? AppColors.white : AppColors.black;
+    final accentPeach = BrutalistPalette.accentPeach(isDark);
+    final accentAmber = BrutalistPalette.accentAmber(isDark);
+    final titleColor = BrutalistPalette.title(isDark);
 
     return Opacity(
       opacity: _headerFade.value,
@@ -316,16 +296,14 @@ class _RegisterPageState extends State<RegisterPage>
                 final glow = _pulseController.value;
                 return Text(
                   '02',
-                  style: AppTypography.monoDisplay.copyWith(
+                  style: AppTypography.monoHero.copyWith(
                     color: isDark
-                        ? _warmYellow.withValues(
+                        ? BrutalistPalette.warmYellow.withValues(
                             alpha: 0.15 + glow * 0.08,
                           )
-                        : _deepAmber.withValues(
+                        : BrutalistPalette.deepAmber.withValues(
                             alpha: 0.10 + glow * 0.06,
                           ),
-                    fontSize: 80,
-                    letterSpacing: -4.0,
                   ),
                 );
               },
@@ -333,9 +311,8 @@ class _RegisterPageState extends State<RegisterPage>
             const SizedBox(height: AppSpacing.xs),
             RevealText(
               text: 'CRIAR',
-              style: AppTypography.displayLarge.copyWith(
+              style: AppTypography.displayBrand.copyWith(
                 color: titleColor,
-                letterSpacing: -2.0,
               ),
               delay: const Duration(milliseconds: 600),
               duration: const Duration(milliseconds: 900),
@@ -343,10 +320,8 @@ class _RegisterPageState extends State<RegisterPage>
             const SizedBox(height: AppSpacing.xxs),
             RevealText(
               text: 'CONTA',
-              style: AppTypography.displayMedium.copyWith(
+              style: AppTypography.displaySubtitle.copyWith(
                 color: accentPeach,
-                letterSpacing: 8.0,
-                fontWeight: FontWeight.w400,
               ),
               delay: const Duration(milliseconds: 900),
               duration: const Duration(milliseconds: 800),
@@ -369,7 +344,6 @@ class _RegisterPageState extends State<RegisterPage>
                     'DATA-SYSTEM // REGISTRO',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
-                      letterSpacing: 4.0,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -470,9 +444,7 @@ class _RegisterPageState extends State<RegisterPage>
                         ? Icons.visibility_off_rounded
                         : Icons.visibility_rounded,
                     size: 18,
-                    color: isDark
-                        ? AppColors.whiteMuted
-                        : AppColors.lightTextTertiary,
+                    color: BrutalistPalette.muted(isDark),
                   ),
                 ),
               ),
@@ -502,9 +474,7 @@ class _RegisterPageState extends State<RegisterPage>
                         ? Icons.visibility_off_rounded
                         : Icons.visibility_rounded,
                     size: 18,
-                    color: isDark
-                        ? AppColors.whiteMuted
-                        : AppColors.lightTextTertiary,
+                    color: BrutalistPalette.muted(isDark),
                   ),
                 ),
               ),
@@ -558,9 +528,8 @@ class _RegisterPageState extends State<RegisterPage>
     int delay = 0,
     Widget? suffixIcon,
   }) {
-    final focusedBorder = isDark
-        ? _warmOrange.withValues(alpha: 0.6)
-        : _deepOrange.withValues(alpha: 0.5);
+    final focusedBorder =
+        BrutalistPalette.accentOrange(isDark).withValues(alpha: isDark ? 0.6 : 0.5);
     final restBorder = isDark ? AppColors.blackLightest : AppColors.lightBorder;
 
     final fieldBg = isDark
@@ -568,20 +537,19 @@ class _RegisterPageState extends State<RegisterPage>
             ? AppColors.blackLight.withValues(alpha: 0.8)
             : AppColors.blackLight.withValues(alpha: 0.4))
         : (isFocused
-            ? AppColors.white.withValues(alpha: 0.9)
-            : AppColors.white.withValues(alpha: 0.6));
+            ? AppColors.white.withValues(alpha: 0.95)
+            : AppColors.white.withValues(alpha: 0.9));
 
-    final labelColor = isDark
-        ? (isFocused ? _warmPeach : AppColors.whiteMuted)
-        : (isFocused ? _deepOrange : AppColors.lightTextTertiary);
+    final labelColor = isFocused
+        ? BrutalistPalette.accentPeach(isDark)
+        : BrutalistPalette.muted(isDark);
 
-    final textColor = isDark ? AppColors.white : AppColors.black;
-    final hintColor =
-        isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
-    final iconColor = isDark
-        ? (isFocused ? _warmPeach : AppColors.whiteMuted)
-        : (isFocused ? _deepOrange : AppColors.lightTextTertiary);
-    final cursorColor = isDark ? _warmOrange : _deepOrange;
+    final textColor = BrutalistPalette.title(isDark);
+    final hintColor = BrutalistPalette.faint(isDark);
+    final iconColor = isFocused
+        ? BrutalistPalette.accentPeach(isDark)
+        : BrutalistPalette.muted(isDark);
+    final cursorColor = BrutalistPalette.accentOrange(isDark);
 
     return FadeSlideIn(
       delay: Duration(milliseconds: 1200 + delay * 120),
@@ -593,9 +561,8 @@ class _RegisterPageState extends State<RegisterPage>
             children: [
               Text(
                 label,
-                style: AppTypography.labelMedium.copyWith(
+                style: AppTypography.inputLabel.copyWith(
                   color: labelColor,
-                  letterSpacing: 3.0,
                 ),
               ),
               if (isFocused) ...[
@@ -609,7 +576,7 @@ class _RegisterPageState extends State<RegisterPage>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color:
-                            (isDark ? _warmOrange : _deepOrange).withValues(
+                            BrutalistPalette.accentOrange(isDark).withValues(
                           alpha: 0.5 + _pulseController.value * 0.5,
                         ),
                       ),
@@ -630,14 +597,8 @@ class _RegisterPageState extends State<RegisterPage>
                 color: isFocused ? focusedBorder : restBorder,
                 width: isFocused ? 1.5 : 1.0,
               ),
-              boxShadow: isFocused && !isDark
-                  ? [
-                      BoxShadow(
-                        color: _deepOrange.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
+              boxShadow: isFocused
+                  ? BrutalistPalette.inputFocusShadow(isDark)
                   : null,
             ),
             child: TextField(
@@ -645,18 +606,15 @@ class _RegisterPageState extends State<RegisterPage>
               focusNode: focusNode,
               obscureText: obscureText,
               keyboardType: keyboardType,
-              style: AppTypography.mono.copyWith(
+              style: AppTypography.monoInput.copyWith(
                 color: textColor,
-                fontSize: 14,
-                letterSpacing: 0.5,
               ),
               cursorColor: cursorColor,
               cursorWidth: 1.5,
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: AppTypography.mono.copyWith(
+                hintStyle: AppTypography.monoInput.copyWith(
                   color: hintColor,
-                  fontSize: 14,
                 ),
                 prefixIcon: Icon(icon, size: 18, color: iconColor),
                 suffixIcon: suffixIcon,
@@ -680,16 +638,10 @@ class _RegisterPageState extends State<RegisterPage>
   //  OWNER TOGGLE — glass container
   // ═══════════════════════════════════════════════════════════════
   Widget _buildOwnerToggle(bool isDark) {
-    final bgColor = isDark
-        ? AppColors.blackLight.withValues(alpha: 0.4)
-        : AppColors.white.withValues(alpha: 0.6);
-    final borderColor = isDark
-        ? (_isOwner
-            ? _warmOrange.withValues(alpha: 0.4)
-            : AppColors.blackLightest)
-        : (_isOwner
-            ? _deepOrange.withValues(alpha: 0.3)
-            : AppColors.lightBorder);
+    final bgColor = BrutalistPalette.cardBg(isDark);
+    final borderColor = _isOwner
+        ? BrutalistPalette.accentOrange(isDark).withValues(alpha: isDark ? 0.4 : 0.3)
+        : BrutalistPalette.cardBorder(isDark);
 
     return AnimatedContainer(
       duration: AppDurations.medium,
@@ -707,20 +659,15 @@ class _RegisterPageState extends State<RegisterPage>
               children: [
                 Text(
                   'SOU PROPRIETÁRIO',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: isDark
-                        ? AppColors.whiteDim
-                        : AppColors.lightTextPrimary,
-                    letterSpacing: 2.0,
+                  style: AppTypography.inputLabel.copyWith(
+                    color: BrutalistPalette.title(isDark),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Ative para anunciar imóveis',
                   style: AppTypography.bodySmall.copyWith(
-                    color: isDark
-                        ? AppColors.whiteMuted
-                        : AppColors.lightTextTertiary,
+                    color: BrutalistPalette.muted(isDark),
                   ),
                 ),
               ],
@@ -729,13 +676,11 @@ class _RegisterPageState extends State<RegisterPage>
           Switch(
             value: _isOwner,
             onChanged: (v) => setState(() => _isOwner = v),
-            activeThumbColor: isDark ? _warmAmber : _deepAmber,
+            activeThumbColor: BrutalistPalette.accentAmber(isDark),
             activeTrackColor: isDark
-                ? _warmBrown.withValues(alpha: 0.4)
-                : _deepOrange.withValues(alpha: 0.2),
-            inactiveThumbColor: isDark
-                ? AppColors.whiteMuted
-                : AppColors.lightTextTertiary,
+                ? BrutalistPalette.warmBrown.withValues(alpha: 0.4)
+                : BrutalistPalette.deepOrange.withValues(alpha: 0.2),
+            inactiveThumbColor: BrutalistPalette.muted(isDark),
             inactiveTrackColor: isDark
                 ? AppColors.blackLightest
                 : AppColors.lightBorder,
@@ -751,7 +696,7 @@ class _RegisterPageState extends State<RegisterPage>
   //  TERMS CHECKBOX — minimal style
   // ═══════════════════════════════════════════════════════════════
   Widget _buildTermsCheckbox(bool isDark) {
-    final accentColor = isDark ? _warmPeach : _deepOrange;
+    final accentColor = BrutalistPalette.accentPeach(isDark);
 
     return GestureDetector(
       onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
@@ -783,10 +728,7 @@ class _RegisterPageState extends State<RegisterPage>
           Text(
             'ACEITO OS TERMOS DE USO',
             style: AppTypography.labelSmall.copyWith(
-              color: isDark
-                  ? AppColors.whiteMuted
-                  : AppColors.lightTextTertiary,
-              letterSpacing: 2.0,
+              color: BrutalistPalette.muted(isDark),
             ),
           ),
         ],
@@ -805,19 +747,20 @@ class _RegisterPageState extends State<RegisterPage>
 
         final gradientColors = isDark
             ? [
-                _warmBrown.withValues(alpha: 0.9),
-                _warmOrange.withValues(alpha: 0.85),
-                _warmYellow.withValues(alpha: 0.8),
+                BrutalistPalette.warmBrown.withValues(alpha: 0.9),
+                BrutalistPalette.warmOrange.withValues(alpha: 0.85),
+                BrutalistPalette.warmYellow.withValues(alpha: 0.8),
               ]
-            : [_deepBrown, _deepOrange, _deepAmber];
+            : [
+                BrutalistPalette.deepBrown,
+                BrutalistPalette.deepOrange,
+                BrutalistPalette.deepAmber,
+              ];
 
         final buttonTextColor = isDark ? AppColors.black : AppColors.white;
-        final loadingColor = isDark
-            ? AppColors.black.withValues(alpha: 0.8)
-            : AppColors.white.withValues(alpha: 0.9);
-        final glowColor = isDark
-            ? _warmOrange.withValues(alpha: 0.2)
-            : _deepOrange.withValues(alpha: 0.15);
+        final loadingColor = buttonTextColor.withValues(alpha: isDark ? 0.8 : 0.9);
+        final glowColor = BrutalistPalette.accentOrange(isDark)
+            .withValues(alpha: isDark ? 0.2 : 0.15);
 
         return GestureDetector(
           onTap: _isLoading ? null : _handleRegister,
@@ -836,14 +779,7 @@ class _RegisterPageState extends State<RegisterPage>
                 ],
               ),
               borderRadius: AppRadius.borderSm,
-              boxShadow: [
-                BoxShadow(
-                  color: glowColor,
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                  spreadRadius: -4,
-                ),
-              ],
+              boxShadow: AppShadows.buttonGlow(glowColor),
             ),
             child: ClipRRect(
               borderRadius: AppRadius.borderSm,
@@ -864,10 +800,8 @@ class _RegisterPageState extends State<RegisterPage>
                           children: [
                             Text(
                               'CRIAR CONTA',
-                              style: AppTypography.labelLarge.copyWith(
+                              style: AppTypography.buttonLabel.copyWith(
                                 color: buttonTextColor,
-                                letterSpacing: 3.0,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -892,9 +826,8 @@ class _RegisterPageState extends State<RegisterPage>
   //  FOOTER — login link, version
   // ═══════════════════════════════════════════════════════════════
   Widget _buildFooter(bool isDark) {
-    final mutedColor =
-        isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
-    final accentColor = isDark ? _warmYellow : _deepAmber;
+    final mutedColor = BrutalistPalette.faint(isDark);
+    final accentColor = isDark ? BrutalistPalette.warmYellow : BrutalistPalette.deepAmber;
 
     return Opacity(
       opacity: _footerFade.value,
@@ -907,7 +840,6 @@ class _RegisterPageState extends State<RegisterPage>
                 'JÁ TEM CONTA?',
                 style: AppTypography.labelSmall.copyWith(
                   color: mutedColor,
-                  letterSpacing: 2.0,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -917,8 +849,6 @@ class _RegisterPageState extends State<RegisterPage>
                   'ENTRAR',
                   style: AppTypography.labelSmall.copyWith(
                     color: accentColor,
-                    letterSpacing: 2.0,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -934,7 +864,6 @@ class _RegisterPageState extends State<RegisterPage>
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,
                   ),
-                  letterSpacing: 2.0,
                 ),
               );
             },

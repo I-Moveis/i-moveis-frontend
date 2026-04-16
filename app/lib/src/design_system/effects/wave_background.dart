@@ -110,7 +110,7 @@ class _WaveBackgroundState extends State<WaveBackground>
   }
 
   _WaveColors _getColors(WaveColorScheme scheme, bool isDark) {
-    final darkBg = const Color(0xFF070808);
+    final darkBg = const Color(0xFF111111);
     final lightBg = const Color(0xFFF5F5F5);
     final bg = isDark ? darkBg : lightBg;
 
@@ -149,15 +149,15 @@ class _WaveBackgroundState extends State<WaveBackground>
         return _WaveColors(
           background: bg,
           waves: _generateGradientLines(
-            isDark ? const Color(0xFFFF6B6B) : const Color(0xFFFF4D4D),
-            isDark ? const Color(0xFFFF9A56) : const Color(0xFFFF7A20),
+            isDark ? const Color(0xFFD4917A) : const Color(0xFFCC7A60),
+            isDark ? const Color(0xFFDEAD82) : const Color(0xFFB08060),
             widget.waveCount,
             isDark: isDark,
           ),
         );
       case WaveColorScheme.mono:
         return _WaveColors(
-          background: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF8F8F8),
+          background: isDark ? const Color(0xFF111111) : const Color(0xFFF8F8F8),
           waves: _generateGradientLines(
             isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000),
             isDark ? const Color(0xFF444444) : const Color(0xFF666666),

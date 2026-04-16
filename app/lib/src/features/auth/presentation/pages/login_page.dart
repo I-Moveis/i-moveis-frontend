@@ -129,19 +129,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  WARM PASTEL ACCENT PALETTE
-  // ═══════════════════════════════════════════════════════════════
-  static const _warmYellow = AppColors.pastelYellow;
-  static const _warmPeach = AppColors.pastelPeach;
-  static const _warmOrange = Color(0xFFFFB878);
-  static const _warmBrown = Color(0xFFD4A574);
-  static const _warmAmber = Color(0xFFE8C47C);
-
-  static const _deepOrange = Color(0xFFCC8844);
-  static const _deepBrown = Color(0xFFAA7744);
-  static const _deepAmber = Color(0xFFBB8833);
-
   void _handleLogin() {
     setState(() => _isLoading = true);
 
@@ -216,9 +203,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   //  HEADER — 01, i-móveis, ALUGUEL, data-system marker
   // ═══════════════════════════════════════════════════════════════
   Widget _buildHeader(bool isDark) {
-    final accentPeach = isDark ? _warmPeach : _deepOrange;
-    final accentAmber = isDark ? _warmAmber : _deepAmber;
-    final titleColor = isDark ? AppColors.white : AppColors.black;
+    final accentPeach = BrutalistPalette.accentPeach(isDark);
+    final accentAmber = BrutalistPalette.accentAmber(isDark);
+    final titleColor = BrutalistPalette.title(isDark);
 
     return Opacity(
       opacity: _logoFade.value,
@@ -233,12 +220,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 final glow = _pulseController.value;
                 return Text(
                   '01',
-                  style: AppTypography.monoDisplay.copyWith(
+                  style: AppTypography.monoHero.copyWith(
                     color: isDark
-                        ? _warmYellow.withValues(alpha: 0.15 + glow * 0.08)
-                        : _deepAmber.withValues(alpha: 0.10 + glow * 0.06),
-                    fontSize: 80,
-                    letterSpacing: -4.0,
+                        ? BrutalistPalette.warmYellow.withValues(alpha: 0.15 + glow * 0.08)
+                        : BrutalistPalette.deepAmber.withValues(alpha: 0.10 + glow * 0.06),
                   ),
                 );
               },
@@ -248,9 +233,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
             RevealText(
               text: 'i-móveis',
-              style: AppTypography.displayLarge.copyWith(
+              style: AppTypography.displayBrand.copyWith(
                 color: titleColor,
-                letterSpacing: -2.0,
               ),
               delay: const Duration(milliseconds: 600),
               duration: const Duration(milliseconds: 900),
@@ -260,10 +244,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
             RevealText(
               text: 'ALUGUEL',
-              style: AppTypography.displayMedium.copyWith(
+              style: AppTypography.displaySubtitle.copyWith(
                 color: accentPeach,
-                letterSpacing: 8.0,
-                fontWeight: FontWeight.w400,
               ),
               delay: const Duration(milliseconds: 900),
               duration: const Duration(milliseconds: 800),
@@ -288,7 +270,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     'DATA-SYSTEM // LOGIN',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
-                      letterSpacing: 4.0,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -354,9 +335,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ? Icons.visibility_off_rounded
                         : Icons.visibility_rounded,
                     size: 18,
-                    color: isDark
-                        ? AppColors.whiteMuted
-                        : AppColors.lightTextTertiary,
+                    color: BrutalistPalette.muted(isDark),
                   ),
                 ),
               ),
@@ -374,10 +353,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   child: Text(
                     'ESQUECI MINHA SENHA',
                     style: AppTypography.labelSmall.copyWith(
-                      color: isDark
-                          ? _warmPeach.withValues(alpha: 0.7)
-                          : _deepOrange.withValues(alpha: 0.8),
-                      letterSpacing: 2.0,
+                      color: BrutalistPalette.accentPeach(isDark).withValues(
+                          alpha: isDark ? 0.7 : 0.8),
                     ),
                   ),
                 ),
@@ -447,9 +424,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     int delay = 0,
     Widget? suffixIcon,
   }) {
-    final focusedBorder = isDark
-        ? _warmOrange.withValues(alpha: 0.6)
-        : _deepOrange.withValues(alpha: 0.5);
+    final focusedBorder = BrutalistPalette.accentOrange(isDark)
+        .withValues(alpha: isDark ? 0.6 : 0.5);
     final restBorder = isDark ? AppColors.blackLightest : AppColors.lightBorder;
 
     final fieldBg = isDark
@@ -457,20 +433,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ? AppColors.blackLight.withValues(alpha: 0.8)
             : AppColors.blackLight.withValues(alpha: 0.4))
         : (isFocused
-            ? AppColors.white.withValues(alpha: 0.9)
-            : AppColors.white.withValues(alpha: 0.6));
+            ? AppColors.white.withValues(alpha: 0.95)
+            : AppColors.white.withValues(alpha: 0.9));
 
-    final labelColor = isDark
-        ? (isFocused ? _warmPeach : AppColors.whiteMuted)
-        : (isFocused ? _deepOrange : AppColors.lightTextTertiary);
+    final labelColor = isFocused
+        ? BrutalistPalette.accentPeach(isDark)
+        : BrutalistPalette.muted(isDark);
 
-    final textColor = isDark ? AppColors.white : AppColors.black;
-    final hintColor =
-        isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
-    final iconColor = isDark
-        ? (isFocused ? _warmPeach : AppColors.whiteMuted)
-        : (isFocused ? _deepOrange : AppColors.lightTextTertiary);
-    final cursorColor = isDark ? _warmOrange : _deepOrange;
+    final textColor = BrutalistPalette.title(isDark);
+    final hintColor = BrutalistPalette.faint(isDark);
+    final iconColor = isFocused
+        ? BrutalistPalette.accentPeach(isDark)
+        : BrutalistPalette.muted(isDark);
+    final cursorColor = BrutalistPalette.accentOrange(isDark);
 
     return FadeSlideIn(
       delay: Duration(milliseconds: 1200 + delay * 150),
@@ -482,9 +457,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             children: [
               Text(
                 label,
-                style: AppTypography.labelMedium.copyWith(
+                style: AppTypography.inputLabel.copyWith(
                   color: labelColor,
-                  letterSpacing: 3.0,
                 ),
               ),
               if (isFocused) ...[
@@ -497,8 +471,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       height: 4,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color:
-                            (isDark ? _warmOrange : _deepOrange).withValues(
+                        color: BrutalistPalette.accentOrange(isDark)
+                            .withValues(
                           alpha: 0.5 + _pulseController.value * 0.5,
                         ),
                       ),
@@ -521,14 +495,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 color: isFocused ? focusedBorder : restBorder,
                 width: isFocused ? 1.5 : 1.0,
               ),
-              boxShadow: isFocused && !isDark
-                  ? [
-                      BoxShadow(
-                        color: _deepOrange.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
+              boxShadow: isFocused
+                  ? BrutalistPalette.inputFocusShadow(isDark)
                   : null,
             ),
             child: TextField(
@@ -536,18 +504,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               focusNode: focusNode,
               obscureText: obscureText,
               keyboardType: keyboardType,
-              style: AppTypography.mono.copyWith(
+              style: AppTypography.monoInput.copyWith(
                 color: textColor,
-                fontSize: 14,
-                letterSpacing: 0.5,
               ),
               cursorColor: cursorColor,
               cursorWidth: 1.5,
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: AppTypography.mono.copyWith(
+                hintStyle: AppTypography.monoInput.copyWith(
                   color: hintColor,
-                  fontSize: 14,
                 ),
                 prefixIcon: Icon(icon, size: 18, color: iconColor),
                 suffixIcon: suffixIcon,
@@ -578,19 +543,22 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
         final gradientColors = isDark
             ? [
-                _warmBrown.withValues(alpha: 0.9),
-                _warmOrange.withValues(alpha: 0.85),
-                _warmYellow.withValues(alpha: 0.8),
+                BrutalistPalette.warmBrown.withValues(alpha: 0.9),
+                BrutalistPalette.warmOrange.withValues(alpha: 0.85),
+                BrutalistPalette.warmYellow.withValues(alpha: 0.8),
               ]
-            : [_deepBrown, _deepOrange, _deepAmber];
+            : [
+                BrutalistPalette.deepBrown,
+                BrutalistPalette.deepOrange,
+                BrutalistPalette.deepAmber,
+              ];
 
         final buttonTextColor = isDark ? AppColors.black : AppColors.white;
         final loadingColor = isDark
             ? AppColors.black.withValues(alpha: 0.8)
             : AppColors.white.withValues(alpha: 0.9);
-        final glowColor = isDark
-            ? _warmOrange.withValues(alpha: 0.2)
-            : _deepOrange.withValues(alpha: 0.15);
+        final glowColor = BrutalistPalette.accentOrange(isDark)
+            .withValues(alpha: isDark ? 0.2 : 0.15);
 
         return GestureDetector(
           onTap: _isLoading ? null : _handleLogin,
@@ -609,14 +577,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ],
               ),
               borderRadius: AppRadius.borderSm,
-              boxShadow: [
-                BoxShadow(
-                  color: glowColor,
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                  spreadRadius: -4,
-                ),
-              ],
+              boxShadow: AppShadows.buttonGlow(glowColor),
             ),
             child: ClipRRect(
               borderRadius: AppRadius.borderSm,
@@ -637,10 +598,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           children: [
                             Text(
                               'ENTRAR',
-                              style: AppTypography.labelLarge.copyWith(
+                              style: AppTypography.buttonLabel.copyWith(
                                 color: buttonTextColor,
-                                letterSpacing: 3.0,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -668,8 +627,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final lineColor = isDark
         ? AppColors.blackLightest.withValues(alpha: 0.5)
         : AppColors.lightBorder.withValues(alpha: 0.6);
-    final textColor =
-        isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
+    final textColor = BrutalistPalette.faint(isDark);
 
     return Row(
       children: [
@@ -680,7 +638,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             'OU',
             style: AppTypography.labelSmall.copyWith(
               color: textColor,
-              letterSpacing: 3.0,
             ),
           ),
         ),
@@ -693,7 +650,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   //  SOCIAL BUTTONS — glass morphism, theme-adaptive
   // ═══════════════════════════════════════════════════════════════
   Widget _buildSocialButton(String label, IconData icon, bool isDark) {
-    final bgColor = isDark ? AppColors.glass : const Color(0x08000000);
+    final bgColor = BrutalistPalette.glassBg(isDark);
     final borderColor = isDark
         ? AppColors.blackLightest.withValues(alpha: 0.6)
         : AppColors.lightBorder;
@@ -722,7 +679,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 label,
                 style: AppTypography.labelMedium.copyWith(
                   color: contentColor,
-                  letterSpacing: 2.0,
                 ),
               ),
             ],
@@ -736,9 +692,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   //  FOOTER — register link, version
   // ═══════════════════════════════════════════════════════════════
   Widget _buildFooter(bool isDark) {
-    final mutedColor =
-        isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
-    final accentColor = isDark ? _warmYellow : _deepAmber;
+    final mutedColor = BrutalistPalette.faint(isDark);
+    final accentColor = isDark ? BrutalistPalette.warmYellow : BrutalistPalette.deepAmber;
 
     return Opacity(
       opacity: _footerFade.value,
@@ -751,7 +706,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 'NÃO TEM CONTA?',
                 style: AppTypography.labelSmall.copyWith(
                   color: mutedColor,
-                  letterSpacing: 2.0,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -761,8 +715,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   'CRIAR CONTA',
                   style: AppTypography.labelSmall.copyWith(
                     color: accentColor,
-                    letterSpacing: 2.0,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -776,11 +728,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             builder: (context, _) {
               return Text(
                 'v1.0.0 // DATA-SYSTEM',
-                style: AppTypography.monoSmall.copyWith(
+                style: AppTypography.monoSmallWide.copyWith(
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,
                   ),
-                  letterSpacing: 2.0,
                 ),
               );
             },

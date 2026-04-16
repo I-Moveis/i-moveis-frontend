@@ -9,12 +9,12 @@ import 'package:flutter/material.dart';
 /// "Simple but audacious, minimalist but not flat, elegant."
 abstract final class AppColors {
   // ═══════════════════════════════════════════════════════════════
-  //  THE BLACK (p5aholic #0f0f0f)
+  //  THE BLACK — warm charcoal, not void-black
   // ═══════════════════════════════════════════════════════════════
-  static const black = Color(0xFF0F0F0F);
-  static const blackLight = Color(0xFF1A1A1A); // Cards, elevated
-  static const blackLighter = Color(0xFF242424); // Hover states
-  static const blackLightest = Color(0xFF333333); // Borders
+  static const black = Color(0xFF131313);
+  static const blackLight = Color(0xFF1C1C1C); // Cards, elevated
+  static const blackLighter = Color(0xFF262626); // Hover states
+  static const blackLightest = Color(0xFF363636); // Borders
 
   // ═══════════════════════════════════════════════════════════════
   //  THE WHITE
@@ -25,10 +25,10 @@ abstract final class AppColors {
   static const whiteFaint = Color(0xFF555555); // Disabled / ghost
 
   // ═══════════════════════════════════════════════════════════════
-  //  DARK THEME (default — the Keita Yamada way)
+  //  DARK THEME — warm charcoal, cozy feel
   // ═══════════════════════════════════════════════════════════════
   static const darkBackground = black;
-  static const darkSurface = Color(0xFF141414);
+  static const darkSurface = Color(0xFF171717);
   static const darkCard = blackLight;
   static const darkElevated = blackLighter;
 
@@ -99,6 +99,9 @@ abstract final class AppColors {
   static const error = Color(0xFFEF4444);
   static const errorBg = Color(0xFF1A0D0D);
   static const errorLight = Color(0xFFFEE2E2);
+  static const pending = Color(0xFFD4A060);
+  static const pendingBg = Color(0xFF1A1508);
+  static const pendingLight = Color(0xFFFFF3E0);
   static const info = Color(0xFF888888);
   static const infoBg = Color(0xFF1A1A1A);
   static const infoLight = Color(0xFFF0F0F0);

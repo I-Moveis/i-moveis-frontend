@@ -1,195 +1,195 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app/src/design_system/design_system.dart';
 
-/// Property detail page — photos, info, price, amenities, owner, actions.
-class PropertyDetailPage extends StatelessWidget {
+/// Property detail — cozy with hero image, rounded stat boxes, warm accents.
+class PropertyDetailPage extends StatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
-
   final String propertyId;
 
   @override
+  State<PropertyDetailPage> createState() => _PropertyDetailPageState();
+}
+
+class _PropertyDetailPageState extends State<PropertyDetailPage> with SingleTickerProviderStateMixin {
+  late final AnimationController _entrance;
+  late final Animation<double> _heroFade;
+  late final Animation<double> _contentFade;
+
+  @override
+  void initState() {
+    super.initState();
+    _entrance = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _heroFade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _entrance, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
+    _contentFade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _entrance, curve: const Interval(0.3, 0.7, curve: Curves.easeOut)));
+    Future.delayed(const Duration(milliseconds: 100), () { if (mounted) _entrance.forward(); });
+  }
+
+  @override
+  void dispose() { _entrance.dispose(); super.dispose(); }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.darkBackground : AppColors.lightBackground;
+    final titleColor = BrutalistPalette.title(isDark);
+    final mutedColor = BrutalistPalette.muted(isDark);
+    final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+    final cardBg = BrutalistPalette.surfaceBg(isDark);
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 250,
-            pinned: true,
-            actions: [
-              IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
-              IconButton(icon: const Icon(Icons.share), onPressed: () {}),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: theme.colorScheme.primaryContainer,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.image, size: 64, color: theme.colorScheme.primary),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => context.push('/property/$propertyId/photos'),
-                        child: const Text('Ver todas as fotos'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                Row(
-                  children: [
-                    Chip(label: const Text('Exclusivo'), backgroundColor: theme.colorScheme.primaryContainer),
-                    const SizedBox(width: 8),
-                    Chip(label: const Text('Novo'), backgroundColor: theme.colorScheme.secondaryContainer),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text('Apartamento - Vila Madalena', style: theme.textTheme.headlineSmall),
-                Text('São Paulo, SP', style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _InfoCard(icon: Icons.square_foot, label: '51 m²'),
-                    _InfoCard(icon: Icons.bed, label: '2 quartos'),
-                    _InfoCard(icon: Icons.shower, label: '1 banh.'),
-                    _InfoCard(icon: Icons.directions_car, label: '1 vaga'),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text('Preços', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 8),
-                _PriceRow(label: 'Aluguel', value: 'R\$ 2.500,00'),
-                _PriceRow(label: 'Condomínio', value: 'R\$ 450,00'),
-                _PriceRow(label: 'IPTU', value: 'R\$ 250,00'),
-                const Divider(),
-                _PriceRow(label: 'Total/mês', value: 'R\$ 3.200,00', bold: true),
-                const SizedBox(height: 24),
-                Text('Sobre', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(
-                  'Apartamento amplo e bem iluminado, com vista para o parque. '
-                  'Localização privilegiada, próximo a transporte público e comércio.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 24),
-                Text('Amenidades', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: const [
-                    Chip(label: Text('Piscina')),
-                    Chip(label: Text('Academia')),
-                    Chip(label: Text('Portaria 24h')),
-                    Chip(label: Text('Elevador')),
-                    Chip(label: Text('Varanda')),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text('Localização', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(child: Icon(Icons.map, size: 48)),
-                ),
-                const SizedBox(height: 24),
-                Text('Proprietário', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 8),
-                ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.person)),
-                  title: const Text('Mariana'),
-                  subtitle: const Text('Membro desde 2023'),
-                  trailing: OutlinedButton(
-                    onPressed: () {},
-                    child: const Text('Mensagem'),
-                  ),
-                ),
-                const SizedBox(height: 100),
+      backgroundColor: bg,
+      body: AnimatedBuilder(animation: _entrance, builder: (context, _) {
+        return Stack(children: [
+          CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
+            // Hero
+            SliverToBoxAdapter(child: Opacity(opacity: _heroFade.value, child: SizedBox(height: 280, child: Stack(fit: StackFit.expand, children: [
+              Container(color: BrutalistPalette.imagePlaceholderBg(isDark), child: Center(child: Icon(Icons.home_rounded, size: 64, color: (isDark ? Colors.white : BrutalistPalette.warmBrown).withValues(alpha: 0.08)))),
+              Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, bg.withValues(alpha: 0.95)], stops: const [0.3, 1.0])))),
+              Positioned(top: 0, left: 0, right: 0, child: SafeArea(child: Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal, vertical: AppSpacing.md), child: Row(children: [
+                _glassBtn(Icons.arrow_back_rounded, () => Navigator.of(context).pop(), isDark, mutedColor),
+                const Spacer(),
+                _glassBtn(Icons.favorite_outline_rounded, () {}, isDark, mutedColor),
+                const SizedBox(width: AppSpacing.sm),
+                _glassBtn(Icons.share_outlined, () {}, isDark, mutedColor),
+              ])))),
+              Positioned(bottom: AppSpacing.xl, right: AppSpacing.screenHorizontal, child: GestureDetector(
+                onTap: () => context.push('/property/${widget.propertyId}/photos'),
+                child: Container(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs), decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderFull, border: Border.all(color: borderColor)),
+                  child: Text('1 / 5', style: AppTypography.bodySmall.copyWith(color: mutedColor))),
+              )),
+            ])))),
+
+            // Content
+            SliverToBoxAdapter(child: Opacity(opacity: _contentFade.value, child: Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const SizedBox(height: AppSpacing.xl),
+              // Tags
+              Row(children: [
+                _tag('Exclusivo', accentColor, isDark),
+                const SizedBox(width: AppSpacing.sm),
+                _tag('Novo', isDark ? BrutalistPalette.warmAmber : BrutalistPalette.deepAmber, isDark),
               ]),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(top: BorderSide(color: theme.colorScheme.outline)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => context.push('/property/$propertyId/schedule'),
-                icon: const Icon(Icons.calendar_today),
-                label: const Text('Agendar visita'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => context.push('/property/$propertyId/proposal'),
-                icon: const Icon(Icons.description),
-                label: const Text('Fazer proposta'),
-              ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Apartamento — Vila Madalena', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.xs),
+              Row(children: [Icon(Icons.place_outlined, size: 14, color: mutedColor), const SizedBox(width: AppSpacing.xs), Text('São Paulo, SP', style: AppTypography.bodyMedium.copyWith(color: mutedColor))]),
+
+              const SizedBox(height: AppSpacing.xxl),
+              // Stats
+              Text('Detalhes', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.md),
+              Row(children: [
+                _stat('51', 'm²', Icons.straighten_rounded, cardBg, borderColor, titleColor, mutedColor, accentColor),
+                const SizedBox(width: AppSpacing.sm),
+                _stat('2', 'quartos', Icons.bed_rounded, cardBg, borderColor, titleColor, mutedColor, accentColor),
+                const SizedBox(width: AppSpacing.sm),
+                _stat('1', 'banh.', Icons.bathtub_outlined, cardBg, borderColor, titleColor, mutedColor, accentColor),
+                const SizedBox(width: AppSpacing.sm),
+                _stat('1', 'vaga', Icons.directions_car_outlined, cardBg, borderColor, titleColor, mutedColor, accentColor),
+              ]),
+
+              const SizedBox(height: AppSpacing.xxl),
+              // Pricing
+              Text('Valores', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.md),
+              _priceRow('Aluguel', 'R\$ 2.500,00', titleColor, mutedColor),
+              _priceRow('Condomínio', 'R\$ 450,00', titleColor, mutedColor),
+              _priceRow('IPTU', 'R\$ 250,00', titleColor, mutedColor),
+              Divider(height: AppSpacing.xxl, color: accentColor.withValues(alpha: 0.2)),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Text('Total / mês', style: AppTypography.titleLargeBold.copyWith(color: titleColor)),
+                Text('R\$ 3.200,00', style: AppTypography.headlineMediumBold.copyWith(color: accentColor)),
+              ]),
+
+              const SizedBox(height: AppSpacing.xxl),
+              Text('Sobre', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.md),
+              Text('Apartamento amplo e bem iluminado, com vista para o parque. Localização privilegiada, próximo a transporte público e comércio.', style: AppTypography.bodyLarge.copyWith(color: titleColor.withValues(alpha: 0.8), height: 1.8)),
+
+              const SizedBox(height: AppSpacing.xxl),
+              Text('Amenidades', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(spacing: AppSpacing.sm, runSpacing: AppSpacing.sm, children: ['Piscina', 'Academia', 'Portaria 24h', 'Elevador', 'Varanda'].map((a) => _tag(a, accentColor, isDark)).toList()),
+
+              const SizedBox(height: AppSpacing.xxl),
+              Text('Localização', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.md),
+              Container(height: 160, decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderLg, border: Border.all(color: borderColor)),
+                child: Center(child: Icon(Icons.map_outlined, size: 32, color: accentColor.withValues(alpha: 0.2)))),
+
+              const SizedBox(height: AppSpacing.xxl),
+              Text('Proprietário', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+              const SizedBox(height: AppSpacing.md),
+              Container(padding: const EdgeInsets.all(AppSpacing.lg), decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderLg, border: Border.all(color: borderColor)),
+                child: Row(children: [
+                  Container(width: 44, height: 44, decoration: BoxDecoration(shape: BoxShape.circle, color: accentColor.withValues(alpha: 0.1)),
+                    child: Center(child: Text('M', style: AppTypography.titleMediumBold.copyWith(color: accentColor)))),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Mariana', style: AppTypography.titleLargeBold.copyWith(color: titleColor)),
+                    Text('Membro desde 2023', style: AppTypography.bodySmall.copyWith(color: mutedColor)),
+                  ])),
+                  GestureDetector(onTap: () {}, child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                    decoration: BoxDecoration(borderRadius: AppRadius.borderFull, border: Border.all(color: borderColor)),
+                    child: Text('Mensagem', style: AppTypography.titleSmall.copyWith(color: mutedColor)),
+                  )),
+                ])),
+              const SizedBox(height: 120),
+            ])))),
+          ]),
+          // Bottom bar
+          Positioned(left: 0, right: 0, bottom: 0, child: Opacity(opacity: _contentFade.value, child: Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(color: (isDark ? AppColors.blackLight : AppColors.white).withValues(alpha: 0.92),
+              border: Border(top: BorderSide(color: borderColor, width: 0.5))),
+            child: SafeArea(top: false, child: Row(children: [
+              Expanded(child: GestureDetector(
+                onTap: () => context.push('/property/${widget.propertyId}/schedule'),
+                child: Container(height: 48, decoration: BoxDecoration(borderRadius: AppRadius.borderLg, border: Border.all(color: borderColor)),
+                  child: Center(child: Text('Agendar visita', style: AppTypography.titleSmallBold.copyWith(color: titleColor)))),
+              )),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: BrutalistGradientButton(label: 'PROPOSTA', height: 48, icon: Icons.description_outlined,
+                onTap: () => context.push('/property/${widget.propertyId}/proposal'))),
+            ])),
+          ))),
+        ]);
+      }),
     );
   }
-}
 
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+  Widget _glassBtn(IconData icon, VoidCallback onTap, bool isDark, Color color) {
+    return GestureDetector(onTap: onTap, child: Container(width: 40, height: 40,
+      decoration: BoxDecoration(color: BrutalistPalette.overlayPillBg(isDark), borderRadius: AppRadius.borderMd),
+      child: Icon(icon, size: 18, color: color)));
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Icon(icon, color: theme.colorScheme.primary),
-        const SizedBox(height: 4),
-        Text(label, style: theme.textTheme.labelMedium),
-      ],
+  Widget _tag(String label, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: AppRadius.borderFull),
+      child: Text(label, style: AppTypography.bodySmallBold.copyWith(color: color)),
     );
   }
-}
 
-class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.label, required this.value, this.bold = false});
-  final String label;
-  final String value;
-  final bool bold;
+  Widget _stat(String val, String label, IconData icon, Color bg, Color border, Color title, Color muted, Color accent) {
+    return Expanded(child: Container(padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg, horizontal: AppSpacing.sm),
+      decoration: BoxDecoration(color: bg, borderRadius: AppRadius.borderLg, border: Border.all(color: border)),
+      child: Column(children: [
+        Icon(icon, size: 16, color: accent.withValues(alpha: 0.5)),
+        const SizedBox(height: AppSpacing.sm),
+        Text(val, style: AppTypography.headlineMediumBold.copyWith(color: title)),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(label, style: AppTypography.captionTiny.copyWith(color: muted)),
+      ])));
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = bold ? theme.textTheme.titleMedium : theme.textTheme.bodyMedium;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: style),
-          Text(value, style: style?.copyWith(fontWeight: bold ? FontWeight.bold : null)),
-        ],
-      ),
-    );
+  Widget _priceRow(String label, String value, Color title, Color muted) {
+    return Padding(padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs), child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [Text(label, style: AppTypography.bodyMedium.copyWith(color: muted)), Text(value, style: AppTypography.titleSmall.copyWith(color: title))],
+    ));
   }
 }

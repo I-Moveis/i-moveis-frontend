@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 
 /// Animated wave background — PS3 XMB style.
 ///
@@ -25,13 +27,16 @@ enum WaveColorScheme {
 
   /// White/gray on black (p5aholic)
   mono,
+
+  /// Dynamic color based on seedColorProvider
+  custom,
 }
 
-class WaveBackground extends StatefulWidget {
+class WaveBackground extends ConsumerStatefulWidget {
   const WaveBackground({
     super.key,
     this.waveCount = 8,
-    this.colorScheme = WaveColorScheme.mono,
+    this.colorScheme = WaveColorScheme.custom,
     this.speed = 0.6,
     this.amplitude = 1.0,
     this.child,
@@ -47,10 +52,10 @@ class WaveBackground extends StatefulWidget {
   final bool adaptToTheme;
 
   @override
-  State<WaveBackground> createState() => _WaveBackgroundState();
+  ConsumerState<WaveBackground> createState() => _WaveBackgroundState();
 }
 
-class _WaveBackgroundState extends State<WaveBackground>
+class _WaveBackgroundState extends ConsumerState<WaveBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -74,7 +79,9 @@ class _WaveBackgroundState extends State<WaveBackground>
   Widget build(BuildContext context) {
     final isDark = !widget.adaptToTheme ||
         Theme.of(context).brightness == Brightness.dark;
-    final colors = _getColors(widget.colorScheme, isDark);
+    
+    final seedColor = ref.watch(seedColorProvider);
+    final colors = _getColors(widget.colorScheme, isDark, seedColor);
 
     return Stack(
       children: [
@@ -109,7 +116,7 @@ class _WaveBackgroundState extends State<WaveBackground>
     );
   }
 
-  _WaveColors _getColors(WaveColorScheme scheme, bool isDark) {
+  _WaveColors _getColors(WaveColorScheme scheme, bool isDark, Color seedColor) {
     final darkBg = const Color(0xFF111111);
     final lightBg = const Color(0xFFF5F5F5);
     final bg = isDark ? darkBg : lightBg;
@@ -161,6 +168,16 @@ class _WaveBackgroundState extends State<WaveBackground>
           waves: _generateGradientLines(
             isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000),
             isDark ? const Color(0xFF444444) : const Color(0xFF666666),
+            widget.waveCount,
+            isDark: isDark,
+          ),
+        );
+      case WaveColorScheme.custom:
+        return _WaveColors(
+          background: bg,
+          waves: _generateGradientLines(
+            seedColor,
+            Color.lerp(seedColor, isDark ? Colors.white : Colors.black, 0.3)!,
             widget.waveCount,
             isDark: isDark,
           ),

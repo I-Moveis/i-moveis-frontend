@@ -126,7 +126,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
         Positioned.fill(
           child: RepaintBoundary(
             child: WaveBackground(
-              colorScheme: WaveColorScheme.sunset,
+              colorScheme: WaveColorScheme.custom,
               speed: 0.4,
               amplitude: 0.8,
               waveCount: 7,

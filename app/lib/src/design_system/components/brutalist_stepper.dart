@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_radius.dart';
@@ -19,11 +21,7 @@ class BrutalistStepData {
 }
 
 /// Custom stepper matching the Brutalist Elegance design language.
-///
-/// Steps are numbered in monoIndex (01, 02, 03...) with an amber
-/// vertical connector line, pulsing dot on the active step,
-/// and a subtle checkmark on completed steps.
-class BrutalistStepper extends StatelessWidget {
+class BrutalistStepper extends ConsumerWidget {
   const BrutalistStepper({
     super.key,
     required this.steps,
@@ -34,13 +32,14 @@ class BrutalistStepper extends StatelessWidget {
   final int currentStep;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentAmber = BrutalistPalette.accentAmber(isDark);
-    final accentOrange = BrutalistPalette.accentOrange(isDark);
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final faintColor = BrutalistPalette.faint(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final accentAmber = palette.accentAmber(isDark);
+    final accentOrange = palette.accentOrange(isDark);
+    final titleColor = palette.title(isDark);
+    final mutedColor = palette.muted(isDark);
+    final faintColor = palette.faint(isDark);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,9 +170,7 @@ class BrutalistStepper extends StatelessWidget {
 }
 
 /// Horizontal progress bar for multi-step flows (e.g. create listing).
-///
-/// Shows a thin amber line that fills proportionally based on progress.
-class BrutalistProgressBar extends StatelessWidget {
+class BrutalistProgressBar extends ConsumerWidget {
   const BrutalistProgressBar({
     super.key,
     required this.currentStep,
@@ -184,10 +181,11 @@ class BrutalistProgressBar extends StatelessWidget {
   final int totalSteps;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentAmber = BrutalistPalette.accentAmber(isDark);
-    final trackColor = BrutalistPalette.faint(isDark).withValues(alpha: 0.15);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final accentAmber = palette.accentAmber(isDark);
+    final trackColor = palette.faint(isDark).withValues(alpha: 0.15);
     final progress = totalSteps > 0 ? (currentStep + 1) / totalSteps : 0.0;
 
     return Column(

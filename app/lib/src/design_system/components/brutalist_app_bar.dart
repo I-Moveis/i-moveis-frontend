@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_radius.dart';
 import 'brutalist_page_scaffold.dart';
 
 /// Inline app bar for sub-pages in the Brutalist Elegance design language.
-///
-/// Replaces Material AppBar with a glass-morphism back button,
-/// optional title, and optional trailing action buttons.
-/// Designed to sit inside the WaveBackground transparent scaffold.
-class BrutalistAppBar extends StatelessWidget {
+class BrutalistAppBar extends ConsumerWidget {
   const BrutalistAppBar({
     super.key,
     this.title,
@@ -31,9 +29,10 @@ class BrutalistAppBar extends StatelessWidget {
   final bool showBack;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = BrutalistPalette.title(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final titleColor = palette.title(isDark);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -94,7 +93,7 @@ class BrutalistAppBarAction {
 }
 
 /// Glass-morphism icon button matching the onboarding skip button style.
-class _GlassIconButton extends StatelessWidget {
+class _GlassIconButton extends ConsumerWidget {
   const _GlassIconButton({
     required this.icon,
     required this.onTap,
@@ -104,9 +103,10 @@ class _GlassIconButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = BrutalistPalette.muted(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final iconColor = palette.muted(isDark);
 
     return GestureDetector(
       onTap: onTap,
@@ -114,10 +114,10 @@ class _GlassIconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: BrutalistPalette.glassBg(isDark),
+          color: palette.glassBg(isDark),
           borderRadius: AppRadius.borderSm,
           border: Border.all(
-            color: BrutalistPalette.glassBorderColor(isDark),
+            color: palette.glassBorderColor(isDark),
             width: 1,
           ),
         ),
@@ -128,7 +128,7 @@ class _GlassIconButton extends StatelessWidget {
 }
 
 /// Glass-morphism text button for app bar actions (e.g. "SALVAR").
-class BrutalistGlassTextButton extends StatelessWidget {
+class BrutalistGlassTextButton extends ConsumerWidget {
   const BrutalistGlassTextButton({
     super.key,
     required this.label,
@@ -139,9 +139,10 @@ class BrutalistGlassTextButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = BrutalistPalette.accentPeach(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final textColor = palette.accentPeach(isDark);
 
     return GestureDetector(
       onTap: onTap,
@@ -151,10 +152,10 @@ class BrutalistGlassTextButton extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: BrutalistPalette.glassBg(isDark),
+          color: palette.glassBg(isDark),
           borderRadius: AppRadius.borderSm,
           border: Border.all(
-            color: BrutalistPalette.glassBorderColor(isDark),
+            color: palette.glassBorderColor(isDark),
             width: 1,
           ),
         ),

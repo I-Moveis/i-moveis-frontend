@@ -163,7 +163,7 @@ class _HomePageState extends State<HomePage>
         Positioned.fill(
           child: RepaintBoundary(
             child: WaveBackground(
-              colorScheme: WaveColorScheme.sunset,
+              colorScheme: WaveColorScheme.custom,
               speed: 0.25,
               amplitude: 0.5,
               waveCount: 4,
@@ -303,6 +303,7 @@ class _HomePageState extends State<HomePage>
   // ═══════════════════════════════════════════════════════════════
   Widget _buildSearchBar(bool isDark) {
     final bgColor = BrutalistPalette.surfaceBg(isDark);
+    final accentColor = BrutalistPalette.accentOrange(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final hintColor =
         isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
@@ -345,7 +346,7 @@ class _HomePageState extends State<HomePage>
                   color: borderColor,
                 ),
                 const SizedBox(width: AppSpacing.md),
-                Icon(Icons.tune_rounded, size: 18, color: iconColor),
+                Icon(Icons.tune_rounded, size: 18, color: accentColor),
               ],
             ),
           ),

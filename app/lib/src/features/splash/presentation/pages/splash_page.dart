@@ -113,7 +113,7 @@ class _SplashPageState extends State<SplashPage>
         Positioned.fill(
           child: RepaintBoundary(
             child: WaveBackground(
-              colorScheme: WaveColorScheme.sunset,
+              colorScheme: WaveColorScheme.custom,
               speed: 0.3,
               amplitude: 0.6,
               waveCount: 8,

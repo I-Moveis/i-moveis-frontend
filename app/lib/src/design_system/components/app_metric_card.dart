@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_radius.dart';
+import '../tokens/brutalist_palette.dart';
 import 'brutalist_page_scaffold.dart';
 
 /// Metric card showing icon, animated count-up value, and label.
-class AppMetricCard extends StatelessWidget {
+class AppMetricCard extends ConsumerWidget {
   const AppMetricCard({
     super.key,
     required this.icon,
@@ -18,13 +21,14 @@ class AppMetricCard extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = BrutalistPalette.surfaceBg(isDark);
-    final border = BrutalistPalette.surfaceBorder(isDark);
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final accentColor = BrutalistPalette.accentOrange(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final bg = palette.surfaceBg(isDark);
+    final border = palette.surfaceBorder(isDark);
+    final titleColor = palette.title(isDark);
+    final mutedColor = palette.muted(isDark);
+    final accentColor = palette.accentOrange(isDark);
 
     return Expanded(
       child: Container(

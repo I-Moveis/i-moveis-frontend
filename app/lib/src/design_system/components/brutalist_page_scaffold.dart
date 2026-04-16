@@ -1,123 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 import '../tokens/app_colors.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_radius.dart';
+import '../tokens/brutalist_palette.dart';
 import '../effects/wave_background.dart';
-
-/// Shared warm pastel palette used across all Brutalist Elegance pages.
-///
-/// Dark theme uses warm/bright tones. Light theme uses deep/muted tones.
-abstract final class BrutalistPalette {
-  static const warmYellow = Color(0xFFF5E6C8);    // softer, muted cream
-  static const warmPeach = Color(0xFFE8C4A8);     // dusty peach
-  static const warmOrange = Color(0xFFDEAD82);     // muted terracotta
-  static const warmBrown = Color(0xFFC49A76);      // soft leather
-  static const warmAmber = Color(0xFFD4B88C);      // warm sand
-
-  static const deepOrange = Color(0xFFB07A50);     // earthy terracotta
-  static const deepBrown = Color(0xFF9A6E48);      // warm wood
-  static const deepAmber = Color(0xFFA68858);      // muted gold
-
-  /// Accent peach: warm for dark, deep for light.
-  static Color accentPeach(bool isDark) =>
-      isDark ? warmPeach : deepOrange;
-
-  /// Accent amber: warm for dark, deep for light.
-  static Color accentAmber(bool isDark) =>
-      isDark ? warmAmber : deepAmber;
-
-  /// Accent orange: warm for dark, deep for light.
-  static Color accentOrange(bool isDark) =>
-      isDark ? warmOrange : deepOrange;
-
-  /// Title color: white for dark, black for light.
-  static Color title(bool isDark) =>
-      isDark ? AppColors.white : AppColors.black;
-
-  /// Muted text color.
-  static Color muted(bool isDark) =>
-      isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
-
-  /// Faint text color (even more muted).
-  static Color faint(bool isDark) =>
-      isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
-
-  /// Glass background color.
-  static Color glassBg(bool isDark) =>
-      isDark ? AppColors.glass : const Color(0x14000000);
-
-  /// Glass border color.
-  static Color glassBorderColor(bool isDark) =>
-      isDark ? AppColors.glassBorder : const Color(0x22000000);
-
-  /// Card background color.
-  static Color cardBg(bool isDark) => isDark
-      ? AppColors.blackLight.withValues(alpha: 0.5)
-      : AppColors.white.withValues(alpha: 0.9);
-
-  /// Card border color.
-  static Color cardBorder(bool isDark) => isDark
-      ? AppColors.blackLightest.withValues(alpha: 0.5)
-      : AppColors.lightBorder;
-
-  /// Surface background for cards, chips, inputs.
-  static Color surfaceBg(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.04)
-      : Colors.white.withValues(alpha: 0.9);
-
-  /// Surface border for cards, inputs, containers.
-  static Color surfaceBorder(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.06)
-      : Colors.black.withValues(alpha: 0.12);
-
-  /// Subtle background for icon containers, buttons, progress bars.
-  static Color subtleBg(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.06)
-      : Colors.black.withValues(alpha: 0.08);
-
-  /// Image placeholder background (warm beige in light).
-  static Color imagePlaceholderBg(bool isDark) => isDark
-      ? AppColors.blackLighter
-      : const Color(0xFFF0EBE3);
-
-  /// Warm background for splash/transition screens.
-  static Color warmScrimBg(bool isDark) => isDark
-      ? const Color(0xFF1A1410)
-      : const Color(0xFFF5EDE4);
-
-  /// Divider / thin separator color.
-  static Color dividerColor(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.08)
-      : Colors.black.withValues(alpha: 0.12);
-
-  /// Overlay pill background (floating over images).
-  static Color overlayPillBg(bool isDark) => isDark
-      ? Colors.black.withValues(alpha: 0.3)
-      : Colors.white.withValues(alpha: 0.8);
-
-  /// Subtle card shadow for light mode only.
-  static List<BoxShadow> subtleShadow(bool isDark) => isDark
-      ? const []
-      : const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 16,
-            offset: Offset(0, 4),
-          ),
-        ];
-
-  /// Input field focus glow shadow for light mode only.
-  static List<BoxShadow> inputFocusShadow(bool isDark) => isDark
-      ? const []
-      : [
-          BoxShadow(
-            color: deepOrange.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ];
-}
 
 /// Page scaffold for the Brutalist Elegance design language.
 ///
@@ -139,11 +28,11 @@ abstract final class BrutalistPalette {
 ///   }
 /// }
 /// ```
-class BrutalistPageScaffold extends StatefulWidget {
+class BrutalistPageScaffold extends ConsumerStatefulWidget {
   const BrutalistPageScaffold({
     super.key,
     required this.builder,
-    this.waveColorScheme = WaveColorScheme.sunset,
+    this.waveColorScheme = WaveColorScheme.custom,
     this.waveSpeed = 0.3,
     this.waveAmplitude = 0.6,
     this.waveCount = 5,
@@ -168,10 +57,10 @@ class BrutalistPageScaffold extends StatefulWidget {
   final bool showWaveBackground;
 
   @override
-  State<BrutalistPageScaffold> createState() => _BrutalistPageScaffoldState();
+  ConsumerState<BrutalistPageScaffold> createState() => _BrutalistPageScaffoldState();
 }
 
-class _BrutalistPageScaffoldState extends State<BrutalistPageScaffold>
+class _BrutalistPageScaffoldState extends ConsumerState<BrutalistPageScaffold>
     with TickerProviderStateMixin {
   late final AnimationController _entranceController;
   late final AnimationController _pulseController;
@@ -263,7 +152,7 @@ class _BrutalistPageScaffoldState extends State<BrutalistPageScaffold>
 /// 01  DESTAQUES
 /// ── DATA-SYSTEM // FEATURED
 /// ```
-class BrutalistSectionHeader extends StatelessWidget {
+class BrutalistSectionHeader extends ConsumerWidget {
   const BrutalistSectionHeader({
     super.key,
     required this.index,
@@ -276,10 +165,11 @@ class BrutalistSectionHeader extends StatelessWidget {
   final String marker;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = BrutalistPalette.title(isDark);
-    final accentAmber = BrutalistPalette.accentAmber(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final titleColor = palette.title(isDark);
+    final accentAmber = palette.accentAmber(isDark);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,13 +222,14 @@ class BrutalistSectionHeader extends StatelessWidget {
 }
 
 /// The standard version footer used across all Brutalist pages.
-class BrutalistVersionFooter extends StatelessWidget {
+class BrutalistVersionFooter extends ConsumerWidget {
   const BrutalistVersionFooter({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = BrutalistPalette.faint(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final mutedColor = palette.faint(isDark);
 
     return Center(
       child: Column(
@@ -363,7 +254,7 @@ class BrutalistVersionFooter extends StatelessWidget {
 }
 
 /// Pulsing index number (large mono display) used in page headers.
-class BrutalistPulsingIndex extends StatelessWidget {
+class BrutalistPulsingIndex extends ConsumerWidget {
   const BrutalistPulsingIndex({
     super.key,
     required this.index,
@@ -376,8 +267,9 @@ class BrutalistPulsingIndex extends StatelessWidget {
   final double fontSize;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = ref.watch(brutalistPaletteProvider);
 
     return AnimatedBuilder(
       animation: pulseController,
@@ -387,9 +279,9 @@ class BrutalistPulsingIndex extends StatelessWidget {
           index,
           style: AppTypography.monoDisplay.copyWith(
             color: isDark
-                ? BrutalistPalette.warmYellow.withValues(
+                ? palette.warmYellow.withValues(
                     alpha: 0.12 + glow * 0.06)
-                : BrutalistPalette.deepAmber.withValues(
+                : palette.deepAmber.withValues(
                     alpha: 0.08 + glow * 0.04),
             fontSize: fontSize,
             letterSpacing: -3.0,
@@ -401,7 +293,7 @@ class BrutalistPulsingIndex extends StatelessWidget {
 }
 
 /// A glass morphism container matching the Brutalist Elegance style.
-class BrutalistGlassContainer extends StatelessWidget {
+class BrutalistGlassContainer extends ConsumerWidget {
   const BrutalistGlassContainer({
     super.key,
     required this.child,
@@ -416,18 +308,19 @@ class BrutalistGlassContainer extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = ref.watch(brutalistPaletteProvider);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: BrutalistPalette.glassBg(isDark),
+          color: palette.glassBg(isDark),
           borderRadius: borderRadius ?? AppRadius.borderSm,
           border: Border.all(
-            color: BrutalistPalette.glassBorderColor(isDark),
+            color: palette.glassBorderColor(isDark),
             width: 1,
           ),
         ),
@@ -438,7 +331,7 @@ class BrutalistGlassContainer extends StatelessWidget {
 }
 
 /// Gradient shimmer button matching the login/onboarding CTA style.
-class BrutalistGradientButton extends StatelessWidget {
+class BrutalistGradientButton extends ConsumerWidget {
   const BrutalistGradientButton({
     super.key,
     required this.label,
@@ -455,25 +348,26 @@ class BrutalistGradientButton extends StatelessWidget {
   final double height;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = ref.watch(brutalistPaletteProvider);
 
     final gradientColors = isDark
         ? [
-            BrutalistPalette.warmBrown.withValues(alpha: 0.9),
-            BrutalistPalette.warmOrange.withValues(alpha: 0.85),
-            BrutalistPalette.warmYellow.withValues(alpha: 0.8),
+            palette.warmBrown.withValues(alpha: 0.9),
+            palette.warmOrange.withValues(alpha: 0.85),
+            palette.warmYellow.withValues(alpha: 0.8),
           ]
         : [
-            BrutalistPalette.deepBrown,
-            BrutalistPalette.deepOrange,
-            BrutalistPalette.deepAmber,
+            palette.deepBrown,
+            palette.deepOrange,
+            palette.deepAmber,
           ];
 
     final buttonTextColor = isDark ? AppColors.black : AppColors.white;
     final glowColor = isDark
-        ? BrutalistPalette.warmOrange.withValues(alpha: 0.2)
-        : BrutalistPalette.deepOrange.withValues(alpha: 0.15);
+        ? palette.warmOrange.withValues(alpha: 0.2)
+        : palette.deepOrange.withValues(alpha: 0.15);
 
     return GestureDetector(
       onTap: isLoading ? null : onTap,

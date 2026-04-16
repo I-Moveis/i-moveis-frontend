@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_spacing.dart';
+import '../tokens/brutalist_palette.dart';
 import 'brutalist_page_scaffold.dart';
 
 /// Section header with title and optional action link.
-class AppSectionHeader extends StatelessWidget {
+class AppSectionHeader extends ConsumerWidget {
   const AppSectionHeader({
     super.key,
     required this.title,
@@ -17,10 +20,11 @@ class AppSectionHeader extends StatelessWidget {
   final VoidCallback? onAction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = BrutalistPalette.title(isDark);
-    final actionColor = BrutalistPalette.accentPeach(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final titleColor = palette.title(isDark);
+    final actionColor = palette.accentPeach(isDark);
 
     return Padding(
       padding: const EdgeInsets.symmetric(

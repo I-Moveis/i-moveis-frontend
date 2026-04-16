@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/seed_color_provider.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_radius.dart';
@@ -22,7 +24,7 @@ class AppMenuGroupItem {
 }
 
 /// Grouped menu items with dividers, used in profile and admin pages.
-class AppMenuGroup extends StatelessWidget {
+class AppMenuGroup extends ConsumerWidget {
   const AppMenuGroup({
     super.key,
     required this.items,
@@ -31,13 +33,14 @@ class AppMenuGroup extends StatelessWidget {
   final List<AppMenuGroupItem> items;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = BrutalistPalette.surfaceBg(isDark);
-    final border = BrutalistPalette.surfaceBorder(isDark);
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final accentColor = BrutalistPalette.accentOrange(isDark);
+    final palette = ref.watch(brutalistPaletteProvider);
+    final bg = palette.surfaceBg(isDark);
+    final border = palette.surfaceBorder(isDark);
+    final titleColor = palette.title(isDark);
+    final mutedColor = palette.muted(isDark);
+    final accentColor = palette.accentOrange(isDark);
 
     return Container(
       decoration: BoxDecoration(

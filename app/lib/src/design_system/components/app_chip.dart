@@ -4,6 +4,7 @@ import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/app_durations.dart';
+import '../tokens/brutalist_palette.dart';
 
 /// Selectable filter chip. Airbnb-style category filters.
 class AppChip extends StatelessWidget {
@@ -23,7 +24,14 @@ class AppChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = isDark ? AppColors.primary : AppColors.primaryDark;
+    final accentColor = BrutalistPalette.accentOrange(isDark);
+
+    final bgColor = isSelected
+        ? accentColor.withValues(alpha: 0.15)
+        : BrutalistPalette.surfaceBg(isDark);
+    final borderColor = isSelected
+        ? accentColor
+        : BrutalistPalette.surfaceBorder(isDark);
 
     return GestureDetector(
       onTap: onTap,
@@ -34,14 +42,10 @@ class AppChip extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: isSelected
-              ? accentColor.withValues(alpha: 0.15)
-              : (isDark ? AppColors.darkCard : AppColors.lightSurface),
+          color: bgColor,
           borderRadius: AppRadius.borderFull,
           border: Border.all(
-            color: isSelected
-                ? accentColor
-                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+            color: borderColor,
             width: isSelected ? 1.5 : 1,
           ),
         ),

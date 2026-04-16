@@ -176,7 +176,7 @@ class _RegisterPageState extends State<RegisterPage>
         Positioned.fill(
           child: RepaintBoundary(
             child: WaveBackground(
-              colorScheme: WaveColorScheme.sunset,
+              colorScheme: WaveColorScheme.custom,
               speed: 0.4,
               amplitude: 0.8,
               waveCount: 7,

@@ -31,6 +31,32 @@
 
   <title>app</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Google Maps JavaScript API. Replace YOUR_API_KEY_HERE before building. See app/MAPS_SETUP.md -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi5LFf9seZQHubygkoSWdwO8aeGZycIig&loading=async" async></script>
+
+  <!-- Hide Google Maps chrome (logo, attribution, fullscreen, keyboard shortcuts).
+       NOTE: hiding the Google logo and attribution technically violates the
+       Google Maps Platform Terms of Service §3.2.3.b. -->
+  <style>
+    .gm-style-cc,
+    .gmnoprint,
+    .gm-bundled-control,
+    .gm-bundled-control-on-bottom,
+    .gm-fullscreen-control,
+    .gm-svpc,
+    .gm-style a[href^="https://maps.google.com/maps"],
+    .gm-style a[href^="https://www.google.com/maps"],
+    .gm-style > div > a[target="_blank"],
+    .gm-style button[aria-label*="Keyboard" i],
+    .gm-style button[aria-label*="teclado" i],
+    .gm-style button[aria-label*="Fullscreen" i],
+    .gm-style button[aria-label*="tela cheia" i],
+    .gm-style button[aria-label*="Zoom" i],
+    .gm-style button[aria-label*="Pan" i] {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
   <!--

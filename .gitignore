@@ -57,6 +57,10 @@ app/web/build/
 .agents/
 .claude/
 
+# Documentation files (local only)
+JIRA_TASKS.md
+PRD_app_aluguel_imoveis.md
+
 # OS files
 *.class
 *.log

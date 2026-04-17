@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../design_system/tokens/app_colors.dart';
+import '../../design_system/tokens/app_durations.dart';
 import '../../design_system/tokens/app_radius.dart';
 import '../../design_system/tokens/app_shadows.dart';
 import '../../design_system/tokens/app_spacing.dart';
-import '../../design_system/tokens/app_durations.dart';
 
 /// Standard card with border and optional elevation.
 /// Inspired by McShannock's clean flat cards.

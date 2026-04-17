@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/seed_color_provider.dart';
-import '../../design_system/tokens/app_colors.dart';
-import '../../design_system/tokens/app_typography.dart';
-import '../../design_system/tokens/app_spacing.dart';
-import '../../design_system/tokens/app_radius.dart';
-import '../../design_system/tokens/brutalist_palette.dart';
 import '../../design_system/effects/wave_background.dart';
+import '../../design_system/tokens/app_colors.dart';
+import '../../design_system/tokens/app_radius.dart';
+import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
+import '../../design_system/tokens/brutalist_palette.dart';
 
 /// Page scaffold for the Brutalist Elegance design language.
 ///

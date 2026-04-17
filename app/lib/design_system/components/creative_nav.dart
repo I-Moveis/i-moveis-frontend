@@ -1,9 +1,13 @@
+// AnimationController.forward/reverse return TickerFuture, not Future<void>,
+// so unawaited() cannot wrap them — intentionally fire-and-forget.
+// ignore_for_file: unawaited_futures
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../design_system/tokens/app_colors.dart';
-import '../../design_system/tokens/app_typography.dart';
 import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 // =============================================================================
 //  1. FULLSCREEN MENU

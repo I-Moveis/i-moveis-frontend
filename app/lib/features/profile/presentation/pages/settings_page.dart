@@ -1,9 +1,10 @@
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flex_color_picker/flex_color_picker.dart';
-import '../../../../design_system/design_system.dart';
-import '../../../../core/theme/theme_provider.dart';
+
 import '../../../../core/theme/seed_color_provider.dart';
+import '../../../../core/theme/theme_provider.dart';
+import '../../../../design_system/design_system.dart';
 
 /// Settings — cozy toggles and links with working theme switch and color picker.
 class SettingsPage extends ConsumerStatefulWidget {

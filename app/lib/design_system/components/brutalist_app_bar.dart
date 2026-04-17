@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/seed_color_provider.dart';
-import '../../design_system/tokens/app_typography.dart';
-import '../../design_system/tokens/app_spacing.dart';
 import '../../design_system/tokens/app_radius.dart';
+import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 /// Inline app bar for sub-pages in the Brutalist Elegance design language.
 class BrutalistAppBar extends ConsumerWidget {

@@ -15,6 +15,14 @@ linter:
     lines_longer_than_80_chars: false
     always_use_package_imports: false
     sort_constructors_first: true
+    # isDark bool parameter is a deliberate design system pattern used app-wide
+    avoid_positional_boolean_parameters: false
+    # assert messages are noise for internal invariants
+    prefer_asserts_with_message: false
+    # Flutter TODO style is team preference
+    flutter_style_todos: false
+    # pubspec ordering is managed manually
+    sort_pub_dependencies: false
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

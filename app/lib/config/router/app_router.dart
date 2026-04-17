@@ -40,9 +40,7 @@ final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
 /// Provider for GoRouter configuration.
 final goRouterProvider = Provider<GoRouter>((ref) {
-  late final GoRouter router;
-
-  router = GoRouter(
+  return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     routes: [
@@ -232,5 +230,4 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 
-  return router;
 });

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/seed_color_provider.dart';
-import '../../design_system/tokens/app_typography.dart';
-import '../../design_system/tokens/app_spacing.dart';
 import '../../design_system/tokens/app_radius.dart';
+import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 /// Data model for a menu group item.
 class AppMenuGroupItem {

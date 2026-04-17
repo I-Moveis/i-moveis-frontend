@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
+import '../../design_system/effects/cosmic_background.dart';
 import '../../design_system/tokens/app_colors.dart';
 import '../../design_system/tokens/app_spacing.dart';
 import '../../design_system/tokens/app_typography.dart';
-import '../../design_system/effects/cosmic_background.dart';
 
 /// Cinematic hero section.
 ///

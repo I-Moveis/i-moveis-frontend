@@ -1,3 +1,6 @@
+// Notifier state acts as the getter; standalone setters would require a
+// corresponding getter which would shadow the inherited `state` property.
+// ignore_for_file: use_setters_to_change_properties
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';

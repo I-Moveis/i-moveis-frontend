@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../config/router/app_router.dart';
-import '../../core/theme/theme_provider.dart';
-import '../../core/theme/seed_color_provider.dart';
-import '../../design_system/design_system.dart';
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'config/router/app_router.dart';
+import 'core/theme/seed_color_provider.dart';
+import 'core/theme/theme_provider.dart';
+import 'design_system/design_system.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/onboarding/presentation/cubit/onboarding_cubit.dart';
 
 /// Root widget of the application.
 class MyApp extends ConsumerWidget {
@@ -25,13 +26,17 @@ class MyApp extends ConsumerWidget {
       BrutalistPalette.update(next);
     });
 
-    return BlocProvider(
-      create: (_) => AuthBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (_) => AuthBloc()),
+        BlocProvider<OnboardingCubit>(
+          create: (_) => OnboardingCubit()..load(),
+        ),
+      ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           state.whenOrNull(
             unauthenticated: () {
-              // Navigate to login when user logs out
               goRouter.go('/login');
             },
           );

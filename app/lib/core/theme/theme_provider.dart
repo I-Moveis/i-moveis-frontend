@@ -10,9 +10,9 @@ class ThemeNotifier extends Notifier<ThemeMode> {
     state = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
   }
 
-  void setMode(ThemeMode mode) {
-    state = mode;
-  }
+  // Notifier state is the getter; a paired getter would shadow it.
+  // ignore: use_setters_to_change_properties
+  void setMode(ThemeMode mode) => state = mode;
 }
 
 /// Provider for the app's theme mode.

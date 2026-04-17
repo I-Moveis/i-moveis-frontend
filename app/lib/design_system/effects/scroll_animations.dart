@@ -634,7 +634,9 @@ class _TextRevealState extends State<TextReveal>
       case TextAlign.right:
       case TextAlign.end:
         return WrapAlignment.end;
-      default:
+      case TextAlign.left:
+      case TextAlign.start:
+      case TextAlign.justify:
         return WrapAlignment.start;
     }
   }

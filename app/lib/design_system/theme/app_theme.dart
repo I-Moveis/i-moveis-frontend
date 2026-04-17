@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../design_system/tokens/app_colors.dart';
-import '../../design_system/tokens/app_typography.dart';
 import '../../design_system/tokens/app_radius.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 /// Complete ThemeData for Dark and Light modes.
 ///

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/seed_color_provider.dart';
-import '../../design_system/tokens/app_typography.dart';
 import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 /// Section header with title and optional action link.
 class AppSectionHeader extends ConsumerWidget {

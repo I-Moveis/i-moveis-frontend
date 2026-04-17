@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../design_system/tokens/app_colors.dart';
-import '../../design_system/tokens/app_spacing.dart';
 import '../../design_system/tokens/app_durations.dart';
+import '../../design_system/tokens/app_spacing.dart';
 
 /// Airbnb-style bottom navigation bar with smooth animations
 /// and a clean, minimal design.

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/seed_color_provider.dart';
-import '../../design_system/tokens/app_typography.dart';
-import '../../design_system/tokens/app_spacing.dart';
 import '../../design_system/tokens/app_radius.dart';
+import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 /// Metric card showing icon, animated count-up value, and label.
 class AppMetricCard extends ConsumerWidget {

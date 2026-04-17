@@ -1,9 +1,11 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import '../../design_system/tokens/app_colors.dart';
-import '../../design_system/tokens/app_typography.dart';
 import '../../design_system/tokens/app_radius.dart';
 import '../../design_system/tokens/app_spacing.dart';
+import '../../design_system/tokens/app_typography.dart';
 
 /// Advanced card components inspired by:
 /// - LQVE: project showcase cards

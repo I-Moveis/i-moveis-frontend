@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../design_system/design_system.dart';
+import '../cubit/onboarding_cubit.dart';
 
 /// Onboarding — Brutalist Elegance x Japanese Creative Web
 ///
@@ -35,6 +39,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       titleBottom: 'SEU LAR',
       marker: 'DATA-SYSTEM // DISCOVER',
       description: 'Milhares de imóveis verificados\nesperando por você',
+      lottieAsset: 'assets/animations/discover.json',
     ),
     _SlideData(
       index: '02',
@@ -42,6 +47,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       titleBottom: 'VISITAS',
       marker: 'DATA-SYSTEM // SCHEDULE',
       description: 'Sem telefonemas, sem espera.\nTudo pelo app',
+      lottieAsset: 'assets/animations/schedule.json',
     ),
     _SlideData(
       index: '03',
@@ -49,6 +55,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       titleBottom: 'DIGITAL',
       marker: 'DATA-SYSTEM // CONTRACT',
       description: 'Sem fiador.\nContrato 100% digital',
+      lottieAsset: 'assets/animations/contract.json',
     ),
   ];
 
@@ -115,14 +122,15 @@ class _OnboardingPageState extends State<OnboardingPage>
     super.dispose();
   }
 
-  void _goToNext() {
+  Future<void> _goToNext() async {
     if (_currentPage < _slides.length - 1) {
-      _pageController.nextPage(
+      unawaited(_pageController.nextPage(
         duration: AppDurations.medium,
         curve: Curves.easeOutCubic,
-      );
+      ));
     } else {
-      context.go('/login');
+      await context.read<OnboardingCubit>().complete();
+      if (mounted) context.go('/login');
     }
   }
 
@@ -193,7 +201,10 @@ class _OnboardingPageState extends State<OnboardingPage>
         child: Align(
           alignment: Alignment.centerRight,
           child: GestureDetector(
-            onTap: () => context.go('/login'),
+            onTap: () async {
+                await context.read<OnboardingCubit>().complete();
+                if (mounted) context.go('/login');
+              },
             child: AnimatedContainer(
               duration: AppDurations.normal,
               padding: const EdgeInsets.symmetric(
@@ -236,6 +247,16 @@ class _OnboardingPageState extends State<OnboardingPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Lottie.asset(
+            slide.lottieAsset,
+            width: 180,
+            height: 180,
+            repeat: true,
+            animate: true,
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
           // Index number with pulse
           AnimatedBuilder(
             animation: _pulseController,
@@ -486,6 +507,7 @@ class _SlideData {
     required this.titleBottom,
     required this.marker,
     required this.description,
+    required this.lottieAsset,
   });
 
   final String index;
@@ -493,4 +515,5 @@ class _SlideData {
   final String titleBottom;
   final String marker;
   final String description;
+  final String lottieAsset;
 }

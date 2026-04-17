@@ -12,9 +12,9 @@ class SeedColorNotifier extends Notifier<Color> {
     return const Color(0xFFDEAD82);
   }
 
-  void setColor(Color color) {
-    state = color;
-  }
+  // Notifier state is the getter; a paired getter would shadow it.
+  // ignore: use_setters_to_change_properties
+  void setColor(Color color) => state = color;
 
   void reset() {
     state = const Color(0xFFDEAD82);

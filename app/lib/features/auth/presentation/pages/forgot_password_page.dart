@@ -551,12 +551,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
 
   /// Simple sin approximation to avoid importing dart:math
   double _sinApprox(double x) {
-    // Normalize to -pi..pi
-    x = x % (3.14159265 * 2);
-    if (x > 3.14159265) x -= 3.14159265 * 2;
-    // Bhaskara approximation
-    final abs = x < 0 ? -x : x;
-    final sign = x < 0 ? -1.0 : 1.0;
+    var normalized = x % (3.14159265 * 2);
+    if (normalized > 3.14159265) normalized -= 3.14159265 * 2;
+    final abs = normalized < 0 ? -normalized : normalized;
+    final sign = normalized < 0 ? -1.0 : 1.0;
     return sign *
         (16 * abs * (3.14159265 - abs)) /
         (49.348 - 4 * abs * (3.14159265 - abs));
@@ -585,7 +583,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                 width: 1.5,
               ),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.check_rounded,
               size: 32,
               color: successColor,

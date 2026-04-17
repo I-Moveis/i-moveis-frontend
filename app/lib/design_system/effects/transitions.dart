@@ -98,8 +98,8 @@ class _CurtainTransitionWidget extends StatelessWidget {
 
     double left = 0;
     double top = 0;
-    double right = w;
-    double bottom = h;
+    var right = w;
+    var bottom = h;
 
     switch (direction) {
       case CurtainDirection.left:
@@ -163,8 +163,7 @@ enum LoadingStyle { minimal, cosmic, wave }
 class LoadingScreen extends StatefulWidget {
 
   const LoadingScreen({
-    super.key,
-    required this.progress,
+    required this.progress, super.key,
     this.style = LoadingStyle.minimal,
     this.onComplete,
     this.logo,
@@ -522,7 +521,7 @@ class CircleReveal extends PageRouteBuilder<void> {
     required Widget page,
     Duration duration = const Duration(milliseconds: 800),
   }) {
-    return CircleReveal(page: page, origin: null, animationDuration: duration);
+    return CircleReveal(page: page, animationDuration: duration);
   }
 
   /// Circle expanding from a tap position.
@@ -789,8 +788,7 @@ class FadeSlideTransition extends PageRouteBuilder<void> {
 class FadeSlideIn extends StatefulWidget {
 
   const FadeSlideIn({
-    super.key,
-    required this.child,
+    required this.child, super.key,
     this.offsetDistance = 30.0,
     this.duration = const Duration(milliseconds: 600),
     this.delay = Duration.zero,

@@ -3,9 +3,10 @@ import '../../design_system/tokens/app_colors.dart';
 
 /// Shared warm pastel palette used across all Brutalist Elegance pages.
 /// Now dynamic based on a seed color.
+@immutable
 class DynamicBrutalistPalette {
 
-  DynamicBrutalistPalette(this.seed);
+  const DynamicBrutalistPalette(this.seed);
   final Color seed;
 
   Color get warmYellow => Color.lerp(seed, Colors.white, 0.3)!;
@@ -127,10 +128,10 @@ class DynamicBrutalistPalette {
 class BrutalistPalette {
   BrutalistPalette._();
 
-  static DynamicBrutalistPalette _current = DynamicBrutalistPalette(const Color(0xFFFFB74D));
+  static DynamicBrutalistPalette _current = const DynamicBrutalistPalette(Color(0xFFFFB74D));
 
-  /// Updates the current global palette instance.
-  /// Should be called by a provider listener in the root of the app.
+  // Static methods cannot be expressed as setters in Dart.
+  // ignore: use_setters_to_change_properties
   static void update(DynamicBrutalistPalette newPalette) {
     _current = newPalette;
   }

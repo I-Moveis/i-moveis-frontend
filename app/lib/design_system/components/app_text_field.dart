@@ -22,10 +22,13 @@ class AppTextField extends StatelessWidget {
     this.errorText,
     this.enabled = true,
     this.autofocus = false,
+    this.focusNode,
   });
 
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final String? label;
+
   final String? hint;
   final IconData? prefixIcon;
   final IconData? suffixIcon;
@@ -56,7 +59,9 @@ class AppTextField extends StatelessWidget {
         ],
         TextField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscureText,
+
           maxLines: maxLines,
           onChanged: onChanged,
           onSubmitted: onSubmitted,

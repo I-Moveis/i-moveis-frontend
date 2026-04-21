@@ -6,6 +6,7 @@ import 'core/theme/seed_color_provider.dart';
 import 'core/theme/theme_provider.dart';
 import 'design_system/design_system.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/home/presentation/bloc/category_bloc.dart';
 import 'features/onboarding/presentation/cubit/onboarding_cubit.dart';
 
 /// Root widget of the application.
@@ -15,7 +16,11 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goRouter = ref.watch(goRouterProvider);
-    final themeMode = ref.watch(themeProvider);
+    final themeMode = ref.watch(themeProvider).when(
+          data: (v) => v,
+          loading: () => ThemeMode.dark,
+          error: (_, __) => ThemeMode.dark,
+        );
     final seedColor = ref.watch(seedColorProvider);
     final palette = ref.watch(brutalistPaletteProvider);
 
@@ -29,6 +34,7 @@ class MyApp extends ConsumerWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(create: (_) => AuthBloc()),
+        BlocProvider<CategoryBloc>(create: (_) => CategoryBloc()),
         BlocProvider<OnboardingCubit>(
           create: (_) => OnboardingCubit()..load(),
         ),

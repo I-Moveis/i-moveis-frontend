@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
+import '../widgets/search_bar_widget.dart';
+
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
 class SearchPage extends StatefulWidget {
@@ -25,7 +27,7 @@ class _SearchPageState extends State<SearchPage> {
         final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
         final mutedColor = BrutalistPalette.muted(isDark);
         final titleColor = BrutalistPalette.title(isDark);
-        final faintColor = BrutalistPalette.faint(isDark);
+
 
         return Opacity(
           opacity: fade.value,
@@ -54,25 +56,8 @@ class _SearchPageState extends State<SearchPage> {
                   const SizedBox(height: AppSpacing.xl),
 
                   // Search bar
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.mdLg),
-                      decoration: BoxDecoration(
-                        color: BrutalistPalette.surfaceBg(isDark),
-                        borderRadius: AppRadius.borderXl,
-                        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-                      ),
-                      child: Row(children: [
-                        Icon(Icons.search_rounded, size: 20, color: mutedColor),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: Text('Cidade, bairro ou endereço...', style: AppTypography.bodyLarge.copyWith(color: faintColor))),
-                        Container(width: 1, height: 20, color: BrutalistPalette.dividerColor(isDark)),
-                        const SizedBox(width: AppSpacing.md),
-                        Icon(Icons.tune_rounded, size: 18, color: mutedColor),
-                      ]),
-                    ),
-                  ),
+                  const SearchBarWidget(),
+
                   const SizedBox(height: AppSpacing.xl),
 
                   // Filter chips

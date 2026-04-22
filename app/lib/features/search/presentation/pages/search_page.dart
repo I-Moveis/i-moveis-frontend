@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
 import '../widgets/search_bar_widget.dart';
+import '../widgets/filter_chip_bar.dart';
 
+
+import '../widgets/property_carousel_card.dart';
+import '../providers/map_providers.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
-class SearchPage extends StatefulWidget {
+class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  ConsumerState<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
-  int _selectedFilter = -1;
-  static const _filters = ['Tipo', 'Quartos', 'Preço', 'Filtros'];
+class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +30,7 @@ class _SearchPageState extends State<SearchPage> {
         final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
         final mutedColor = BrutalistPalette.muted(isDark);
         final titleColor = BrutalistPalette.title(isDark);
+        final properties = ref.watch(mockPropertiesProvider);
 
 
         return Opacity(
@@ -59,37 +63,35 @@ class _SearchPageState extends State<SearchPage> {
                   const SearchBarWidget(),
 
                   const SizedBox(height: AppSpacing.xl),
-
-                  // Filter chips
-                  Wrap(spacing: AppSpacing.sm, children: List.generate(_filters.length, (i) {
-                    final isSelected = i == _selectedFilter;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedFilter = isSelected ? -1 : i),
-                      child: AnimatedContainer(
-                        duration: AppDurations.normal,
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: isSelected ? accentColor.withValues(alpha: 0.12) : BrutalistPalette.surfaceBg(isDark),
-                          borderRadius: AppRadius.borderFull,
-                          border: Border.all(color: isSelected ? accentColor.withValues(alpha: 0.4) : BrutalistPalette.surfaceBorder(isDark)),
-                        ),
-                        child: Text(_filters[i], style: AppTypography.titleSmall.copyWith(color: isSelected ? accentColor : mutedColor)),
-                      ),
-                    );
-                  })),
                 ]),
               )),
 
-              // Empty state
-              SliverFillRemaining(hasScrollBody: false, child: Center(
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.search_rounded, size: 48, color: accentColor.withValues(alpha: 0.2)),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text('Explore imóveis', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text('Use os filtros para encontrar seu lar', style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
-                ]),
-              )),
+              // Filter chips
+              const SliverToBoxAdapter(
+                child: FilterChipBar(),
+              ),
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.xxxl),
+              ),
+
+              // Property list
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final property = properties[index];
+                      return PropertyCarouselCard(
+                        property: property,
+                        onTap: () => context.push('/property/${property.id}'),
+                      );
+                    },
+                    childCount: properties.length,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
         );

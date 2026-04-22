@@ -13,6 +13,10 @@ final List<MapProperty> kMockMapProperties = <MapProperty>[
     price: r'R$ 2.450.000',
     type: 'Cobertura · 3 suítes',
     thumbnailIcon: Icons.apartment_rounded,
+    imageUrls: [
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&w=800&q=80',
+    ],
   ),
   const MapProperty(
     id: 'mp-2',
@@ -21,6 +25,9 @@ final List<MapProperty> kMockMapProperties = <MapProperty>[
     price: r'R$ 1.180.000',
     type: 'Apartamento · 2 quartos',
     thumbnailIcon: Icons.apartment_rounded,
+    imageUrls: [
+      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80',
+    ],
   ),
   const MapProperty(
     id: 'mp-3',
@@ -29,6 +36,9 @@ final List<MapProperty> kMockMapProperties = <MapProperty>[
     price: r'R$ 3.100.000',
     type: 'Casa · 4 quartos',
     thumbnailIcon: Icons.home_rounded,
+    imageUrls: [
+      'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80',
+    ],
   ),
   const MapProperty(
     id: 'mp-4',
@@ -37,6 +47,9 @@ final List<MapProperty> kMockMapProperties = <MapProperty>[
     price: r'R$ 520.000',
     type: 'Studio · 1 dorm.',
     thumbnailIcon: Icons.weekend_rounded,
+    imageUrls: [
+      'https://images.unsplash.com/photo-1536376074432-bf12177d4f4f?auto=format&fit=crop&w=800&q=80',
+    ],
   ),
   const MapProperty(
     id: 'mp-5',

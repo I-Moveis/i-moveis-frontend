@@ -369,7 +369,7 @@ class BrutalistGradientButton extends ConsumerWidget {
             end: Alignment.bottomRight,
             colors: gradientColors,
           ),
-          borderRadius: AppRadius.borderSm,
+          borderRadius: AppRadius.borderFull,
           boxShadow: [
             BoxShadow(
               color: glowColor,

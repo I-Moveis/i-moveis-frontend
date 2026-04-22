@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/search_filters_provider.dart';
 
-/// Modal for selecting the transaction type (e.g., Aluguel, Comprar).
+/// Modal for selecting multiple transaction types (e.g., Aluguel, Comprar).
 class TransactionTypeFilterModal extends ConsumerWidget {
   /// Creates a [TransactionTypeFilterModal].
   const TransactionTypeFilterModal({super.key});
@@ -27,11 +27,11 @@ class TransactionTypeFilterModal extends ConsumerWidget {
                 runSpacing: AppSpacing.md,
                 alignment: WrapAlignment.center,
                 children: options.map((type) {
-                  final isSelected = filters.transactionType == type;
+                  final isSelected = filters.transactionTypes.contains(type);
                   return AppChip(
                     label: type,
                     isSelected: isSelected,
-                    onTap: () => ref.read(searchFiltersProvider.notifier).updateTransactionType(type),
+                    onTap: () => ref.read(searchFiltersProvider.notifier).toggleTransactionType(type),
                   );
                 }).toList(),
               ),

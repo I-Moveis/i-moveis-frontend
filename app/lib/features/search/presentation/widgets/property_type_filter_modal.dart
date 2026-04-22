@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/search_filters_provider.dart';
 
-/// Modal for selecting the property type (e.g., Apartamento, Casa).
+/// Modal for selecting multiple property types (e.g., Apartamento, Casa).
 class PropertyTypeFilterModal extends ConsumerWidget {
   /// Creates a [PropertyTypeFilterModal].
   const PropertyTypeFilterModal({super.key});
@@ -12,7 +12,6 @@ class PropertyTypeFilterModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(searchFiltersProvider);
     final options = [
-      'Qualquer',
       'Apartamento',
       'Casa',
       'Studio',
@@ -36,13 +35,11 @@ class PropertyTypeFilterModal extends ConsumerWidget {
                 runSpacing: AppSpacing.md,
                 alignment: WrapAlignment.center,
                 children: options.map((type) {
-                  final label = type;
-                  final value = type == 'Qualquer' ? null : type;
-                  final isSelected = filters.propertyType == value;
+                  final isSelected = filters.propertyTypes.contains(type);
                   return AppChip(
-                    label: label,
+                    label: type,
                     isSelected: isSelected,
-                    onTap: () => ref.read(searchFiltersProvider.notifier).updatePropertyType(value),
+                    onTap: () => ref.read(searchFiltersProvider.notifier).togglePropertyType(type),
                   );
                 }).toList(),
               ),

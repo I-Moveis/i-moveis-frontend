@@ -9,6 +9,7 @@ class MapProperty {
     required this.price,
     required this.type,
     required this.thumbnailIcon,
+    this.imageUrls = const [],
   });
 
   final String id;
@@ -17,4 +18,5 @@ class MapProperty {
   final String price;
   final String type;
   final IconData thumbnailIcon;
+  final List<String> imageUrls;
 }

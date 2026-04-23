@@ -60,7 +60,7 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
     
     // Agora o provider retorna um AsyncValue (simulando API)
     final propertiesAsync = ref.watch(mockPropertiesProvider);
-    final properties = propertiesAsync.valueOrNull ?? [];
+    final properties = propertiesAsync.value ?? [];
     
     final selectedId = ref.watch(selectedPropertyIdProvider);
     final permission = ref.watch(locationPermissionStatusProvider);

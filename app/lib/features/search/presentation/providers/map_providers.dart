@@ -40,10 +40,16 @@ final mockPropertiesProvider = FutureProvider<List<MapProperty>>((ref) async {
   var filteredList = kMockMapProperties.toList();
 
   if (filter.minPrice != null) {
-    filteredList = filteredList.where((p) => p.price >= filter.minPrice!).toList();
+    filteredList = filteredList.where((p) {
+      final priceNum = double.tryParse(p.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
+      return priceNum >= filter.minPrice!;
+    }).toList();
   }
   if (filter.maxPrice != null) {
-    filteredList = filteredList.where((p) => p.price <= filter.maxPrice!).toList();
+    filteredList = filteredList.where((p) {
+      final priceNum = double.tryParse(p.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
+      return priceNum <= filter.maxPrice!;
+    }).toList();
   }
 
   return filteredList;

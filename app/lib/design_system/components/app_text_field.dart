@@ -22,10 +22,13 @@ class AppTextField extends StatelessWidget {
     this.errorText,
     this.enabled = true,
     this.autofocus = false,
+    this.focusNode,
   });
 
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final String? label;
+
   final String? hint;
   final IconData? prefixIcon;
   final IconData? suffixIcon;
@@ -56,7 +59,9 @@ class AppTextField extends StatelessWidget {
         ],
         TextField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscureText,
+
           maxLines: maxLines,
           onChanged: onChanged,
           onSubmitted: onSubmitted,
@@ -89,7 +94,9 @@ class AppSearchBar extends StatelessWidget {
     super.key,
     this.hint = 'Search...',
     this.onTap,
+    this.onFilterTap,
     this.controller,
+    this.focusNode,
     this.onChanged,
     this.autofocus = false,
     this.isButton = false,
@@ -97,7 +104,9 @@ class AppSearchBar extends StatelessWidget {
 
   final String hint;
   final VoidCallback? onTap;
+  final VoidCallback? onFilterTap;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
   final bool autofocus;
   final bool isButton;
@@ -145,6 +154,7 @@ class AppSearchBar extends StatelessWidget {
                     )
                   : TextField(
                       controller: controller,
+                      focusNode: focusNode,
                       onChanged: onChanged,
                       autofocus: autofocus,
                       style: AppTypography.bodyMedium.copyWith(
@@ -161,10 +171,13 @@ class AppSearchBar extends StatelessWidget {
                       ),
                     ),
             ),
-            Icon(
-              Icons.tune_rounded,
-              size: 20,
-              color: isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
+            GestureDetector(
+              onTap: onFilterTap ?? onTap,
+              child: Icon(
+                Icons.tune_rounded,
+                size: 20,
+                color: isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
+              ),
             ),
           ],
         ),

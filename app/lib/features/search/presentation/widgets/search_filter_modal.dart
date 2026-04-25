@@ -168,11 +168,33 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
 
                 // --- Amenities ---
                 _buildSectionLabel('Comodidades', titleColor),
-                const SizedBox(height: AppSpacing.sm),
-                _buildToggleItem('WiFi', filters.hasWifi, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateWifi(val), isDark, accentColor),
-                _buildToggleItem('Piscina', filters.hasPool, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePool(val), isDark, accentColor),
-                _buildToggleItem('Estacionamento', filters.hasParking, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateParking(val), isDark, accentColor),
-                _buildToggleItem('Aceita Pets', filters.isPetFriendly, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePetFriendly(val), isDark, accentColor),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: [
+                    AppChip(
+                      label: 'WiFi',
+                      isSelected: filters.hasWifi,
+                      onTap: () => ref.read(searchFiltersProvider.notifier).updateWifi(!filters.hasWifi),
+                    ),
+                    AppChip(
+                      label: 'Piscina',
+                      isSelected: filters.hasPool,
+                      onTap: () => ref.read(searchFiltersProvider.notifier).updatePool(!filters.hasPool),
+                    ),
+                    AppChip(
+                      label: 'Estacionamento',
+                      isSelected: filters.hasParking,
+                      onTap: () => ref.read(searchFiltersProvider.notifier).updateParking(!filters.hasParking),
+                    ),
+                    AppChip(
+                      label: 'Aceita Pets',
+                      isSelected: filters.isPetFriendly,
+                      onTap: () => ref.read(searchFiltersProvider.notifier).updatePetFriendly(!filters.isPetFriendly),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: AppSpacing.xxl),
 
@@ -210,16 +232,6 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     return Text(
       label,
       style: AppTypography.titleMedium.copyWith(color: color, fontWeight: FontWeight.bold),
-    );
-  }
-
-  Widget _buildToggleItem(String label, bool value, ValueChanged<bool> onChanged, bool isDark, Color accentColor) {
-    return SwitchListTile.adaptive(
-      title: Text(label, style: AppTypography.bodyMedium.copyWith(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
-      value: value,
-      onChanged: onChanged,
-      activeColor: accentColor,
-      contentPadding: EdgeInsets.zero,
     );
   }
 

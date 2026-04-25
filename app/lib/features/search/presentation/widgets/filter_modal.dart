@@ -11,99 +11,55 @@ class FilterModal extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch<SearchFilters>(searchFiltersProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = BrutalistPalette.accentOrange(isDark);
-    final titleColor = BrutalistPalette.title(isDark);
 
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const AppBottomSheetHeader(title: 'Comodidades'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppSpacing.md),
-                
-                _buildToggleItem(
-                  'WiFi',
-                  filters.hasWifi,
-                  (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateWifi(val),
-                  isDark,
-                  accentColor,
-                ),
-                _buildToggleItem(
-                  'Piscina',
-                  filters.hasPool,
-                  (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePool(val),
-                  isDark,
-                  accentColor,
-                ),
-                _buildToggleItem(
-                  'Estacionamento',
-                  filters.hasParking,
-                  (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateParking(val),
-                  isDark,
-                  accentColor,
-                ),
-                _buildToggleItem(
-                  'Aceita Pets',
-                  filters.isPetFriendly,
-                  (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePetFriendly(val),
-                  isDark,
-                  accentColor,
-                ),
-  
-                const SizedBox(height: AppSpacing.xxxl),
-  
-                // --- Action Buttons ---
-                SizedBox(
-                  width: double.infinity,
-                  child: BrutalistGradientButton(
-                    label: 'APLICAR FILTRO',
-                    onTap: () => Navigator.pop(context),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.md),
+              
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
+                alignment: WrapAlignment.center,
+                children: [
+                  _buildAmenityChip('WiFi', filters.hasWifi, (val) => ref.read(searchFiltersProvider.notifier).updateWifi(val), ref),
+                  _buildAmenityChip('Piscina', filters.hasPool, (val) => ref.read(searchFiltersProvider.notifier).updatePool(val), ref),
+                  _buildAmenityChip('Estacionamento', filters.hasParking, (val) => ref.read(searchFiltersProvider.notifier).updateParking(val), ref),
+                  _buildAmenityChip('Aceita Pets', filters.isPetFriendly, (val) => ref.read(searchFiltersProvider.notifier).updatePetFriendly(val), ref),
+                ],
+              ),
 
-  Widget _buildToggleItem(
-    String label, 
-    bool value, 
-    ValueChanged<bool> onChanged,
-    bool isDark,
-    Color accentColor,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: BrutalistPalette.dividerColor(isDark),
-            width: 0.5,
+              const SizedBox(height: AppSpacing.xxxl),
+
+              // --- Action Buttons ---
+              SizedBox(
+                width: double.infinity,
+                child: BrutalistGradientButton(
+                  label: 'APLICAR FILTRO',
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
           ),
         ),
-      ),
-      child: SwitchListTile.adaptive(
-        title: Text(
-          label,
-          style: AppTypography.bodyMedium.copyWith(
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          ),
-        ),
-        value: value,
-        onChanged: onChanged,
-        activeColor: accentColor,
-        contentPadding: EdgeInsets.zero,
-      ),
+      ],
+    ),
+  );
+}
+
+  Widget _buildAmenityChip(String label, bool value, ValueChanged<bool> onChanged, WidgetRef ref) {
+    return AppChip(
+      label: label,
+      isSelected: value,
+      onTap: () => onChanged(!value),
     );
   }
 }

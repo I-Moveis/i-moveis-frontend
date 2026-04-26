@@ -393,24 +393,30 @@ class BrutalistGradientButton extends ConsumerWidget {
                         color: buttonTextColor.withValues(alpha: 0.8),
                       ),
                     )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          label,
-                          style: AppTypography.labelLarge.copyWith(
-                            color: buttonTextColor,
-                            letterSpacing: 3,
-                            fontWeight: FontWeight.w700,
-                          ),
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              label,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: buttonTextColor,
+                                letterSpacing: 3,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Icon(
+                              icon ?? Icons.arrow_forward_rounded,
+                              size: 18,
+                              color: buttonTextColor.withValues(alpha: 0.7),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Icon(
-                          icon ?? Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: buttonTextColor.withValues(alpha: 0.7),
-                        ),
-                      ],
+                      ),
                     ),
             ),
           ),

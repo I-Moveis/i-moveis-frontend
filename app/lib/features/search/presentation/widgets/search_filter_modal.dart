@@ -32,6 +32,10 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     'Comercial',
   ];
 
+  bool _isPropertyTypeExpanded = false;
+  bool _isBedroomsExpanded = false;
+  bool _isAmenitiesExpanded = false;
+
   @override
   Widget build(BuildContext context) {
     final filters = ref.watch<SearchFilters>(searchFiltersProvider);
@@ -104,43 +108,75 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                 // --- Property Type ---
                 _buildSectionLabel('Tipo de Imóvel', titleColor),
                 const SizedBox(height: AppSpacing.md),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _propertyTypeOptions.map((type) {
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    ...(_isPropertyTypeExpanded
+                            ? _propertyTypeOptions
+                            : _propertyTypeOptions.take(3))
+                        .map((type) {
                       final isSelected = filters.propertyTypes.contains(type);
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.sm),
-                        child: AppChip(
-                          label: type,
-                          isSelected: isSelected,
-                          onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).togglePropertyType(type),
-                        ),
+                      return AppChip(
+                        label: type,
+                        isSelected: isSelected,
+                        onTap: () => ref
+                            .read<SearchFiltersNotifier>(
+                                searchFiltersProvider.notifier)
+                            .togglePropertyType(type),
                       );
-                    }).toList(),
-                  ),
+                    }),
+                    AppChip(
+                      label: _isPropertyTypeExpanded ? 'Ver menos' : 'Ver mais',
+                      icon: _isPropertyTypeExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      isSelected: false,
+                      onTap: () {
+                        setState(() {
+                          _isPropertyTypeExpanded = !_isPropertyTypeExpanded;
+                        });
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
                 // --- Bedrooms ---
                 _buildSectionLabel('Quartos', titleColor),
                 const SizedBox(height: AppSpacing.md),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [1, 2, 3, 4, 5].map((count) {
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    ...(_isBedroomsExpanded
+                            ? [1, 2, 3, 4, 5]
+                            : [1, 2, 3])
+                        .map((count) {
                       final isSelected = filters.bedrooms.contains(count);
                       final label = '$count+';
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.sm),
-                        child: AppChip(
-                          label: label,
-                          isSelected: isSelected,
-                          onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).toggleBedroom(count),
-                        ),
+                      return AppChip(
+                        label: label,
+                        isSelected: isSelected,
+                        onTap: () => ref
+                            .read<SearchFiltersNotifier>(
+                                searchFiltersProvider.notifier)
+                            .toggleBedroom(count),
                       );
-                    }).toList(),
-                  ),
+                    }),
+                    AppChip(
+                      label: _isBedroomsExpanded ? 'Ver menos' : 'Ver mais',
+                      icon: _isBedroomsExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      isSelected: false,
+                      onTap: () {
+                        setState(() {
+                          _isBedroomsExpanded = !_isBedroomsExpanded;
+                        });
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -168,11 +204,76 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
 
                 // --- Amenities ---
                 _buildSectionLabel('Comodidades', titleColor),
-                const SizedBox(height: AppSpacing.sm),
-                _buildToggleItem('WiFi', filters.hasWifi, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateWifi(val), isDark, accentColor),
-                _buildToggleItem('Piscina', filters.hasPool, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePool(val), isDark, accentColor),
-                _buildToggleItem('Estacionamento', filters.hasParking, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateParking(val), isDark, accentColor),
-                _buildToggleItem('Aceita Pets', filters.isPetFriendly, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePetFriendly(val), isDark, accentColor),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: [
+                    ...(_isAmenitiesExpanded
+                        ? [
+                            _AmenityData(
+                                label: 'WiFi',
+                                isSelected: filters.hasWifi,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updateWifi(!filters.hasWifi)),
+                            _AmenityData(
+                                label: 'Piscina',
+                                isSelected: filters.hasPool,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updatePool(!filters.hasPool)),
+                            _AmenityData(
+                                label: 'Estacionamento',
+                                isSelected: filters.hasParking,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updateParking(!filters.hasParking)),
+                            _AmenityData(
+                                label: 'Aceita Pets',
+                                isSelected: filters.isPetFriendly,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updatePetFriendly(!filters.isPetFriendly)),
+                          ]
+                        : [
+                            _AmenityData(
+                                label: 'WiFi',
+                                isSelected: filters.hasWifi,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updateWifi(!filters.hasWifi)),
+                            _AmenityData(
+                                label: 'Piscina',
+                                isSelected: filters.hasPool,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updatePool(!filters.hasPool)),
+                            _AmenityData(
+                                label: 'Estacionamento',
+                                isSelected: filters.hasParking,
+                                onTap: () => ref
+                                    .read(searchFiltersProvider.notifier)
+                                    .updateParking(!filters.hasParking)),
+                          ]).map((data) => AppChip(
+                          label: data.label,
+                          isSelected: data.isSelected,
+                          onTap: data.onTap,
+                        )),
+                    AppChip(
+                      label: _isAmenitiesExpanded ? 'Ver menos' : 'Ver mais',
+                      icon: _isAmenitiesExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      isSelected: false,
+                      onTap: () {
+                        setState(() {
+                          _isAmenitiesExpanded = !_isAmenitiesExpanded;
+                        });
+                      },
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: AppSpacing.xxl),
 
@@ -213,16 +314,6 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     );
   }
 
-  Widget _buildToggleItem(String label, bool value, ValueChanged<bool> onChanged, bool isDark, Color accentColor) {
-    return SwitchListTile.adaptive(
-      title: Text(label, style: AppTypography.bodyMedium.copyWith(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
-      value: value,
-      onChanged: onChanged,
-      activeColor: accentColor,
-      contentPadding: EdgeInsets.zero,
-    );
-  }
-
   Widget _buildAutocompleteOptions(BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options, bool isDark, Color titleColor) {
     return Align(
       alignment: Alignment.topLeft,
@@ -253,4 +344,16 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
       ),
     );
   }
+}
+
+class _AmenityData {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  _AmenityData({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 }

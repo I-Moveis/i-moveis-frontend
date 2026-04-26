@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
+import 'core/providers/shared_preferences_provider.dart';
 
 void main() {
   runZonedGuarded(
@@ -13,9 +15,14 @@ void main() {
         debugPrint('Flutter render error: ${details.exception}');
       };
 
+      final sharedPrefs = await SharedPreferences.getInstance();
+      
       runApp(
-        const ProviderScope(
-          child: MyApp(),
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(sharedPrefs),
+          ],
+          child: const MyApp(),
         ),
       );
     },

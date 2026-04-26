@@ -1,13 +1,23 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
 import '../../domain/entities/property.dart';
 import '../../domain/usecases/search_properties_usecase.dart';
 import 'search_filters_provider.dart';
 
-/// Provider for SearchNotifier.
+// Provider for SearchNotifier.
 final searchNotifierProvider = AsyncNotifierProvider<SearchNotifier, List<Property>>(
   SearchNotifier.new,
 );
+
+/// Provider to trigger scroll to top on SearchPage when tapping the nav bar icon
+class ScrollTriggerNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void trigger() => state++;
+}
+
+final searchScrollTriggerProvider = NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
 
 class SearchNotifier extends AsyncNotifier<List<Property>> {
   int _currentPage = 1;

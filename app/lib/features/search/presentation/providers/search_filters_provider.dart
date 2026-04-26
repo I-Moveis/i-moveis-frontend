@@ -212,6 +212,8 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
     state = const SearchFilters();
     _persist();
   }
+
+  void clearFilters() => reset();
 }
 
 /// Provider for the search filters state.

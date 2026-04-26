@@ -6,6 +6,10 @@ import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_chip_bar.dart';
 import '../widgets/property_list_tile.dart';
 import '../providers/search_notifier.dart';
+import '../providers/search_view_provider.dart';
+import '../providers/search_filters_provider.dart';
+import '../widgets/brutalist_shimmer.dart';
+import 'map_search_page.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
 class SearchPage extends ConsumerStatefulWidget {
@@ -57,14 +61,26 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Listen for scroll to top triggers from bottom nav bar
+    ref.listen<int>(searchScrollTriggerProvider, (previous, next) {
+      if (next > 0) {
+        _scrollToTop();
+      }
+    });
+
+    final viewMode = ref.watch(searchViewProvider);
+    final titleColor = BrutalistPalette.title(isDark);
+    final searchState = ref.watch(searchNotifierProvider);
+
     return BrutalistPageScaffold(
       builder: (context, _, entrance, pulse) {
+        if (viewMode == SearchViewMode.map) {
+          return const MapSearchPage();
+        }
+
         final fade = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
         );
-
-        final titleColor = BrutalistPalette.title(isDark);
-        final searchState = ref.watch(searchNotifierProvider);
 
         return Opacity(
           opacity: fade.value,
@@ -89,7 +105,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.go('/search/map'),
+                            onTap: () => ref.read(searchViewProvider.notifier).toggle(),
                             child: Container(
                               width: 44,
                               height: 44,
@@ -98,7 +114,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 borderRadius: AppRadius.borderMd,
                               ),
                               child: Icon(
-                                Icons.map_outlined,
+                                viewMode == SearchViewMode.list ? Icons.map_outlined : Icons.list_outlined,
                                 size: 20,
                                 color: BrutalistPalette.muted(isDark),
                               ),
@@ -130,10 +146,23 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               searchState.when(
                 data: (properties) {
                   if (properties.isEmpty) {
-                    return const SliverFillRemaining(
+                    return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
-                        child: Text('Nenhum imóvel encontrado.'),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Nenhum resultado encontrado',
+                              style: AppTypography.titleMedium.copyWith(color: titleColor),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppButton(
+                              label: 'Limpar Filtros',
+                              onPressed: () => ref.read(searchFiltersProvider.notifier).clearFilters(),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
@@ -166,10 +195,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     ),
                   );
                 },
-                loading: () => const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                loading: () => const SliverToBoxAdapter(
+                  child: BrutalistShimmer(),
                 ),
                 error: (error, stack) => SliverFillRemaining(
                   hasScrollBody: false,

@@ -21,6 +21,23 @@ void main() {
   late MockSharedPreferences mockPrefs;
   late ProviderContainer container;
 
+  Property createMockProperty(String id, String price) {
+    return Property(
+      id: id,
+      title: 'Prop $id',
+      latitude: 0,
+      longitude: 0,
+      price: price,
+      priceValue: 1000,
+      description: 'Desc',
+      type: 'Apartamento',
+      area: 50,
+      bedrooms: 2,
+      bathrooms: 1,
+      parkingSpots: 1,
+    );
+  }
+
   setUp(() {
     mockUseCase = MockSearchPropertiesUseCase();
     mockPrefs = MockSharedPreferences();
@@ -42,9 +59,7 @@ void main() {
 
   group('SearchNotifier', () {
     test('initial state should be loading and then success with properties', () async {
-      final properties = [
-        Property(id: '1', title: 'Prop 1', latitude: 0, longitude: 0, price: '100', description: 'Desc', type: 'Apartamento'),
-      ];
+      final properties = [createMockProperty('1', '100')];
 
       when(() => mockUseCase.execute(any(), page: 1))
           .thenAnswer((_) async => properties);
@@ -57,8 +72,8 @@ void main() {
     });
 
     test('loadNextPage should append properties to current list', () async {
-      final page1 = [Property(id: '1', title: 'Prop 1', latitude: 0, longitude: 0, price: '100', description: 'Desc', type: 'Apartamento')];
-      final page2 = [Property(id: '2', title: 'Prop 2', latitude: 0, longitude: 0, price: '200', description: 'Desc', type: 'Apartamento')];
+      final page1 = [createMockProperty('1', '100')];
+      final page2 = [createMockProperty('2', '200')];
 
       when(() => mockUseCase.execute(any(), page: 1)).thenAnswer((_) async => page1);
       when(() => mockUseCase.execute(any(), page: 2)).thenAnswer((_) async => page2);
@@ -74,7 +89,7 @@ void main() {
     });
 
     test('search should reset pagination and reload', () async {
-      final page1 = [Property(id: '1', title: 'Prop 1', latitude: 0, longitude: 0, price: '100', description: 'Desc', type: 'Apartamento')];
+      final page1 = [createMockProperty('1', '100')];
       
       when(() => mockUseCase.execute(any(), page: 1)).thenAnswer((_) async => page1);
 
@@ -86,7 +101,7 @@ void main() {
     });
 
     test('should retry on error without losing previous state', () async {
-       final page1 = [Property(id: '1', title: 'Prop 1', latitude: 0, longitude: 0, price: '100', description: 'Desc', type: 'Apartamento')];
+       final page1 = [createMockProperty('1', '100')];
        
        when(() => mockUseCase.execute(any(), page: 1)).thenAnswer((_) async => page1);
        when(() => mockUseCase.execute(any(), page: 2)).thenThrow(Exception('Network error'));
@@ -100,7 +115,7 @@ void main() {
        expect(container.read(searchNotifierProvider).value, page1); // Preserves page 1
 
        // Retry
-       when(() => mockUseCase.execute(any(), page: 2)).thenAnswer((_) async => [Property(id: '2', title: 'Prop 2', latitude: 0, longitude: 0, price: '200', description: 'Desc', type: 'Apartamento')]);
+       when(() => mockUseCase.execute(any(), page: 2)).thenAnswer((_) async => [createMockProperty('2', '200')]);
        
        await container.read(searchNotifierProvider.notifier).loadNextPage();
        

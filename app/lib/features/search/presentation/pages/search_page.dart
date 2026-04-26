@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_chip_bar.dart';
-import '../widgets/property_carousel_card.dart';
+import '../widgets/property_list_tile.dart';
 import '../providers/search_notifier.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
@@ -17,6 +17,7 @@ class SearchPage extends ConsumerStatefulWidget {
 
 class _SearchPageState extends ConsumerState<SearchPage> {
   final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
 
   @override
   void initState() {
@@ -31,15 +32,33 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    final show = _scrollController.offset > 400;
+    if (show != _showScrollToTop) {
+      setState(() {
+        _showScrollToTop = show;
+      });
+    }
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       ref.read(searchNotifierProvider.notifier).loadNextPage();
     }
   }
 
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutQuart,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BrutalistPageScaffold(
-      builder: (context, isDark, entrance, pulse) {
+      builder: (context, _, entrance, pulse) {
         final fade = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
         );
@@ -126,7 +145,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         (context, index) {
                           if (index < properties.length) {
                             final property = properties[index];
-                            return PropertyCarouselCard(
+                            return PropertyListTile(
                               property: property,
                               onTap: () => context.push('/property/${property.id}'),
                             );
@@ -178,11 +197,23 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
         );
       },
+      floatingActionButton: _showScrollToTop
+          ? FloatingActionButton(
+              onPressed: _scrollToTop,
+              backgroundColor: BrutalistPalette.warmBrown.withValues(alpha: 0.9),
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: Icon(
+                Icons.keyboard_arrow_up_rounded,
+                color: BrutalistPalette.accentAmber(isDark),
+                size: 32,
+              ),
+            )
+          : null,
     );
   }
 }

@@ -19,6 +19,9 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     'Curitiba, PR',
     'Porto Alegre, RS',
     'Florianópolis, SC',
+    'Brasília, DF',
+    'Salvador, BA',
+    'Fortaleza, CE',
   ];
 
   final List<String> _transactionOptions = ['Aluguel', 'Comprar', 'Lançamentos'];
@@ -31,6 +34,21 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     'Terreno',
     'Comercial',
   ];
+
+  // Individual scroll controllers for each horizontal filter to enable interactivity
+  final ScrollController _transactionScrollController = ScrollController();
+  final ScrollController _propertyTypeScrollController = ScrollController();
+  final ScrollController _bedroomsScrollController = ScrollController();
+  final ScrollController _amenitiesScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _transactionScrollController.dispose();
+    _propertyTypeScrollController.dispose();
+    _bedroomsScrollController.dispose();
+    _amenitiesScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,68 +99,52 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // --- Transaction Type ---
-                _buildSectionLabel('O que você busca?', titleColor),
-                const SizedBox(height: AppSpacing.md),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _transactionOptions.map((type) {
-                      final isSelected = filters.transactionTypes.contains(type);
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.sm),
-                        child: AppChip(
-                          label: type,
-                          isSelected: isSelected,
-                          onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).toggleTransactionType(type),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                _buildHorizontalFilter(
+                  label: 'O que você busca?',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _transactionScrollController,
+                  children: _transactionOptions.map((type) {
+                    final isSelected = filters.transactionTypes.contains(type);
+                    return AppChip(
+                      label: type,
+                      isSelected: isSelected,
+                      onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).toggleTransactionType(type),
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: AppSpacing.xl),
 
                 // --- Property Type ---
-                _buildSectionLabel('Tipo de Imóvel', titleColor),
-                const SizedBox(height: AppSpacing.md),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _propertyTypeOptions.map((type) {
-                      final isSelected = filters.propertyTypes.contains(type);
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.sm),
-                        child: AppChip(
-                          label: type,
-                          isSelected: isSelected,
-                          onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).togglePropertyType(type),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                _buildHorizontalFilter(
+                  label: 'Tipo de Imóvel',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _propertyTypeScrollController,
+                  children: _propertyTypeOptions.map((type) {
+                    final isSelected = filters.propertyTypes.contains(type);
+                    return AppChip(
+                      label: type,
+                      isSelected: isSelected,
+                      onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).togglePropertyType(type),
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: AppSpacing.xl),
 
                 // --- Bedrooms ---
-                _buildSectionLabel('Quartos', titleColor),
-                const SizedBox(height: AppSpacing.md),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [1, 2, 3, 4, 5].map((count) {
-                      final isSelected = filters.bedrooms.contains(count);
-                      final label = '$count+';
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.sm),
-                        child: AppChip(
-                          label: label,
-                          isSelected: isSelected,
-                          onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).toggleBedroom(count),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                _buildHorizontalFilter(
+                  label: 'Quartos',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _bedroomsScrollController,
+                  children: [1, 2, 3, 4, 5].map((count) {
+                    final isSelected = filters.bedrooms.contains(count);
+                    return AppChip(
+                      label: '$count+',
+                      isSelected: isSelected,
+                      onTap: () => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).toggleBedroom(count),
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: AppSpacing.xl),
 
                 // --- Price Range ---
                 Row(
@@ -167,14 +169,36 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // --- Amenities ---
-                _buildSectionLabel('Comodidades', titleColor),
-                const SizedBox(height: AppSpacing.sm),
-                _buildToggleItem('WiFi', filters.hasWifi, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateWifi(val), isDark, accentColor),
-                _buildToggleItem('Piscina', filters.hasPool, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePool(val), isDark, accentColor),
-                _buildToggleItem('Estacionamento', filters.hasParking, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateParking(val), isDark, accentColor),
-                _buildToggleItem('Aceita Pets', filters.isPetFriendly, (val) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePetFriendly(val), isDark, accentColor),
+                _buildHorizontalFilter(
+                  label: 'Comodidades',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _amenitiesScrollController,
+                  children: [
+                    _AmenityData(
+                        label: 'WiFi',
+                        isSelected: filters.hasWifi,
+                        onTap: () => ref.read(searchFiltersProvider.notifier).updateWifi(!filters.hasWifi)),
+                    _AmenityData(
+                        label: 'Piscina',
+                        isSelected: filters.hasPool,
+                        onTap: () => ref.read(searchFiltersProvider.notifier).updatePool(!filters.hasPool)),
+                    _AmenityData(
+                        label: 'Estacionamento',
+                        isSelected: filters.hasParking,
+                        onTap: () => ref.read(searchFiltersProvider.notifier).updateParking(!filters.hasParking)),
+                    _AmenityData(
+                        label: 'Aceita Pets',
+                        isSelected: filters.isPetFriendly,
+                        onTap: () => ref.read(searchFiltersProvider.notifier).updatePetFriendly(!filters.isPetFriendly)),
+                  ].map((data) => AppChip(
+                    label: data.label,
+                    isSelected: data.isSelected,
+                    onTap: data.onTap,
+                  )).toList(),
+                ),
 
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.lg),
 
                 // --- Action Buttons ---
                 Row(
@@ -206,20 +230,53 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     );
   }
 
+  Widget _buildHorizontalFilter({
+    required String label,
+    required List<Widget> children,
+    required Color titleColor,
+    required Color accentColor,
+    required ScrollController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionLabel(label, titleColor),
+        const SizedBox(height: AppSpacing.md),
+        Theme(
+          data: Theme.of(context).copyWith(
+            scrollbarTheme: ScrollbarThemeData(
+              thumbColor: WidgetStateProperty.all(accentColor),
+              trackColor: WidgetStateProperty.all(Colors.transparent),
+              thickness: WidgetStateProperty.all(4.0),
+              radius: const Radius.circular(10),
+              interactive: true,
+            ),
+          ),
+          child: Scrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              controller: controller,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Row(
+                children: children.map((child) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: child,
+                )).toList(),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+      ],
+    );
+  }
+
   Widget _buildSectionLabel(String label, Color color) {
     return Text(
       label,
       style: AppTypography.titleMedium.copyWith(color: color, fontWeight: FontWeight.bold),
-    );
-  }
-
-  Widget _buildToggleItem(String label, bool value, ValueChanged<bool> onChanged, bool isDark, Color accentColor) {
-    return SwitchListTile.adaptive(
-      title: Text(label, style: AppTypography.bodyMedium.copyWith(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
-      value: value,
-      onChanged: onChanged,
-      activeColor: accentColor,
-      contentPadding: EdgeInsets.zero,
     );
   }
 
@@ -253,4 +310,16 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
       ),
     );
   }
+}
+
+class _AmenityData {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  _AmenityData({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 }

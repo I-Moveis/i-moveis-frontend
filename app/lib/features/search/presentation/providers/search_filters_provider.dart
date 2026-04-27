@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app/core/providers/shared_preferences_provider.dart';
 
 /// Model representing search filters with multi-selection support.
 @immutable
@@ -15,6 +17,43 @@ class SearchFilters {
     this.hasParking = false,
     this.isPetFriendly = false,
   });
+
+  factory SearchFilters.fromJson(Map<String, dynamic> json) {
+    try {
+      return SearchFilters(
+        location: json['location'] as String? ?? '',
+        bedrooms: (json['bedrooms'] as List<dynamic>?)?.cast<int>() ?? const [],
+        priceRange: RangeValues(
+          (json['minPrice'] as num?)?.toDouble() ?? 0.0,
+          (json['maxPrice'] as num?)?.toDouble() ?? 50000.0,
+        ),
+        transactionTypes: (json['transactionTypes'] as List<dynamic>?)?.cast<String>() ?? const [],
+        propertyTypes: (json['propertyTypes'] as List<dynamic>?)?.cast<String>() ?? const [],
+        hasWifi: json['hasWifi'] as bool? ?? false,
+        hasPool: json['hasPool'] as bool? ?? false,
+        hasParking: json['hasParking'] as bool? ?? false,
+        isPetFriendly: json['isPetFriendly'] as bool? ?? false,
+      );
+    } catch (e) {
+      // Return default filters if parsing fails (silently)
+      return const SearchFilters();
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'location': location,
+      'bedrooms': bedrooms,
+      'minPrice': priceRange.start,
+      'maxPrice': priceRange.end,
+      'transactionTypes': transactionTypes,
+      'propertyTypes': propertyTypes,
+      'hasWifi': hasWifi,
+      'hasPool': hasPool,
+      'hasParking': hasParking,
+      'isPetFriendly': isPetFriendly,
+    };
+  }
 
   final String location;
   final List<int> bedrooms;
@@ -80,11 +119,35 @@ class SearchFilters {
 
 /// Notifier to manage search filters state.
 class SearchFiltersNotifier extends Notifier<SearchFilters> {
+  static const _kFiltersKey = 'search_filters';
+
   @override
-  SearchFilters build() => const SearchFilters();
+  SearchFilters build() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final jsonString = prefs.getString(_kFiltersKey);
+    if (jsonString != null) {
+      try {
+        final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
+        return SearchFilters.fromJson(jsonMap);
+      } catch (_) {
+        // Silently fail and use default state
+      }
+    }
+    return const SearchFilters();
+  }
+
+  void _persist() {
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      prefs.setString(_kFiltersKey, json.encode(state.toJson()));
+    } catch (_) {
+      // Silently fail persistence
+    }
+  }
 
   void updateLocation(String location) {
     state = state.copyWith(location: location);
+    _persist();
   }
 
   void toggleBedroom(int count) {
@@ -95,10 +158,12 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
       current.add(count);
     }
     state = state.copyWith(bedrooms: current);
+    _persist();
   }
 
   void updatePriceRange(RangeValues priceRange) {
     state = state.copyWith(priceRange: priceRange);
+    _persist();
   }
 
   void toggleTransactionType(String type) {
@@ -109,6 +174,7 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
       current.add(type);
     }
     state = state.copyWith(transactionTypes: current);
+    _persist();
   }
 
   void togglePropertyType(String type) {
@@ -119,26 +185,32 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
       current.add(type);
     }
     state = state.copyWith(propertyTypes: current);
+    _persist();
   }
 
   void updateWifi(bool value) {
     state = state.copyWith(hasWifi: value);
+    _persist();
   }
 
   void updatePool(bool value) {
     state = state.copyWith(hasPool: value);
+    _persist();
   }
 
   void updateParking(bool value) {
     state = state.copyWith(hasParking: value);
+    _persist();
   }
 
   void updatePetFriendly(bool value) {
     state = state.copyWith(isPetFriendly: value);
+    _persist();
   }
 
   void reset() {
     state = const SearchFilters();
+    _persist();
   }
 }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../design_system/tokens/app_colors.dart';
-import '../../design_system/tokens/app_radius.dart';
-import '../../design_system/tokens/app_spacing.dart';
-import '../../design_system/tokens/app_typography.dart';
+import '../tokens/app_colors.dart';
+import '../tokens/app_radius.dart';
+import '../tokens/app_spacing.dart';
+import '../tokens/app_typography.dart';
+import '../tokens/brutalist_palette.dart';
 
 /// Standard text field with design system styling.
 class AppTextField extends StatelessWidget {
@@ -176,7 +177,7 @@ class AppSearchBar extends StatelessWidget {
               child: Icon(
                 Icons.tune_rounded,
                 size: 20,
-                color: isDark ? AppColors.darkTextTertiary : AppColors.lightTextTertiary,
+                color: BrutalistPalette.accentOrange(isDark),
               ),
             ),
           ],

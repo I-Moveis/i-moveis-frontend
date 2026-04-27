@@ -9,12 +9,14 @@ class LocationService {
       throw const LocationServiceDisabledException();
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever) {
-      throw PermissionDeniedException('Permissão de localização negada permanentemente.');
+      throw const PermissionDeniedException(
+        'Permissão de localização negada permanentemente.',
+      );
     }
 
     return Geolocator.getCurrentPosition(

@@ -1,7 +1,8 @@
 import 'dart:convert';
+
+import 'package:app/core/providers/shared_preferences_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app/core/providers/shared_preferences_provider.dart';
 
 /// Model representing search filters with multi-selection support.
 @immutable
@@ -34,8 +35,7 @@ class SearchFilters {
         hasParking: json['hasParking'] as bool? ?? false,
         isPetFriendly: json['isPetFriendly'] as bool? ?? false,
       );
-    } catch (e) {
-      // Return default filters if parsing fails (silently)
+    } on Object {
       return const SearchFilters();
     }
   }
@@ -129,7 +129,7 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
       try {
         final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
         return SearchFilters.fromJson(jsonMap);
-      } catch (_) {
+      } on Object {
         // Silently fail and use default state
       }
     }
@@ -138,9 +138,10 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
 
   void _persist() {
     try {
-      final prefs = ref.read(sharedPreferencesProvider);
-      prefs.setString(_kFiltersKey, json.encode(state.toJson()));
-    } catch (_) {
+      ref
+          .read(sharedPreferencesProvider)
+          .setString(_kFiltersKey, json.encode(state.toJson()));
+    } on Object {
       // Silently fail persistence
     }
   }

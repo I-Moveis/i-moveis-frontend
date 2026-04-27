@@ -8,10 +8,10 @@ import '../../data/mock_properties_datasource.dart';
 import '../../domain/entities/map_property.dart';
 import '../map_style.dart';
 import '../providers/map_providers.dart';
+import '../providers/search_view_provider.dart';
 import '../widgets/map_location_fab.dart';
 import '../widgets/map_property_preview.dart';
 import '../widgets/map_search_top_bar.dart';
-import '../providers/search_view_provider.dart';
 
 /// Map search — fullscreen Google Map with floating overlays.
 class MapSearchPage extends ConsumerStatefulWidget {
@@ -58,12 +58,10 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    // Agora o provider retorna um AsyncValue (simulando API)
+
     final propertiesAsync = ref.watch(mockPropertiesProvider);
     final properties = propertiesAsync.value ?? [];
-    
-    final selectedId = ref.watch(selectedPropertyIdProvider);
+
     final permission = ref.watch(locationPermissionStatusProvider);
     final locationGranted = permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
@@ -96,52 +94,55 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
             child: Column(
               children: [
                 MapSearchTopBar(
-                  onBack: () => ref.read(searchViewProvider.notifier).set(SearchViewMode.list),
+                  onBack: () => ref
+                      .read(searchViewProvider.notifier)
+                      .set(SearchViewMode.list),
                   onSearchTap: () {},
                 ),
                 const Spacer(),
               ],
             ),
           ),
-          // Botão flutuante de filtro (Task especificação)
           Positioned(
             right: AppSpacing.screenHorizontal,
-            top: 100, // Logo abaixo do TopBar
+            top: 100,
             child: FloatingActionButton.small(
               heroTag: 'filter_fab',
               onPressed: () => _showFilterModal(context, ref),
               backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Icon(Icons.filter_list, color: Theme.of(context).colorScheme.onPrimary),
+              child: Icon(
+                Icons.filter_list,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
           ),
-          Positioned(
+          const Positioned(
             right: AppSpacing.screenHorizontal,
-            bottom: 300, // Acima do bottom sheet
-            child: const MapLocationFab(),
+            bottom: 300,
+            child: MapLocationFab(),
           ),
-          // Novo component: Bottom Sheet Draggable
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: SizedBox(
-               height: MediaQuery.of(context).size.height * 0.7, // Altura max do content limit
-               child: DraggableScrollableSheet(
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: DraggableScrollableSheet(
                 initialChildSize: 0.15,
                 minChildSize: 0.1,
-                maxChildSize: 1.0,
                 builder: (context, scrollController) {
                   return Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                       boxShadow: const [
-                        BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 0)
+                        BoxShadow(color: Colors.black26, blurRadius: 10),
                       ],
                     ),
                     child: Column(
                       children: [
-                        // Handle bar
                         Container(
                           margin: const EdgeInsets.symmetric(vertical: 12),
                           width: 40,
@@ -151,12 +152,13 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        // Loading State e Listagem
                         Expanded(
                           child: propertiesAsync.when(
                             data: (data) {
                               if (data.isEmpty) {
-                                return const Center(child: Text("Nenhum imóvel encontrado."));
+                                return const Center(
+                                  child: Text('Nenhum imóvel encontrado.'),
+                                );
                               }
                               return ListView.builder(
                                 controller: scrollController,
@@ -171,8 +173,11 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
                                 },
                               );
                             },
-                            loading: () => const Center(child: CircularProgressIndicator()),
-                            error: (err, stack) => Center(child: Text('Erro: $err')),
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (err, stack) =>
+                                Center(child: Text('Erro: $err')),
                           ),
                         ),
                       ],
@@ -188,10 +193,12 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
   }
 
   void _showFilterModal(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return Padding(
           padding: const EdgeInsets.all(24),
@@ -199,21 +206,26 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Filtros", style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Filtros',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 20),
               ListTile(
                 leading: const Icon(Icons.attach_money),
-                title: const Text("Até R\$ 4.000"),
+                title: const Text(r'Até R$ 4.000'),
                 onTap: () {
-                  ref.read(searchFilterProvider.notifier).updateFilter(max: 4000);
+                  ref
+                      .read(searchFilterProvider.notifier)
+                      .updateFilter(max: 4000);
                   Navigator.pop(ctx);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.clear_all),
-                title: const Text("Limpar Filtros"),
+                title: const Text('Limpar Filtros'),
                 onTap: () {
-                  ref.read(searchFilterProvider.notifier).updateFilter(max: null, min: null);
+                  ref.read(searchFilterProvider.notifier).updateFilter();
                   Navigator.pop(ctx);
                 },
               ),

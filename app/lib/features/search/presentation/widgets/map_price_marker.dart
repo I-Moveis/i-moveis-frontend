@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 class MapPriceMarker extends StatelessWidget {
+  const MapPriceMarker({
+    required this.formattedPrice,
+    required this.onTap,
+    super.key,
+    this.isSelected = false,
+  });
+
   final String formattedPrice;
   final VoidCallback onTap;
   final bool isSelected;
-
-  const MapPriceMarker({
-    super.key,
-    required this.formattedPrice,
-    required this.onTap,
-    this.isSelected = false,
-  });
 
   @override
   Widget build(BuildContext context) {

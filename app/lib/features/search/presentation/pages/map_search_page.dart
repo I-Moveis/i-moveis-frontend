@@ -58,17 +58,15 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final properties = ref.watch(mockPropertiesProvider);
+    
+    // Agora o provider retorna um AsyncValue (simulando API)
+    final propertiesAsync = ref.watch(mockPropertiesProvider);
+    final properties = propertiesAsync.value ?? [];
+    
     final selectedId = ref.watch(selectedPropertyIdProvider);
     final permission = ref.watch(locationPermissionStatusProvider);
     final locationGranted = permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
-    final selected = selectedId == null
-        ? null
-        : properties.firstWhere(
-            (p) => p.id == selectedId,
-            orElse: () => properties.first,
-          );
 
     return Scaffold(
       body: Stack(
@@ -105,41 +103,124 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
               ],
             ),
           ),
+          // Botão flutuante de filtro (Task especificação)
           Positioned(
             right: AppSpacing.screenHorizontal,
-            bottom: selected != null ? 180 : AppSpacing.xxl,
+            top: 100, // Logo abaixo do TopBar
+            child: FloatingActionButton.small(
+              heroTag: 'filter_fab',
+              onPressed: () => _showFilterModal(context, ref),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Icon(Icons.filter_list, color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          Positioned(
+            right: AppSpacing.screenHorizontal,
+            bottom: 300, // Acima do bottom sheet
             child: const MapLocationFab(),
           ),
+          // Novo component: Bottom Sheet Draggable
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: AnimatedSwitcher(
-              duration: AppDurations.normal,
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 1),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: FadeTransition(opacity: animation, child: child),
-                );
-              },
-              child: selected == null
-                  ? const SizedBox.shrink(key: ValueKey('empty'))
-                  : MapPropertyPreview(
-                      key: ValueKey(selected.id),
-                      property: selected,
-                      onClose: () => ref
-                          .read(selectedPropertyIdProvider.notifier)
-                          .set(null),
+            child: SizedBox(
+               height: MediaQuery.of(context).size.height * 0.7, // Altura max do content limit
+               child: DraggableScrollableSheet(
+                initialChildSize: 0.15,
+                minChildSize: 0.1,
+                maxChildSize: 1.0,
+                builder: (context, scrollController) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 0)
+                      ],
                     ),
+                    child: Column(
+                      children: [
+                        // Handle bar
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 12),
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        // Loading State e Listagem
+                        Expanded(
+                          child: propertiesAsync.when(
+                            data: (data) {
+                              if (data.isEmpty) {
+                                return const Center(child: Text("Nenhum imóvel encontrado."));
+                              }
+                              return ListView.builder(
+                                controller: scrollController,
+                                itemCount: data.length,
+                                itemBuilder: (context, index) {
+                                  final prop = data[index];
+                                  return MapPropertyPreview(
+                                    key: ValueKey(prop.id),
+                                    property: prop,
+                                    onClose: () {},
+                                  );
+                                },
+                              );
+                            },
+                            loading: () => const Center(child: CircularProgressIndicator()),
+                            error: (err, stack) => Center(child: Text('Erro: $err')),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showFilterModal(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Filtros", style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.attach_money),
+                title: const Text("Até R\$ 4.000"),
+                onTap: () {
+                  ref.read(searchFilterProvider.notifier).updateFilter(max: 4000);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.clear_all),
+                title: const Text("Limpar Filtros"),
+                onTap: () {
+                  ref.read(searchFilterProvider.notifier).updateFilter(max: null, min: null);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

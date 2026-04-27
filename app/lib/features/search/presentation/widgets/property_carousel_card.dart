@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import '../../../../design_system/design_system.dart';
-import '../../domain/entities/map_property.dart';
+import '../../domain/entities/property.dart';
+import 'package:flutter/material.dart';
 
 /// A card for property listings with an integrated image carousel.
 class PropertyCarouselCard extends StatelessWidget {
@@ -11,7 +11,7 @@ class PropertyCarouselCard extends StatelessWidget {
     super.key,
   });
 
-  final MapProperty property;
+  final Property property;
   final VoidCallback? onTap;
 
   @override
@@ -50,7 +50,7 @@ class PropertyCarouselCard extends StatelessWidget {
                         child: property.imageUrls.isEmpty
                             ? Center(
                                 child: Icon(
-                                  property.thumbnailIcon,
+                                  IconData(property.thumbnailIconCode, fontFamily: 'MaterialIcons'),
                                   size: 48,
                                   color: (isDark ? Colors.white : BrutalistPalette.warmBrown)
                                       .withValues(alpha: 0.1),
@@ -61,7 +61,7 @@ class PropertyCarouselCard extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Center(
                                   child: Icon(
-                                    property.thumbnailIcon,
+                                    IconData(property.thumbnailIconCode, fontFamily: 'MaterialIcons'),
                                     size: 48,
                                     color: (isDark ? Colors.white : BrutalistPalette.warmBrown)
                                         .withValues(alpha: 0.1),

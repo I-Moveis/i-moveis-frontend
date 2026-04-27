@@ -3,15 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../design_system/components/app_bottom_sheet.dart';
 import '../../../../design_system/components/app_chip.dart';
-import '../../../../design_system/tokens/app_colors.dart';
 import '../../../../design_system/tokens/app_radius.dart';
 import '../../../../design_system/tokens/app_spacing.dart';
 import '../../../../design_system/tokens/brutalist_palette.dart';
 import '../providers/search_filters_provider.dart';
 import 'bedrooms_filter_modal.dart';
+import 'filter_modal.dart';
 import 'price_filter_modal.dart';
 import 'property_type_filter_modal.dart';
-import 'filter_modal.dart';
 import 'transaction_type_filter_modal.dart';
 
 /// A horizontal bar of filter chips for the search page with a scroll indicator.
@@ -49,7 +48,7 @@ class _FilterChipBarState extends ConsumerState<FilterChipBar> {
                 return BrutalistPalette.accentOrange(isDark);
               }),
               trackColor: WidgetStateProperty.all(Colors.transparent),
-              thickness: WidgetStateProperty.all(4.0),
+              thickness: WidgetStateProperty.all(4),
               radius: const Radius.circular(AppRadius.full),
               interactive: true,
             ),

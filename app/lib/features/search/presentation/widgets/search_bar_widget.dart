@@ -49,9 +49,10 @@ class SearchBarWidget extends ConsumerWidget {
         return AppSearchBar(
           controller: controller,
           focusNode: focusNode,
-          onChanged: (value) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateLocation(value),
+          onChanged: (value) => ref
+              .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+              .updateLocation(value),
           onFilterTap: () => _openFilters(context),
-          autofocus: false,
           hint: 'Cidade, bairro ou endereço...',
         );
       },

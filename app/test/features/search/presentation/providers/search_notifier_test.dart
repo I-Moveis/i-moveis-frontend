@@ -1,11 +1,11 @@
+import 'package:app/core/providers/shared_preferences_provider.dart';
+import 'package:app/features/search/domain/entities/property.dart';
+import 'package:app/features/search/domain/usecases/search_properties_usecase.dart';
+import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
+import 'package:app/features/search/presentation/providers/search_notifier.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app/features/search/presentation/providers/search_notifier.dart';
-import 'package:app/features/search/domain/usecases/search_properties_usecase.dart';
-import 'package:app/features/search/domain/entities/property.dart';
-import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
-import 'package:app/core/providers/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockSearchPropertiesUseCase extends Mock implements SearchPropertiesUseCase {}
@@ -61,21 +61,21 @@ void main() {
     test('initial state should be loading and then success with properties', () async {
       final properties = [createMockProperty('1', '100')];
 
-      when(() => mockUseCase.execute(any(), page: 1))
+      when(() => mockUseCase.execute(any()))
           .thenAnswer((_) async => properties);
 
       // Trigger build
       final state = await container.read(searchNotifierProvider.future);
 
       expect(state, properties);
-      verify(() => mockUseCase.execute(any(), page: 1)).called(1);
+      verify(() => mockUseCase.execute(any())).called(1);
     });
 
     test('loadNextPage should append properties to current list', () async {
       final page1 = [createMockProperty('1', '100')];
       final page2 = [createMockProperty('2', '200')];
 
-      when(() => mockUseCase.execute(any(), page: 1)).thenAnswer((_) async => page1);
+      when(() => mockUseCase.execute(any())).thenAnswer((_) async => page1);
       when(() => mockUseCase.execute(any(), page: 2)).thenAnswer((_) async => page2);
 
       // Load page 1
@@ -91,19 +91,19 @@ void main() {
     test('search should reset pagination and reload', () async {
       final page1 = [createMockProperty('1', '100')];
       
-      when(() => mockUseCase.execute(any(), page: 1)).thenAnswer((_) async => page1);
+      when(() => mockUseCase.execute(any())).thenAnswer((_) async => page1);
 
       await container.read(searchNotifierProvider.future);
       
       await container.read(searchNotifierProvider.notifier).search();
 
-      verify(() => mockUseCase.execute(any(), page: 1)).called(2);
+      verify(() => mockUseCase.execute(any())).called(2);
     });
 
     test('should retry on error without losing previous state', () async {
        final page1 = [createMockProperty('1', '100')];
        
-       when(() => mockUseCase.execute(any(), page: 1)).thenAnswer((_) async => page1);
+       when(() => mockUseCase.execute(any())).thenAnswer((_) async => page1);
        when(() => mockUseCase.execute(any(), page: 2)).thenThrow(Exception('Network error'));
 
        await container.read(searchNotifierProvider.future);

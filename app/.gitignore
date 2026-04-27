@@ -58,23 +58,11 @@ ios/**/*.xcarchive
 ios/**/*.xcworkspace/
 ios/**/*.xcodeproj/project.pbxproj
 
-# macOS build artifacts
-/macos/build/
-/macos/Pods/
-/macos/Podfile.lock
-/macos/**/*.xcarchive
-/macos/**/*.xcworkspace/
-
-# Linux build artifacts
-/linux/build/
-/linux/.cmake/
-/linux/CMakeMakefile
-
-# Windows build artifacts
-/windows/build/
-/windows/.vs/
-/windows/cmake_install.cmake
-/windows/CMakeCache.txt
+# Desktop platforms are not supported by this project; Flutter tooling
+# regenerates these folders on `pub get`, so ignore them entirely.
+/macos/
+/windows/
+/linux/
 
 # Web build artifacts
 /web/build/

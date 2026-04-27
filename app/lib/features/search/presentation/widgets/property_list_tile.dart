@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../design_system/design_system.dart';
-import '../../domain/entities/property.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
+import '../../domain/entities/property.dart';
 
 /// A detailed list tile for property listings with integrated image carousel
 /// and domain-specific information (area, rooms, total price).

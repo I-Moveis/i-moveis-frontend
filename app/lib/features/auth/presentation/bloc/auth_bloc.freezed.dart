@@ -55,14 +55,15 @@ extension AuthEventPatterns on AuthEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LoginRequested value)?  loginRequested,TResult Function( RegisterRequested value)?  registerRequested,TResult Function( LogoutRequested value)?  logoutRequested,TResult Function( SocialLoginRequested value)?  socialLoginRequested,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LoginRequested value)?  loginRequested,TResult Function( RegisterRequested value)?  registerRequested,TResult Function( LogoutRequested value)?  logoutRequested,TResult Function( SocialLoginRequested value)?  socialLoginRequested,TResult Function( CheckSessionRequested value)?  checkSessionRequested,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that);case RegisterRequested() when registerRequested != null:
 return registerRequested(_that);case LogoutRequested() when logoutRequested != null:
 return logoutRequested(_that);case SocialLoginRequested() when socialLoginRequested != null:
-return socialLoginRequested(_that);case _:
+return socialLoginRequested(_that);case CheckSessionRequested() when checkSessionRequested != null:
+return checkSessionRequested(_that);case _:
   return orElse();
 
 }
@@ -80,14 +81,15 @@ return socialLoginRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LoginRequested value)  loginRequested,required TResult Function( RegisterRequested value)  registerRequested,required TResult Function( LogoutRequested value)  logoutRequested,required TResult Function( SocialLoginRequested value)  socialLoginRequested,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LoginRequested value)  loginRequested,required TResult Function( RegisterRequested value)  registerRequested,required TResult Function( LogoutRequested value)  logoutRequested,required TResult Function( SocialLoginRequested value)  socialLoginRequested,required TResult Function( CheckSessionRequested value)  checkSessionRequested,}){
 final _that = this;
 switch (_that) {
 case LoginRequested():
 return loginRequested(_that);case RegisterRequested():
 return registerRequested(_that);case LogoutRequested():
 return logoutRequested(_that);case SocialLoginRequested():
-return socialLoginRequested(_that);case _:
+return socialLoginRequested(_that);case CheckSessionRequested():
+return checkSessionRequested(_that);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -104,14 +106,15 @@ return socialLoginRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LoginRequested value)?  loginRequested,TResult? Function( RegisterRequested value)?  registerRequested,TResult? Function( LogoutRequested value)?  logoutRequested,TResult? Function( SocialLoginRequested value)?  socialLoginRequested,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LoginRequested value)?  loginRequested,TResult? Function( RegisterRequested value)?  registerRequested,TResult? Function( LogoutRequested value)?  logoutRequested,TResult? Function( SocialLoginRequested value)?  socialLoginRequested,TResult? Function( CheckSessionRequested value)?  checkSessionRequested,}){
 final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that);case RegisterRequested() when registerRequested != null:
 return registerRequested(_that);case LogoutRequested() when logoutRequested != null:
 return logoutRequested(_that);case SocialLoginRequested() when socialLoginRequested != null:
-return socialLoginRequested(_that);case _:
+return socialLoginRequested(_that);case CheckSessionRequested() when checkSessionRequested != null:
+return checkSessionRequested(_that);case _:
   return null;
 
 }
@@ -128,13 +131,14 @@ return socialLoginRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  String password)?  loginRequested,TResult Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult Function()?  logoutRequested,TResult Function( SocialProvider provider)?  socialLoginRequested,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  String password)?  loginRequested,TResult Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult Function()?  logoutRequested,TResult Function( SocialProvider provider)?  socialLoginRequested,TResult Function()?  checkSessionRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that.email,_that.password);case RegisterRequested() when registerRequested != null:
 return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested() when logoutRequested != null:
 return logoutRequested();case SocialLoginRequested() when socialLoginRequested != null:
-return socialLoginRequested(_that.provider);case _:
+return socialLoginRequested(_that.provider);case CheckSessionRequested() when checkSessionRequested != null:
+return checkSessionRequested();case _:
   return orElse();
 
 }
@@ -152,13 +156,14 @@ return socialLoginRequested(_that.provider);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  String password)  loginRequested,required TResult Function( String name,  String email,  String phone,  String password)  registerRequested,required TResult Function()  logoutRequested,required TResult Function( SocialProvider provider)  socialLoginRequested,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  String password)  loginRequested,required TResult Function( String name,  String email,  String phone,  String password)  registerRequested,required TResult Function()  logoutRequested,required TResult Function( SocialProvider provider)  socialLoginRequested,required TResult Function()  checkSessionRequested,}) {final _that = this;
 switch (_that) {
 case LoginRequested():
 return loginRequested(_that.email,_that.password);case RegisterRequested():
 return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested():
 return logoutRequested();case SocialLoginRequested():
-return socialLoginRequested(_that.provider);case _:
+return socialLoginRequested(_that.provider);case CheckSessionRequested():
+return checkSessionRequested();case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -175,13 +180,14 @@ return socialLoginRequested(_that.provider);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  String password)?  loginRequested,TResult? Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult? Function()?  logoutRequested,TResult? Function( SocialProvider provider)?  socialLoginRequested,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  String password)?  loginRequested,TResult? Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult? Function()?  logoutRequested,TResult? Function( SocialProvider provider)?  socialLoginRequested,TResult? Function()?  checkSessionRequested,}) {final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that.email,_that.password);case RegisterRequested() when registerRequested != null:
 return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested() when logoutRequested != null:
 return logoutRequested();case SocialLoginRequested() when socialLoginRequested != null:
-return socialLoginRequested(_that.provider);case _:
+return socialLoginRequested(_that.provider);case CheckSessionRequested() when checkSessionRequested != null:
+return checkSessionRequested();case _:
   return null;
 
 }
@@ -426,6 +432,38 @@ as SocialProvider,
 
 
 }
+
+/// @nodoc
+
+
+class CheckSessionRequested implements AuthEvent {
+  const CheckSessionRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckSessionRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AuthEvent.checkSessionRequested()';
+}
+
+
+}
+
+
+
 
 /// @nodoc
 mixin _$AuthState {

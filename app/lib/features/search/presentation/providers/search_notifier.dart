@@ -1,12 +1,13 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
+
 import '../../domain/entities/property.dart';
 import '../../domain/usecases/search_properties_usecase.dart';
 import 'search_filters_provider.dart';
 
-// Provider for SearchNotifier.
-final searchNotifierProvider = AsyncNotifierProvider<SearchNotifier, List<Property>>(
+final searchNotifierProvider =
+    AsyncNotifierProvider<SearchNotifier, List<Property>>(
   SearchNotifier.new,
 );
 
@@ -17,7 +18,8 @@ class ScrollTriggerNotifier extends Notifier<int> {
   void trigger() => state++;
 }
 
-final searchScrollTriggerProvider = NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
+final searchScrollTriggerProvider =
+    NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
 
 class SearchNotifier extends AsyncNotifier<List<Property>> {
   int _currentPage = 1;
@@ -25,7 +27,6 @@ class SearchNotifier extends AsyncNotifier<List<Property>> {
 
   @override
   FutureOr<List<Property>> build() async {
-    // Watch filter changes to trigger rebuild
     ref.watch(searchFiltersProvider);
 
     _currentPage = 1;
@@ -46,16 +47,10 @@ class SearchNotifier extends AsyncNotifier<List<Property>> {
     if (_hasReachedMax || state.isLoading) return;
 
     final currentProperties = state.value ?? [];
-    
-    // Set loading state but keep previous data to allow "retry" or show previous items
-    // Riverpod 2.0 AsyncValue.guard with data is a bit tricky, 
-    // we can use state = AsyncValue.loading() but it will lose data in UI if not handled.
-    // Better to just fetch and update state.
-    
     final nextPage = _currentPage + 1;
-    
+
     final result = await AsyncValue.guard(() => _fetchPage(nextPage));
-    
+
     result.when(
       data: (newProperties) {
         if (newProperties.isEmpty) {
@@ -66,8 +61,8 @@ class SearchNotifier extends AsyncNotifier<List<Property>> {
         }
       },
       error: (err, stack) {
-        // Keep previous data but set error
-        state = AsyncError<List<Property>>(err, stack).copyWithPrevious(state);
+        // Keep previous data but surface the error.
+        state = AsyncValue<List<Property>>.error(err, stack);
       },
       loading: () {},
     );

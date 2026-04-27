@@ -19,4 +19,6 @@ class AuthEvent with _$AuthEvent {
   const factory AuthEvent.socialLoginRequested({
     required SocialProvider provider,
   }) = SocialLoginRequested;
+
+  const factory AuthEvent.checkSessionRequested() = CheckSessionRequested;
 }

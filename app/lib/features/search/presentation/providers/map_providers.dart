@@ -7,8 +7,53 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../data/mock_properties_datasource.dart';
 import '../../domain/entities/map_property.dart';
 
-final mockPropertiesProvider = Provider<List<MapProperty>>((ref) {
-  return kMockMapProperties;
+class SearchFilter {
+  SearchFilter({this.minPrice, this.maxPrice});
+
+  final double? minPrice;
+  final double? maxPrice;
+}
+
+class SearchFilterNotifier extends Notifier<SearchFilter> {
+  @override
+  SearchFilter build() => SearchFilter();
+
+  void updateFilter({double? min, double? max}) {
+    state = SearchFilter(
+      minPrice: min ?? state.minPrice,
+      maxPrice: max ?? state.maxPrice,
+    );
+  }
+}
+
+final searchFilterProvider =
+    NotifierProvider<SearchFilterNotifier, SearchFilter>(
+  SearchFilterNotifier.new,
+);
+
+final mockPropertiesProvider = FutureProvider<List<MapProperty>>((ref) async {
+  final filter = ref.watch(searchFilterProvider);
+
+  await Future<void>.delayed(const Duration(milliseconds: 800));
+
+  var filteredList = kMockMapProperties.toList();
+
+  if (filter.minPrice != null) {
+    filteredList = filteredList.where((p) {
+      final priceNum =
+          double.tryParse(p.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
+      return priceNum >= filter.minPrice!;
+    }).toList();
+  }
+  if (filter.maxPrice != null) {
+    filteredList = filteredList.where((p) {
+      final priceNum =
+          double.tryParse(p.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
+      return priceNum <= filter.maxPrice!;
+    }).toList();
+  }
+
+  return filteredList;
 });
 
 class SelectedPropertyIdNotifier extends Notifier<String?> {

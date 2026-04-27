@@ -1,14 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:app/features/search/presentation/pages/search_page.dart';
-import 'package:app/features/search/presentation/providers/search_notifier.dart';
-import 'package:app/features/search/domain/usecases/search_properties_usecase.dart';
-import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
 import 'package:app/core/providers/shared_preferences_provider.dart';
+import 'package:app/features/search/domain/usecases/search_properties_usecase.dart';
+import 'package:app/features/search/presentation/pages/search_page.dart';
+import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app/features/search/domain/entities/property.dart';
 
 class MockSearchPropertiesUseCase extends Mock implements SearchPropertiesUseCase {}
 class MockSharedPreferences extends Mock implements SharedPreferences {}

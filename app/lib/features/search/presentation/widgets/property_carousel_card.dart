@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
+
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/property.dart';
-import 'package:flutter/material.dart';
 
 /// A card for property listings with an integrated image carousel.
 class PropertyCarouselCard extends StatelessWidget {

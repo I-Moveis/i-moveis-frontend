@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../presentation/providers/search_filters_provider.dart';
 import '../entities/property.dart';
 import '../repositories/property_repository.dart';
-import '../../presentation/providers/search_filters_provider.dart';
 
 /// Provider for the SearchPropertiesUseCase.
 final searchPropertiesUseCaseProvider = Provider<SearchPropertiesUseCase>((ref) {
@@ -25,6 +25,9 @@ class SearchResult {
   });
 }
 
+// Contract for search use case — abstract to allow mocking in tests and
+// swapping mock impl for a real API-backed one without touching callers.
+// ignore: one_member_abstracts
 abstract class SearchPropertiesUseCase {
   Future<SearchResult> execute(SearchFilters filters, {int page = 1});
 }

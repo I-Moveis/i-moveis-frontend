@@ -9,6 +9,7 @@ import '../../features/admin/presentation/pages/admin_users_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/providers/auth_status_provider.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/pages/conversations_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
@@ -38,11 +39,33 @@ final _favoritesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'favorites'
 final _chatNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'chat');
 final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
+/// Paths allowed for users without an authenticated session.
+const _publicPaths = <String>{
+  '/splash',
+  '/onboarding',
+  '/login',
+  '/register',
+  '/forgot-password',
+};
+
 /// Provider for GoRouter configuration.
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
+    redirect: (context, state) {
+      final status = ref.read(authStatusProvider);
+      final location = state.matchedLocation;
+      final isPublic = _publicPaths.any(location.startsWith);
+
+      // Don't redirect until the splash has resolved the session.
+      if (status == AuthStatus.unknown) return null;
+
+      if (status == AuthStatus.unauthenticated && !isPublic) {
+        return '/login';
+      }
+      return null;
+    },
     routes: [
       // ── Auth flow ────────────────────────────────────────────
       GoRoute(

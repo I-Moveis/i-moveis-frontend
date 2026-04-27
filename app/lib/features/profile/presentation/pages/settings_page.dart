@@ -19,7 +19,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeProvider);
+    final themeMode = ref.watch(themeProvider).when(
+          data: (v) => v,
+          loading: () => ThemeMode.dark,
+          error: (_, __) => ThemeMode.dark,
+        );
     final isDarkMode = themeMode == ThemeMode.dark;
     final palette = ref.watch(brutalistPaletteProvider);
     final seedColor = ref.watch(seedColorProvider);

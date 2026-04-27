@@ -1,6 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
+
 import '../../domain/entities/property.dart';
 import '../../domain/usecases/search_properties_usecase.dart';
 import 'search_filters_provider.dart';
@@ -41,7 +42,8 @@ class ScrollTriggerNotifier extends Notifier<int> {
   void trigger() => state++;
 }
 
-final searchScrollTriggerProvider = NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
+final searchScrollTriggerProvider =
+    NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
 
 class SearchNotifier extends AsyncNotifier<SearchState> {
   int _currentPage = 1;
@@ -82,9 +84,9 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
     if (currentState == null) return;
     
     final nextPage = _currentPage + 1;
-    
+
     final result = await AsyncValue.guard(() => _fetchPage(nextPage));
-    
+
     result.when(
       data: (searchResult) {
         if (searchResult.properties.isEmpty) {

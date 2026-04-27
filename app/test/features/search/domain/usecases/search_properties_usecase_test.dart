@@ -11,6 +11,10 @@ void main() {
   late SearchPropertiesUseCaseImpl useCase;
   late MockPropertyRepository mockRepository;
 
+  setUpAll(() {
+    registerFallbackValue(const SearchFilters());
+  });
+
   setUp(() {
     mockRepository = MockPropertyRepository();
     useCase = SearchPropertiesUseCaseImpl(mockRepository);
@@ -24,7 +28,7 @@ void main() {
       title: 'Test Property',
       latitude: 0,
       longitude: 0,
-      price: 'R$ 1.000',
+      price: r'R$ 1.000',
       priceValue: 1000,
       description: 'Test description',
       type: 'Apartamento',

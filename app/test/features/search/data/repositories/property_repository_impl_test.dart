@@ -13,6 +13,10 @@ void main() {
   late MockRemoteDataSource mockRemoteDataSource;
   late MockLocalDataSource mockLocalDataSource;
 
+  setUpAll(() {
+    registerFallbackValue(const SearchFilters());
+  });
+
   setUp(() {
     mockRemoteDataSource = MockRemoteDataSource();
     mockLocalDataSource = MockLocalDataSource();
@@ -30,7 +34,7 @@ void main() {
       title: 'Test Property',
       latitude: 0,
       longitude: 0,
-      price: 'R$ 1.000',
+      price: r'R$ 1.000',
       priceValue: 1000,
       description: 'Test description',
       type: 'Apartamento',

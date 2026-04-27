@@ -1,4 +1,4 @@
-import '../entities/property.dart';
+import '../../domain/entities/property.dart';
 import '../../presentation/providers/search_filters_provider.dart';
 
 abstract class PropertyRemoteDataSource {

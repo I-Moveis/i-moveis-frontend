@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../search/presentation/providers/search_notifier.dart';
 
 /// Main shell with fixed bottom navigation bar.
-class MainShellPage extends StatelessWidget {
+class MainShellPage extends ConsumerWidget {
   const MainShellPage({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
@@ -19,7 +21,7 @@ class MainShellPage extends StatelessWidget {
   static const _labels = ['Home', 'Busca', 'Salvos', 'Chat', 'Perfil'];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -49,10 +51,17 @@ class MainShellPage extends StatelessWidget {
                     label: _labels[i],
                     isActive: isActive,
                     isDark: isDark,
-                    onTap: () => navigationShell.goBranch(
-                      i,
-                      initialLocation: i == navigationShell.currentIndex,
-                    ),
+                    onTap: () {
+                      // If tapping the search icon (index 1) while already active, trigger scroll to top
+                      if (isActive && i == 1) {
+                        ref.read(searchScrollTriggerProvider.notifier).trigger();
+                      }
+                      
+                      navigationShell.goBranch(
+                        i,
+                        initialLocation: i == navigationShell.currentIndex,
+                      );
+                    },
                   ),
                 );
               }),

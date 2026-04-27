@@ -39,6 +39,7 @@ class BrutalistPageScaffold extends ConsumerStatefulWidget {
     this.resizeToAvoidBottomInset = false,
     this.showWaveBackground = true,
     this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   /// Builds the page content. Receives context, theme brightness,
@@ -57,6 +58,7 @@ class BrutalistPageScaffold extends ConsumerStatefulWidget {
   final bool resizeToAvoidBottomInset;
   final bool showWaveBackground;
   final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   @override
   ConsumerState<BrutalistPageScaffold> createState() => _BrutalistPageScaffoldState();
@@ -124,6 +126,7 @@ class _BrutalistPageScaffoldState extends ConsumerState<BrutalistPageScaffold>
           backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: widget.resizeToAvoidBottomInset,
           floatingActionButton: widget.floatingActionButton,
+          floatingActionButtonLocation: widget.floatingActionButtonLocation,
           body: SafeArea(
             child: AnimatedBuilder(
               animation: _entranceController,

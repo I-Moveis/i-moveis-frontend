@@ -11,6 +11,7 @@ import '../providers/map_providers.dart';
 import '../widgets/map_location_fab.dart';
 import '../widgets/map_property_preview.dart';
 import '../widgets/map_search_top_bar.dart';
+import '../providers/search_view_provider.dart';
 
 /// Map search — fullscreen Google Map with floating overlays.
 class MapSearchPage extends ConsumerStatefulWidget {
@@ -95,7 +96,7 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
             child: Column(
               children: [
                 MapSearchTopBar(
-                  onBack: () => Navigator.of(context).pop(),
+                  onBack: () => ref.read(searchViewProvider.notifier).set(SearchViewMode.list),
                   onSearchTap: () {},
                 ),
                 const Spacer(),

@@ -144,7 +144,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
               // Property list or Error/Loading
               searchState.when(
-                data: (properties) {
+                data: (state) {
+                  final properties = state.properties;
                   if (properties.isEmpty) {
                     return SliverFillRemaining(
                       hasScrollBody: false,
@@ -169,8 +170,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
                   return SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        if (state.isOffline)
+                          SliverToBoxAdapter(
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs, horizontal: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.error.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.05),
+                                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                                borderRadius: AppRadius.borderSm,
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.cloud_off_rounded, size: 14, color: AppColors.error),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(
+                                    'Modo Offline — Resultados podem estar desatualizados',
+                                    style: AppTypography.labelSmall.copyWith(color: AppColors.error),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           if (index < properties.length) {
                             final property = properties[index];
@@ -193,7 +218,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         childCount: properties.length + (searchState.isLoading ? 1 : 0),
                       ),
                     ),
-                  );
+                  ],
+                ),
+              );
                 },
                 loading: () => const SliverToBoxAdapter(
                   child: BrutalistShimmer(),

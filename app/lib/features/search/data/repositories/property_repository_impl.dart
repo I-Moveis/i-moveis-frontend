@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:app/core/error/failures.dart';
 import '../../domain/entities/property.dart';
 import '../../domain/repositories/property_repository.dart';
 import '../../domain/usecases/search_properties_usecase.dart';
@@ -16,22 +18,53 @@ class PropertyRepositoryImpl implements PropertyRepository {
   @override
   Future<SearchResult> searchProperties(SearchFilters filters, {int page = 1}) async {
     try {
+      // Network-First strategy
       final remoteProperties = await remoteDataSource.searchProperties(filters, page: page);
       
       // Update cache
       await localDataSource.cacheProperties(filters, remoteProperties, page: page);
       
-      return SearchResult(properties: remoteProperties, isOffline: false);
+      return SearchResult(
+        properties: remoteProperties, 
+        isOffline: false,
+        currentPage: page,
+        hasNextPage: remoteProperties.length >= 10, // Assuming 10 is the page size
+      );
+    } on SocketException {
+      return await _handleOfflineFallback(filters, page, isNetworkError: true);
     } catch (e) {
-      // Fallback to local cache
-      final cachedProperties = await localDataSource.getCachedProperties(filters, page: page);
-      
-      if (cachedProperties.isNotEmpty) {
-        return SearchResult(properties: cachedProperties, isOffline: true);
+      // For any other error (e.g. 500), also try fallback
+      try {
+        return await _handleOfflineFallback(filters, page, isNetworkError: false);
+      } catch (fallbackError) {
+        // If fallback also fails or cache is empty, map the original error
+        if (fallbackError is Failure) rethrow;
+        throw const ServerFailure();
       }
-      
-      // If cache is also empty, rethrow error
-      rethrow;
+    }
+  }
+
+  Future<SearchResult> _handleOfflineFallback(
+    SearchFilters filters, 
+    int page, 
+    {required bool isNetworkError}
+  ) async {
+    final cachedProperties = await localDataSource.getCachedProperties(filters, page: page);
+    
+    if (cachedProperties.isNotEmpty) {
+      return SearchResult(
+        properties: cachedProperties, 
+        isOffline: true,
+        currentPage: page,
+        hasNextPage: false, // Limited info in cache fallback
+      );
+    }
+    
+    // If cache is empty, throw specific failure based on the original cause
+    if (isNetworkError) {
+      throw const NetworkFailure();
+    } else {
+      throw const ServerFailure();
     }
   }
 }

@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:app/core/error/failures.dart';
 import 'package:app/features/search/domain/entities/property.dart';
 import 'package:app/features/search/data/repositories/property_repository_impl.dart';
 import 'package:app/features/search/data/datasources/property_datasources.dart';
+import 'package:app/features/search/domain/usecases/search_properties_usecase.dart';
 import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
 
 class MockRemoteDataSource extends Mock implements PropertyRemoteDataSource {}
@@ -26,7 +29,7 @@ void main() {
     );
   });
 
-  final tFilters = SearchFilters();
+  final tFilters = const SearchFilters();
   const tPage = 1;
   final tProperties = [
     const Property(
@@ -63,10 +66,10 @@ void main() {
       expect(result.isOffline, false);
     });
 
-    test('should return cached data when remote fetch fails (offline fallback)', () async {
+    test('should return cached data when remote fetch fails with SocketException (offline fallback)', () async {
       // arrange
       when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
-          .thenThrow(Exception('No internet'));
+          .thenThrow(const SocketException('No internet'));
       when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
           .thenAnswer((_) async => tProperties);
 
@@ -80,10 +83,10 @@ void main() {
       expect(result.isOffline, true);
     });
 
-    test('should throw Exception when both remote and local fail', () async {
+    test('should throw NetworkFailure when remote fails with SocketException and cache is empty', () async {
       // arrange
       when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
-          .thenThrow(Exception('No internet'));
+          .thenThrow(const SocketException('No internet'));
       when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
           .thenAnswer((_) async => []);
 
@@ -91,7 +94,21 @@ void main() {
       final call = repository.searchProperties;
 
       // assert
-      expect(() => call(tFilters, page: tPage), throwsA(isA<Exception>()));
+      expect(() => call(tFilters, page: tPage), throwsA(isA<NetworkFailure>()));
+    });
+
+    test('should throw ServerFailure when remote fails with generic exception and cache is empty', () async {
+      // arrange
+      when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
+          .thenThrow(Exception('Server Error'));
+      when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
+          .thenAnswer((_) async => []);
+
+      // act
+      final call = repository.searchProperties;
+
+      // assert
+      expect(() => call(tFilters, page: tPage), throwsA(isA<ServerFailure>()));
     });
   });
 }

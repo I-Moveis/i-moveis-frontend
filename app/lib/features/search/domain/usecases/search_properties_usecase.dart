@@ -5,20 +5,24 @@ import '../../presentation/providers/search_filters_provider.dart';
 
 /// Provider for the SearchPropertiesUseCase.
 final searchPropertiesUseCaseProvider = Provider<SearchPropertiesUseCase>((ref) {
-  // Repository will be provided by another provider
   final repository = ref.watch(propertyRepositoryProvider);
   return SearchPropertiesUseCaseImpl(repository);
 });
 
-// Interface is already defined in repositories/property_repository.dart
-// But for consistency with the existing code, I'll keep it here if needed or just use the one from repository.
-// Actually, the original file had the abstract class. I'll move it to repository.dart and leave it here as a re-export or just use the one from there.
-
 class SearchResult {
   final List<Property> properties;
   final bool isOffline;
+  final int totalResults;
+  final int currentPage;
+  final bool hasNextPage;
 
-  SearchResult({required this.properties, required this.isOffline});
+  SearchResult({
+    required this.properties,
+    required this.isOffline,
+    this.totalResults = 0,
+    this.currentPage = 1,
+    this.hasNextPage = false,
+  });
 }
 
 abstract class SearchPropertiesUseCase {

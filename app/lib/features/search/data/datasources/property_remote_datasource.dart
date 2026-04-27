@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../domain/entities/property.dart';
 import '../../presentation/providers/search_filters_provider.dart';
 import 'property_datasources.dart';
@@ -8,7 +9,10 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     // Simulated API call
     await Future.delayed(const Duration(milliseconds: 800));
     
-    // For now, returning the same mock data as before
+    // Simulating network failure for testing offline fallback
+    // To test fallback: uncomment the line below
+    // throw const SocketException('No internet connection');
+
     return List.generate(10, (index) {
       final id = 'prop-${page}-${index}';
       final basePrice = (2000 + index * 100).toDouble();

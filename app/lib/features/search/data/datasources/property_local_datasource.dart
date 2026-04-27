@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:hive/hive.dart';
 import '../../domain/entities/property.dart';
 import '../../presentation/providers/search_filters_provider.dart';
@@ -6,6 +7,7 @@ import 'property_datasources.dart';
 
 class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
   static const String _boxName = 'properties_cache';
+  static const Duration _cacheDuration = Duration(hours: 2);
 
   Future<Box> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
@@ -19,11 +21,23 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
     try {
       final box = await _getBox();
       final key = _generateKey(filters, page);
-      final dynamic cachedData = box.get(key);
+      final dynamic cachedEntry = box.get(key);
       
-      if (cachedData is! List) return [];
+      if (cachedEntry == null || cachedEntry is! Map) return [];
+
+      // Check expiration
+      final timestampStr = cachedEntry['timestamp'] as String?;
+      if (timestampStr != null) {
+        final timestamp = DateTime.parse(timestampStr);
+        if (DateTime.now().difference(timestamp) > _cacheDuration) {
+          await box.delete(key);
+          return [];
+        }
+      }
+
+      final List<dynamic> data = cachedEntry['data'] as List<dynamic>? ?? [];
       
-      return cachedData.map((m) {
+      return data.map((m) {
         if (m is! Map) return null;
         return PropertyModel.fromMap(Map<String, dynamic>.from(m));
       }).whereType<Property>().toList();
@@ -42,17 +56,21 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
       final key = _generateKey(filters, page);
       final data = properties.map((e) => PropertyModel.toMap(e)).toList();
       
-      await box.put(key, data);
+      final entry = {
+        'timestamp': DateTime.now().toIso8601String(),
+        'data': data,
+      };
+      
+      await box.put(key, entry);
     } catch (e) {
       // Fail silently for cache
     }
   }
 
   String _generateKey(SearchFilters filters, int page) {
-    // Generate a unique key based on the filter state
-    final transactionPart = filters.transactionTypes.join(',');
-    final propertyPart = filters.propertyTypes.join(',');
-    final locationPart = filters.location;
-    return 'search_${locationPart}_${transactionPart}_${propertyPart}_p$page';
+    // Use jsonEncode to create a unique key based on all filter parameters
+    final filtersJson = jsonEncode(filters.toJson());
+    // We use the hash of the JSON to keep the key length manageable while staying unique
+    return 'search_${filtersJson.hashCode}_p$page';
   }
 }

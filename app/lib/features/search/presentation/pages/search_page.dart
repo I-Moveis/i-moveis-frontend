@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../../core/error/failures.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_chip_bar.dart';
 import '../widgets/property_list_tile.dart';
@@ -236,8 +237,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           const Icon(Icons.error_outline, size: 48, color: Colors.red),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            'Erro ao carregar imóveis.',
+                            error is Failure ? error.message : 'Erro ao carregar imóveis.',
                             style: AppTypography.titleMedium,
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           AppButton(

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/search_filters_provider.dart';
 
-/// Modal for selecting the number of bedrooms.
+/// Modal for selecting multiple bedroom counts.
 class BedroomsFilterModal extends ConsumerWidget {
   /// Creates a [BedroomsFilterModal].
   const BedroomsFilterModal({super.key});
@@ -11,6 +11,7 @@ class BedroomsFilterModal extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(searchFiltersProvider);
+    final options = [1, 2, 3, 4, 5];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -25,13 +26,13 @@ class BedroomsFilterModal extends ConsumerWidget {
                 spacing: AppSpacing.md,
                 runSpacing: AppSpacing.md,
                 alignment: WrapAlignment.center,
-                children: [0, 1, 2, 3, 4, 5].map((count) {
-                  final isSelected = filters.bedrooms == count;
-                  final label = count == 0 ? 'Qualquer' : '$count+';
+                children: options.map((count) {
+                  final label = '$count+';
+                  final isSelected = filters.bedrooms.contains(count);
                   return AppChip(
                     label: label,
                     isSelected: isSelected,
-                    onTap: () => ref.read(searchFiltersProvider.notifier).updateBedrooms(count),
+                    onTap: () => ref.read(searchFiltersProvider.notifier).toggleBedroom(count),
                   );
                 }).toList(),
               ),

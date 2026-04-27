@@ -38,6 +38,8 @@ class BrutalistPageScaffold extends ConsumerStatefulWidget {
     this.waveCount = 5,
     this.resizeToAvoidBottomInset = false,
     this.showWaveBackground = true,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   /// Builds the page content. Receives context, theme brightness,
@@ -55,6 +57,8 @@ class BrutalistPageScaffold extends ConsumerStatefulWidget {
   final int waveCount;
   final bool resizeToAvoidBottomInset;
   final bool showWaveBackground;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   @override
   ConsumerState<BrutalistPageScaffold> createState() => _BrutalistPageScaffoldState();
@@ -121,6 +125,8 @@ class _BrutalistPageScaffoldState extends ConsumerState<BrutalistPageScaffold>
         Scaffold(
           backgroundColor: Colors.transparent,
           resizeToAvoidBottomInset: widget.resizeToAvoidBottomInset,
+          floatingActionButton: widget.floatingActionButton,
+          floatingActionButtonLocation: widget.floatingActionButtonLocation,
           body: SafeArea(
             child: AnimatedBuilder(
               animation: _entranceController,
@@ -369,7 +375,7 @@ class BrutalistGradientButton extends ConsumerWidget {
             end: Alignment.bottomRight,
             colors: gradientColors,
           ),
-          borderRadius: AppRadius.borderSm,
+          borderRadius: AppRadius.borderFull,
           boxShadow: [
             BoxShadow(
               color: glowColor,
@@ -393,24 +399,30 @@ class BrutalistGradientButton extends ConsumerWidget {
                         color: buttonTextColor.withValues(alpha: 0.8),
                       ),
                     )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          label,
-                          style: AppTypography.labelLarge.copyWith(
-                            color: buttonTextColor,
-                            letterSpacing: 3,
-                            fontWeight: FontWeight.w700,
-                          ),
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              label,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: buttonTextColor,
+                                letterSpacing: 3,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Icon(
+                              icon ?? Icons.arrow_forward_rounded,
+                              size: 18,
+                              color: buttonTextColor.withValues(alpha: 0.7),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Icon(
-                          icon ?? Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: buttonTextColor.withValues(alpha: 0.7),
-                        ),
-                      ],
+                      ),
                     ),
             ),
           ),

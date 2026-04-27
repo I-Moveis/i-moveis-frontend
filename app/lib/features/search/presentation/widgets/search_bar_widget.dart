@@ -29,7 +29,7 @@ class SearchBarWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final filters = ref.watch(searchFiltersProvider);
+    final filters = ref.watch<SearchFilters>(searchFiltersProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Autocomplete<String>(
@@ -42,14 +42,14 @@ class SearchBarWidget extends ConsumerWidget {
         });
       },
       onSelected: (String selection) {
-        ref.read(searchFiltersProvider.notifier).updateLocation(selection);
+        ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateLocation(selection);
       },
       initialValue: TextEditingValue(text: filters.location),
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
         return AppSearchBar(
           controller: controller,
           focusNode: focusNode,
-          onChanged: (value) => ref.read(searchFiltersProvider.notifier).updateLocation(value),
+          onChanged: (value) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateLocation(value),
           onFilterTap: () => _openFilters(context),
           autofocus: false,
           hint: 'Cidade, bairro ou endereço...',

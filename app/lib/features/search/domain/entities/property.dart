@@ -18,6 +18,11 @@ class Property {
     this.thumbnailIconCode = 0xe06a, // Default to apartment icon
     this.imageUrls = const [],
     this.isFavorite = false,
+    this.address = '',
+    this.amenities = const [],
+    this.badges = const [],
+    this.ownerName = '',
+    this.ownerMemberSince = '',
   });
 
   final String id;
@@ -37,6 +42,21 @@ class Property {
   final int thumbnailIconCode;
   final List<String> imageUrls;
   final bool isFavorite;
+
+  /// Display address (e.g. "Vila Madalena, São Paulo - SP")
+  final String address;
+
+  /// Amenities list (e.g. ["Piscina", "Academia", "Portaria 24h"])
+  final List<String> amenities;
+
+  /// Highlight badges shown in the header (e.g. ["Exclusivo", "Novo"])
+  final List<String> badges;
+
+  /// Owner display name
+  final String ownerName;
+
+  /// Owner membership info (e.g. "Membro desde 2023")
+  final String ownerMemberSince;
 
   double get totalPrice => priceValue + condoFee + taxes;
 
@@ -58,6 +78,11 @@ class Property {
     int? thumbnailIconCode,
     List<String>? imageUrls,
     bool? isFavorite,
+    String? address,
+    List<String>? amenities,
+    List<String>? badges,
+    String? ownerName,
+    String? ownerMemberSince,
   }) {
     return Property(
       id: id ?? this.id,
@@ -77,6 +102,11 @@ class Property {
       thumbnailIconCode: thumbnailIconCode ?? this.thumbnailIconCode,
       imageUrls: imageUrls ?? this.imageUrls,
       isFavorite: isFavorite ?? this.isFavorite,
+      address: address ?? this.address,
+      amenities: amenities ?? this.amenities,
+      badges: badges ?? this.badges,
+      ownerName: ownerName ?? this.ownerName,
+      ownerMemberSince: ownerMemberSince ?? this.ownerMemberSince,
     );
   }
 

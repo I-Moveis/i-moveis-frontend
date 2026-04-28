@@ -1,11 +1,12 @@
 import 'dart:convert';
+
+import 'package:app/core/providers/shared_preferences_provider.dart';
+import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
-import 'package:app/core/providers/shared_preferences_provider.dart';
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
 
@@ -86,11 +87,11 @@ void main() {
     });
 
     test('toggleBedroom should persist change', () async {
-      final notifier = container.read(searchFiltersProvider.notifier);
-      notifier.toggleBedroom(2);
+      final notifier = container.read(searchFiltersProvider.notifier)
+        ..toggleBedroom(2);
       verify(() => mockPrefs.setString(filtersKey, any())).called(1);
       expect(container.read(searchFiltersProvider).bedrooms, [2]);
-      
+
       notifier.toggleBedroom(2);
       verify(() => mockPrefs.setString(filtersKey, any())).called(1);
       expect(container.read(searchFiltersProvider).bedrooms, isEmpty);
@@ -104,15 +105,15 @@ void main() {
     });
 
     test('toggleTransactionType should persist change', () async {
-      final notifier = container.read(searchFiltersProvider.notifier);
-      notifier.toggleTransactionType('Rent');
+      container.read(searchFiltersProvider.notifier)
+          .toggleTransactionType('Rent');
       verify(() => mockPrefs.setString(filtersKey, any())).called(1);
       expect(container.read(searchFiltersProvider).transactionTypes, ['Rent']);
     });
 
     test('togglePropertyType should persist change', () async {
-      final notifier = container.read(searchFiltersProvider.notifier);
-      notifier.togglePropertyType('House');
+      container.read(searchFiltersProvider.notifier)
+          .togglePropertyType('House');
       verify(() => mockPrefs.setString(filtersKey, any())).called(1);
       expect(container.read(searchFiltersProvider).propertyTypes, ['House']);
     });
@@ -142,12 +143,12 @@ void main() {
     });
 
     test('reset should persist default state to SharedPreferences', () async {
-      final notifier = container.read(searchFiltersProvider.notifier);
-      notifier.updateWifi(true);
-      notifier.reset();
-      
+      container.read(searchFiltersProvider.notifier)
+        ..updateWifi(true)
+        ..reset();
+
       verify(() => mockPrefs.setString(filtersKey, any())).called(2);
-      
+
       final filters = container.read(searchFiltersProvider);
       expect(filters.hasWifi, false);
     });

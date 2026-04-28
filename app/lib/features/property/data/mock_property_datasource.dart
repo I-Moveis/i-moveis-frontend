@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../search/domain/entities/property.dart';
 
 final List<Property> kMockProperties = [

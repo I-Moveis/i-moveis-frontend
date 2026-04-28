@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+
 /// Pure domain entity for Property, independent of UI frameworks.
+@immutable
 class Property {
   const Property({
     required this.id,

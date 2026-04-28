@@ -1,6 +1,6 @@
+import 'package:app/features/search/presentation/widgets/filter_chip_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/search/presentation/widgets/filter_chip_bar.dart';
 
 void main() {
   group('FilterChipBar Widget Tests', () {

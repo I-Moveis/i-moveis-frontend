@@ -15,7 +15,6 @@ class BrutalistShimmer extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
-      period: const Duration(milliseconds: 1500),
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -37,7 +36,7 @@ class _ShimmerTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadius.borderLg, // Keep it angular
-        border: Border.all(color: Colors.black, width: 1.5),
+        border: Border.all(width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../design_system/design_system.dart';
+import '../../../../core/error/failures.dart';
+import '../providers/search_filters_provider.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_chip_bar.dart';
 import '../widgets/property_list_tile.dart';
 import '../providers/search_notifier.dart';
 import '../providers/search_view_provider.dart';
-import '../providers/search_filters_provider.dart';
 import '../widgets/brutalist_shimmer.dart';
+import '../widgets/filter_chip_bar.dart';
+import '../widgets/property_list_tile.dart';
+import '../widgets/search_bar_widget.dart';
 import 'map_search_page.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
@@ -144,7 +149,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
               // Property list or Error/Loading
               searchState.when(
-                data: (properties) {
+                data: (state) {
+                  final properties = state.properties;
                   if (properties.isEmpty) {
                     return SliverFillRemaining(
                       hasScrollBody: false,
@@ -169,8 +175,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
                   return SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        if (state.isOffline)
+                          SliverToBoxAdapter(
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs, horizontal: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.error.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.05),
+                                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                                borderRadius: AppRadius.borderSm,
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.cloud_off_rounded, size: 14, color: AppColors.error),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(
+                                    'Modo Offline — Resultados podem estar desatualizados',
+                                    style: AppTypography.labelSmall.copyWith(color: AppColors.error),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           if (index < properties.length) {
                             final property = properties[index];
@@ -193,7 +223,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         childCount: properties.length + (searchState.isLoading ? 1 : 0),
                       ),
                     ),
-                  );
+                  ],
+                ),
+              );
                 },
                 loading: () => const SliverToBoxAdapter(
                   child: BrutalistShimmer(),
@@ -209,8 +241,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           const Icon(Icons.error_outline, size: 48, color: Colors.red),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            'Erro ao carregar imóveis.',
+                            error is Failure ? error.message : 'Erro ao carregar imóveis.',
                             style: AppTypography.titleMedium,
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           AppButton(

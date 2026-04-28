@@ -247,7 +247,7 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
             scrollbarTheme: ScrollbarThemeData(
               thumbColor: WidgetStateProperty.all(accentColor),
               trackColor: WidgetStateProperty.all(Colors.transparent),
-              thickness: WidgetStateProperty.all(4.0),
+              thickness: WidgetStateProperty.all(4),
               radius: const Radius.circular(10),
               interactive: true,
             ),
@@ -313,13 +313,13 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
 }
 
 class _AmenityData {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
   _AmenityData({
     required this.label,
     required this.isSelected,
     required this.onTap,
   });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
 }

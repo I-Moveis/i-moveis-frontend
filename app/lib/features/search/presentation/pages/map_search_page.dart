@@ -34,7 +34,6 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
 
   @override
   void dispose() {
-    ref.read(mapControllerProvider.notifier).set(null);
     super.dispose();
   }
 

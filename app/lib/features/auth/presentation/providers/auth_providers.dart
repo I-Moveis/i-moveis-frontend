@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/providers/dio_provider.dart';
 import '../../../../core/providers/secure_storage_provider.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/mock_auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../../domain/usecases/get_current_session_usecase.dart';
@@ -17,7 +17,9 @@ import '../../domain/usecases/social_login_usecase.dart';
 // ── Data sources ────────────────────────────────────────────────────────────
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
-  return AuthRemoteDataSourceImpl(ref.watch(dioProvider));
+  // Use mock data source if backend is unavailable for UI testing
+  return MockAuthRemoteDataSourceImpl();
+  // return AuthRemoteDataSourceImpl(ref.watch(dioProvider));
 });
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {

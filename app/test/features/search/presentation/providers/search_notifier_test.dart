@@ -60,23 +60,27 @@ void main() {
   group('SearchNotifier', () {
     test('initial state should be loading and then success with properties', () async {
       final properties = [createMockProperty('1', '100')];
+      final searchResult = SearchResult(properties: properties, isOffline: false);
 
-      when(() => mockUseCase.execute(any()))
-          .thenAnswer((_) async => properties);
+      when(() => mockUseCase.execute(any(), page: 1))
+          .thenAnswer((_) async => searchResult);
 
       // Trigger build
       final state = await container.read(searchNotifierProvider.future);
 
-      expect(state, properties);
-      verify(() => mockUseCase.execute(any())).called(1);
+      expect(state.properties, properties);
+      expect(state.isOffline, false);
+      verify(() => mockUseCase.execute(any(), page: 1)).called(1);
     });
 
     test('loadNextPage should append properties to current list', () async {
       final page1 = [createMockProperty('1', '100')];
       final page2 = [createMockProperty('2', '200')];
 
-      when(() => mockUseCase.execute(any())).thenAnswer((_) async => page1);
-      when(() => mockUseCase.execute(any(), page: 2)).thenAnswer((_) async => page2);
+      when(() => mockUseCase.execute(any(), page: 1))
+          .thenAnswer((_) async => SearchResult(properties: page1, isOffline: false));
+      when(() => mockUseCase.execute(any(), page: 2))
+          .thenAnswer((_) async => SearchResult(properties: page2, isOffline: false));
 
       // Load page 1
       await container.read(searchNotifierProvider.future);
@@ -85,13 +89,14 @@ void main() {
       await container.read(searchNotifierProvider.notifier).loadNextPage();
 
       final state = container.read(searchNotifierProvider).value;
-      expect(state, [...page1, ...page2]);
+      expect(state?.properties, [...page1, ...page2]);
     });
 
     test('search should reset pagination and reload', () async {
       final page1 = [createMockProperty('1', '100')];
       
-      when(() => mockUseCase.execute(any())).thenAnswer((_) async => page1);
+      when(() => mockUseCase.execute(any(), page: 1))
+          .thenAnswer((_) async => SearchResult(properties: page1, isOffline: false));
 
       await container.read(searchNotifierProvider.future);
       
@@ -103,7 +108,8 @@ void main() {
     test('should retry on error without losing previous state', () async {
        final page1 = [createMockProperty('1', '100')];
        
-       when(() => mockUseCase.execute(any())).thenAnswer((_) async => page1);
+       when(() => mockUseCase.execute(any(), page: 1))
+           .thenAnswer((_) async => SearchResult(properties: page1, isOffline: false));
        when(() => mockUseCase.execute(any(), page: 2)).thenThrow(Exception('Network error'));
 
        await container.read(searchNotifierProvider.future);
@@ -112,14 +118,15 @@ void main() {
        await container.read(searchNotifierProvider.notifier).loadNextPage();
        
        expect(container.read(searchNotifierProvider).hasError, true);
-       expect(container.read(searchNotifierProvider).value, page1); // Preserves page 1
+       expect(container.read(searchNotifierProvider).value?.properties, page1); // Preserves page 1
 
        // Retry
-       when(() => mockUseCase.execute(any(), page: 2)).thenAnswer((_) async => [createMockProperty('2', '200')]);
+       when(() => mockUseCase.execute(any(), page: 2))
+           .thenAnswer((_) async => SearchResult(properties: [createMockProperty('2', '200')], isOffline: false));
        
        await container.read(searchNotifierProvider.notifier).loadNextPage();
        
-       expect(container.read(searchNotifierProvider).value!.length, 2);
+       expect(container.read(searchNotifierProvider).value!.properties.length, 2);
     });
   });
 }

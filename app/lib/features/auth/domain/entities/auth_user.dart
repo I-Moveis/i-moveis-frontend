@@ -9,6 +9,7 @@ class AuthUser {
     this.phone,
     this.avatarUrl,
     this.isOwner = false,
+    this.isAdmin = false,
   });
 
   final String id;
@@ -17,6 +18,7 @@ class AuthUser {
   final String? phone;
   final String? avatarUrl;
   final bool isOwner;
+  final bool isAdmin;
 
   AuthUser copyWith({
     String? id,
@@ -25,6 +27,7 @@ class AuthUser {
     String? phone,
     String? avatarUrl,
     bool? isOwner,
+    bool? isAdmin,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -33,6 +36,7 @@ class AuthUser {
       phone: phone ?? this.phone,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       isOwner: isOwner ?? this.isOwner,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
@@ -46,8 +50,10 @@ class AuthUser {
           email == other.email &&
           phone == other.phone &&
           avatarUrl == other.avatarUrl &&
-          isOwner == other.isOwner;
+          isOwner == other.isOwner &&
+          isAdmin == other.isAdmin;
 
   @override
-  int get hashCode => Object.hash(id, name, email, phone, avatarUrl, isOwner);
+  int get hashCode =>
+      Object.hash(id, name, email, phone, avatarUrl, isOwner, isAdmin);
 }

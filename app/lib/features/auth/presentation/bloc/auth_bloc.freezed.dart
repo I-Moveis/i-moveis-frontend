@@ -55,7 +55,7 @@ extension AuthEventPatterns on AuthEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LoginRequested value)?  loginRequested,TResult Function( RegisterRequested value)?  registerRequested,TResult Function( LogoutRequested value)?  logoutRequested,TResult Function( SocialLoginRequested value)?  socialLoginRequested,TResult Function( CheckSessionRequested value)?  checkSessionRequested,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LoginRequested value)?  loginRequested,TResult Function( RegisterRequested value)?  registerRequested,TResult Function( LogoutRequested value)?  logoutRequested,TResult Function( SocialLoginRequested value)?  socialLoginRequested,TResult Function( CheckSessionRequested value)?  checkSessionRequested,TResult Function( DemoLoginRequested value)?  demoLoginRequested,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
@@ -63,7 +63,8 @@ return loginRequested(_that);case RegisterRequested() when registerRequested != 
 return registerRequested(_that);case LogoutRequested() when logoutRequested != null:
 return logoutRequested(_that);case SocialLoginRequested() when socialLoginRequested != null:
 return socialLoginRequested(_that);case CheckSessionRequested() when checkSessionRequested != null:
-return checkSessionRequested(_that);case _:
+return checkSessionRequested(_that);case DemoLoginRequested() when demoLoginRequested != null:
+return demoLoginRequested(_that);case _:
   return orElse();
 
 }
@@ -81,7 +82,7 @@ return checkSessionRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LoginRequested value)  loginRequested,required TResult Function( RegisterRequested value)  registerRequested,required TResult Function( LogoutRequested value)  logoutRequested,required TResult Function( SocialLoginRequested value)  socialLoginRequested,required TResult Function( CheckSessionRequested value)  checkSessionRequested,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LoginRequested value)  loginRequested,required TResult Function( RegisterRequested value)  registerRequested,required TResult Function( LogoutRequested value)  logoutRequested,required TResult Function( SocialLoginRequested value)  socialLoginRequested,required TResult Function( CheckSessionRequested value)  checkSessionRequested,required TResult Function( DemoLoginRequested value)  demoLoginRequested,}){
 final _that = this;
 switch (_that) {
 case LoginRequested():
@@ -89,7 +90,8 @@ return loginRequested(_that);case RegisterRequested():
 return registerRequested(_that);case LogoutRequested():
 return logoutRequested(_that);case SocialLoginRequested():
 return socialLoginRequested(_that);case CheckSessionRequested():
-return checkSessionRequested(_that);case _:
+return checkSessionRequested(_that);case DemoLoginRequested():
+return demoLoginRequested(_that);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -106,7 +108,7 @@ return checkSessionRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LoginRequested value)?  loginRequested,TResult? Function( RegisterRequested value)?  registerRequested,TResult? Function( LogoutRequested value)?  logoutRequested,TResult? Function( SocialLoginRequested value)?  socialLoginRequested,TResult? Function( CheckSessionRequested value)?  checkSessionRequested,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LoginRequested value)?  loginRequested,TResult? Function( RegisterRequested value)?  registerRequested,TResult? Function( LogoutRequested value)?  logoutRequested,TResult? Function( SocialLoginRequested value)?  socialLoginRequested,TResult? Function( CheckSessionRequested value)?  checkSessionRequested,TResult? Function( DemoLoginRequested value)?  demoLoginRequested,}){
 final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
@@ -114,7 +116,8 @@ return loginRequested(_that);case RegisterRequested() when registerRequested != 
 return registerRequested(_that);case LogoutRequested() when logoutRequested != null:
 return logoutRequested(_that);case SocialLoginRequested() when socialLoginRequested != null:
 return socialLoginRequested(_that);case CheckSessionRequested() when checkSessionRequested != null:
-return checkSessionRequested(_that);case _:
+return checkSessionRequested(_that);case DemoLoginRequested() when demoLoginRequested != null:
+return demoLoginRequested(_that);case _:
   return null;
 
 }
@@ -131,14 +134,15 @@ return checkSessionRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  String password)?  loginRequested,TResult Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult Function()?  logoutRequested,TResult Function( SocialProvider provider)?  socialLoginRequested,TResult Function()?  checkSessionRequested,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  String password)?  loginRequested,TResult Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult Function()?  logoutRequested,TResult Function( SocialProvider provider)?  socialLoginRequested,TResult Function()?  checkSessionRequested,TResult Function( DemoRole role)?  demoLoginRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that.email,_that.password);case RegisterRequested() when registerRequested != null:
 return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested() when logoutRequested != null:
 return logoutRequested();case SocialLoginRequested() when socialLoginRequested != null:
 return socialLoginRequested(_that.provider);case CheckSessionRequested() when checkSessionRequested != null:
-return checkSessionRequested();case _:
+return checkSessionRequested();case DemoLoginRequested() when demoLoginRequested != null:
+return demoLoginRequested(_that.role);case _:
   return orElse();
 
 }
@@ -156,14 +160,15 @@ return checkSessionRequested();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  String password)  loginRequested,required TResult Function( String name,  String email,  String phone,  String password)  registerRequested,required TResult Function()  logoutRequested,required TResult Function( SocialProvider provider)  socialLoginRequested,required TResult Function()  checkSessionRequested,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  String password)  loginRequested,required TResult Function( String name,  String email,  String phone,  String password)  registerRequested,required TResult Function()  logoutRequested,required TResult Function( SocialProvider provider)  socialLoginRequested,required TResult Function()  checkSessionRequested,required TResult Function( DemoRole role)  demoLoginRequested,}) {final _that = this;
 switch (_that) {
 case LoginRequested():
 return loginRequested(_that.email,_that.password);case RegisterRequested():
 return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested():
 return logoutRequested();case SocialLoginRequested():
 return socialLoginRequested(_that.provider);case CheckSessionRequested():
-return checkSessionRequested();case _:
+return checkSessionRequested();case DemoLoginRequested():
+return demoLoginRequested(_that.role);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -180,14 +185,15 @@ return checkSessionRequested();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  String password)?  loginRequested,TResult? Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult? Function()?  logoutRequested,TResult? Function( SocialProvider provider)?  socialLoginRequested,TResult? Function()?  checkSessionRequested,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  String password)?  loginRequested,TResult? Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult? Function()?  logoutRequested,TResult? Function( SocialProvider provider)?  socialLoginRequested,TResult? Function()?  checkSessionRequested,TResult? Function( DemoRole role)?  demoLoginRequested,}) {final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that.email,_that.password);case RegisterRequested() when registerRequested != null:
 return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested() when logoutRequested != null:
 return logoutRequested();case SocialLoginRequested() when socialLoginRequested != null:
 return socialLoginRequested(_that.provider);case CheckSessionRequested() when checkSessionRequested != null:
-return checkSessionRequested();case _:
+return checkSessionRequested();case DemoLoginRequested() when demoLoginRequested != null:
+return demoLoginRequested(_that.role);case _:
   return null;
 
 }
@@ -464,6 +470,72 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class DemoLoginRequested implements AuthEvent {
+  const DemoLoginRequested({required this.role});
+  
+
+ final  DemoRole role;
+
+/// Create a copy of AuthEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DemoLoginRequestedCopyWith<DemoLoginRequested> get copyWith => _$DemoLoginRequestedCopyWithImpl<DemoLoginRequested>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoLoginRequested&&(identical(other.role, role) || other.role == role));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,role);
+
+@override
+String toString() {
+  return 'AuthEvent.demoLoginRequested(role: $role)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DemoLoginRequestedCopyWith<$Res> implements $AuthEventCopyWith<$Res> {
+  factory $DemoLoginRequestedCopyWith(DemoLoginRequested value, $Res Function(DemoLoginRequested) _then) = _$DemoLoginRequestedCopyWithImpl;
+@useResult
+$Res call({
+ DemoRole role
+});
+
+
+
+
+}
+/// @nodoc
+class _$DemoLoginRequestedCopyWithImpl<$Res>
+    implements $DemoLoginRequestedCopyWith<$Res> {
+  _$DemoLoginRequestedCopyWithImpl(this._self, this._then);
+
+  final DemoLoginRequested _self;
+  final $Res Function(DemoLoginRequested) _then;
+
+/// Create a copy of AuthEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? role = null,}) {
+  return _then(DemoLoginRequested(
+role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as DemoRole,
+  ));
+}
+
+
+}
 
 /// @nodoc
 mixin _$AuthState {

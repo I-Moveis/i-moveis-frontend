@@ -21,4 +21,8 @@ class AuthEvent with _$AuthEvent {
   }) = SocialLoginRequested;
 
   const factory AuthEvent.checkSessionRequested() = CheckSessionRequested;
+
+  const factory AuthEvent.demoLoginRequested({
+    required DemoRole role,
+  }) = DemoLoginRequested;
 }

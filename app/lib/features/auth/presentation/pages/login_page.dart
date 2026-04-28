@@ -1,11 +1,13 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../bloc/auth_bloc.dart';
+import '../bloc/demo_role.dart';
 import '../bloc/social_provider.dart';
 
 /// Login page — Brutalist Elegance x Japanese Creative Web
@@ -160,7 +162,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         state.whenOrNull(
           authenticated: (user) {
             setState(() => _loadingSocial = null);
-            context.go('/home');
+            final destination = user.isAdmin
+                ? '/admin'
+                : user.isOwner
+                    ? '/profile/my-properties'
+                    : '/home';
+            context.go(destination);
           },
           unauthenticated: () {
             setState(() {
@@ -442,6 +449,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ],
               ),
             ),
+
+            if (kDebugMode) ...[
+              const SizedBox(height: AppSpacing.xxl),
+              FadeSlideIn(
+                delay: const Duration(milliseconds: 2000),
+                offsetDistance: 10,
+                child: _buildDemoRoleSection(isDark),
+              ),
+            ],
           ],
         ),
       ),
@@ -810,6 +826,107 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  DEMO ROLES — dev-only quick login buttons
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildDemoRoleSection(bool isDark) {
+    final mutedColor = isDark
+        ? AppColors.whiteDim.withValues(alpha: 0.5)
+        : AppColors.lightTextSecondary.withValues(alpha: 0.7);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'DEV // ENTRAR COMO',
+          style: AppTypography.monoSmallWide.copyWith(color: mutedColor),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDemoRoleButton(
+                'CLIENTE',
+                Icons.person_outline_rounded,
+                isDark,
+                DemoRole.client,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildDemoRoleButton(
+                'PROPRIETÁRIO',
+                Icons.home_work_outlined,
+                isDark,
+                DemoRole.owner,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildDemoRoleButton(
+                'ADMIN',
+                Icons.shield_outlined,
+                isDark,
+                DemoRole.admin,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDemoRoleButton(
+    String label,
+    IconData icon,
+    bool isDark,
+    DemoRole role,
+  ) {
+    final bgColor = isDark
+        ? AppColors.blackLight.withValues(alpha: 0.4)
+        : AppColors.lightSurface.withValues(alpha: 0.85);
+    final borderColor = isDark
+        ? AppColors.blackLightest.withValues(alpha: 0.5)
+        : AppColors.lightBorder;
+    final contentColor =
+        isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _isLoading || _loadingSocial != null
+            ? null
+            : () => context
+                .read<AuthBloc>()
+                .add(AuthEvent.demoLoginRequested(role: role)),
+        borderRadius: AppRadius.borderSm,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: AppRadius.borderSm,
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: contentColor, size: 18),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: AppTypography.monoSmallWide.copyWith(
+                  color: contentColor,
+                  fontSize: 9,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

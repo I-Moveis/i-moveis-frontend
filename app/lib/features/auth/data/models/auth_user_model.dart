@@ -10,6 +10,7 @@ class AuthUserModel {
     this.phone,
     this.avatarUrl,
     this.isOwner = false,
+    this.isAdmin = false,
   });
 
   factory AuthUserModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,7 @@ class AuthUserModel {
       phone: json['phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       isOwner: json['is_owner'] as bool? ?? false,
+      isAdmin: json['is_admin'] as bool? ?? false,
     );
   }
 
@@ -31,6 +33,7 @@ class AuthUserModel {
       phone: user.phone,
       avatarUrl: user.avatarUrl,
       isOwner: user.isOwner,
+      isAdmin: user.isAdmin,
     );
   }
 
@@ -40,6 +43,7 @@ class AuthUserModel {
   final String? phone;
   final String? avatarUrl;
   final bool isOwner;
+  final bool isAdmin;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -48,6 +52,7 @@ class AuthUserModel {
         'phone': phone,
         'avatar_url': avatarUrl,
         'is_owner': isOwner,
+        'is_admin': isAdmin,
       };
 
   AuthUser toEntity() => AuthUser(
@@ -57,5 +62,6 @@ class AuthUserModel {
         phone: phone,
         avatarUrl: avatarUrl,
         isOwner: isOwner,
+        isAdmin: isAdmin,
       );
 }

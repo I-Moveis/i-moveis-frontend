@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../design_system/design_system.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../design_system/design_system.dart';
 import '../providers/search_filters_provider.dart';
-import '../widgets/search_bar_widget.dart';
-import '../widgets/filter_chip_bar.dart';
-import '../widgets/property_list_tile.dart';
 import '../providers/search_notifier.dart';
 import '../providers/search_view_provider.dart';
 import '../widgets/brutalist_shimmer.dart';

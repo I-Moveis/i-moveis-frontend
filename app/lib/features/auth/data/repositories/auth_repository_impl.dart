@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
+import '../../../../core/constants.dart';
 import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/failures/auth_failure.dart';
@@ -13,11 +14,22 @@ class AuthRepositoryImpl implements IAuthRepository {
   AuthRepositoryImpl({
     required AuthRemoteDataSource remote,
     required AuthLocalDataSource local,
+    required Dio dio,
   })  : _remote = remote,
-        _local = local;
+        _local = local,
+        _dio = dio;
 
   final AuthRemoteDataSource _remote;
   final AuthLocalDataSource _local;
+  final Dio _dio;
+
+  /// After Auth0 login/register/social succeeds, swap the cached Auth0 `sub`
+  /// for the backend UUID by calling `/users/me`. No-op on mock builds
+  /// since the mock userId is already the authoritative one.
+  Future<void> _syncBackendIdentity() async {
+    if (kUseMockAuth) return;
+    await _local.syncFromBackend(_dio);
+  }
 
   @override
   Future<Either<AuthFailure, AuthSession>> login({
@@ -27,6 +39,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     try {
       final model = await _remote.login(email: email, password: password);
       await _local.saveSession(model);
+      await _syncBackendIdentity();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e));
@@ -50,6 +63,7 @@ class AuthRepositoryImpl implements IAuthRepository {
         password: password,
       );
       await _local.saveSession(model);
+      await _syncBackendIdentity();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e, isRegister: true));
@@ -65,6 +79,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     try {
       final model = await _remote.socialLogin(provider);
       await _local.saveSession(model);
+      await _syncBackendIdentity();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e));

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/storage/secure_token_storage.dart';
@@ -15,6 +16,13 @@ abstract class AuthLocalDataSource {
   Future<String?> readAccessToken();
   Future<bool> hasSession();
   Future<void> clear();
+
+  /// After Auth0 login, fetches `/api/users/me` via [dio] and rewrites the
+  /// cached user and the `SecureTokenStorage.userId` with the backend UUID
+  /// (not the Auth0 `sub`). Swallows errors so a transient API hiccup
+  /// doesn't kill the login flow — callers can still use the cached Auth0
+  /// profile until the next restore.
+  Future<void> syncFromBackend(Dio dio);
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -64,5 +72,54 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<void> clear() async {
     await _tokenStorage.clear();
     await _prefs.remove(_kCachedUserKey);
+  }
+
+  @override
+  Future<void> syncFromBackend(Dio dio) async {
+    try {
+      final response = await dio.get<Map<String, dynamic>>('/users/me');
+      final body = response.data;
+      if (body == null) return;
+
+      final backendId = body['id'] as String?;
+      if (backendId == null || backendId.isEmpty) return;
+
+      // Merge backend fields into the currently cached user so we keep the
+      // Auth0-provided name/email/avatar while upgrading the id to the
+      // backend UUID.
+      final cached = await readCachedUser();
+      final role = (body['role'] as String?) ?? 'TENANT';
+      final backendName = (body['name'] as String?)?.trim() ?? '';
+      final merged = AuthUserModel(
+        id: backendId,
+        name: backendName.isNotEmpty ? backendName : (cached?.name ?? ''),
+        email: cached?.email ?? '',
+        phone: (body['phoneNumber'] as String?) ?? cached?.phone,
+        avatarUrl: cached?.avatarUrl,
+        isOwner: role == 'LANDLORD',
+        isAdmin: role == 'ADMIN',
+      );
+
+      await _prefs.setString(
+        _kCachedUserKey,
+        jsonEncode(merged.toJson()),
+      );
+
+      // Rewrite the storage userId so `currentUserIdProvider` hands out the
+      // backend UUID (required by Visits' tenantId/landlordId).
+      final accessToken = await _tokenStorage.readAccessToken();
+      final refreshToken = await _tokenStorage.readRefreshToken();
+      if (accessToken != null) {
+        await _tokenStorage.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken ?? '',
+          userId: backendId,
+        );
+      }
+    } on DioException {
+      // Ignore — login should not fail just because /users/me hiccuped.
+    } on Object {
+      // Any other error (parse, etc.) — same behaviour.
+    }
   }
 }

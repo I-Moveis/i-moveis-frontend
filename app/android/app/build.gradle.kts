@@ -28,6 +28,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Auth0 callback host — must match the AUTH0_DOMAIN constant in
+        // lib/core/constants.dart. Until a tenant exists, leave blank; fill
+        // via a local gradle.properties "auth0Domain" entry when ready.
+        manifestPlaceholders["auth0Domain"] =
+            (project.findProperty("auth0Domain") ?: "") as String
     }
 
     buildTypes {

@@ -62,7 +62,7 @@ void main() {
       final properties = [createMockProperty('1', '100')];
       final searchResult = SearchResult(properties: properties, isOffline: false);
 
-      when(() => mockUseCase.execute(any(), page: 1))
+      when(() => mockUseCase.execute(any()))
           .thenAnswer((_) async => searchResult);
 
       // Trigger build
@@ -70,14 +70,14 @@ void main() {
 
       expect(state.properties, properties);
       expect(state.isOffline, false);
-      verify(() => mockUseCase.execute(any(), page: 1)).called(1);
+      verify(() => mockUseCase.execute(any())).called(1);
     });
 
     test('loadNextPage should append properties to current list', () async {
       final page1 = [createMockProperty('1', '100')];
       final page2 = [createMockProperty('2', '200')];
 
-      when(() => mockUseCase.execute(any(), page: 1))
+      when(() => mockUseCase.execute(any()))
           .thenAnswer((_) async => SearchResult(properties: page1, isOffline: false));
       when(() => mockUseCase.execute(any(), page: 2))
           .thenAnswer((_) async => SearchResult(properties: page2, isOffline: false));
@@ -95,7 +95,7 @@ void main() {
     test('search should reset pagination and reload', () async {
       final page1 = [createMockProperty('1', '100')];
       
-      when(() => mockUseCase.execute(any(), page: 1))
+      when(() => mockUseCase.execute(any()))
           .thenAnswer((_) async => SearchResult(properties: page1, isOffline: false));
 
       await container.read(searchNotifierProvider.future);
@@ -108,7 +108,7 @@ void main() {
     test('should retry on error without losing previous state', () async {
        final page1 = [createMockProperty('1', '100')];
        
-       when(() => mockUseCase.execute(any(), page: 1))
+       when(() => mockUseCase.execute(any()))
            .thenAnswer((_) async => SearchResult(properties: page1, isOffline: false));
        when(() => mockUseCase.execute(any(), page: 2)).thenThrow(Exception('Network error'));
 

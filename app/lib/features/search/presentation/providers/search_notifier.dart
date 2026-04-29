@@ -7,15 +7,15 @@ import '../../domain/usecases/search_properties_usecase.dart';
 import 'search_filters_provider.dart';
 
 class SearchState {
-  final List<Property> properties;
-  final bool isOffline;
-  final bool hasReachedMax;
 
   SearchState({
     required this.properties,
     this.isOffline = false,
     this.hasReachedMax = false,
   });
+  final List<Property> properties;
+  final bool isOffline;
+  final bool hasReachedMax;
 
   SearchState copyWith({
     List<Property>? properties,
@@ -78,7 +78,7 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
 
   /// Loads the next page and appends to existing state
   Future<void> loadNextPage() async {
-    if (state.value?.hasReachedMax == true || state.isLoading) return;
+    if ((state.value?.hasReachedMax ?? false) || state.isLoading) return;
 
     final currentState = state.value;
     if (currentState == null) return;
@@ -100,7 +100,8 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
         }
       },
       error: (err, stack) {
-        state = AsyncError<SearchState>(err, stack).copyWithPrevious(state);
+        // Keep previous data visible while surfacing the error for pagination failures.
+        state = AsyncValue<SearchState>.error(err, stack);
       },
       loading: () {},
     );

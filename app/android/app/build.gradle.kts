@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -34,6 +37,14 @@ android {
         // via a local gradle.properties "auth0Domain" entry when ready.
         manifestPlaceholders["auth0Domain"] =
             (project.findProperty("auth0Domain") ?: "") as String
+
+        val envFile = project.rootProject.file("../.env")
+        val env = Properties()
+        if (envFile.exists()) {
+            env.load(FileInputStream(envFile))
+        }
+        val mapsApiKey = env.getProperty("MAPS_API_KEY") ?: "YOUR_API_KEY_HERE"
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {

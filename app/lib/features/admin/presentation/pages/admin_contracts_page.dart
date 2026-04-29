@@ -28,6 +28,25 @@ class AdminContractsPage extends StatelessWidget {
         return Opacity(opacity: fade.value, child: CustomScrollView(physics: const BouncingScrollPhysics(), slivers: [
           const SliverToBoxAdapter(child: BrutalistAppBar(title: 'Contratos')),
           SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.08),
+                borderRadius: AppRadius.borderLg,
+                border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+              ),
+              child: Row(children: [
+                Icon(Icons.info_outline, size: 16, color: accentColor),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Em breve — o backend ainda não expõe o endpoint de contratos.',
+                    style: AppTypography.bodySmall.copyWith(color: accentColor),
+                  ),
+                ),
+              ]),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
             Wrap(spacing: AppSpacing.sm, children: ['Todos', 'Ativos', 'Pendentes', 'Encerrados'].map((l) => Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
               decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.1), borderRadius: AppRadius.borderFull),

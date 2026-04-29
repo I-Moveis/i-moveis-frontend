@@ -11,7 +11,6 @@ class MockAuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     id: 'mock-user-123',
     name: 'Usuário Teste',
     email: 'teste@exemplo.com',
-    isOwner: false,
   );
 
   late final AuthSessionModel _mockSession = AuthSessionModel(

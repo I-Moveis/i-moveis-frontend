@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/demo_role.dart';
@@ -141,7 +142,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final email = _emailController.text;
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    // In Auth0 mode, form inputs are ignored — the Universal Login webview
+    // collects credentials itself. Skip the empty-field guard so the CTA
+    // still works when the inputs are visually collapsed.
+    if (kUseMockAuth && (email.isEmpty || password.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha todos os campos')),
       );
@@ -450,7 +454,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
             ),
 
-            if (kDebugMode) ...[
+            if (kDebugMode && kUseMockAuth) ...[
               const SizedBox(height: AppSpacing.xxl),
               FadeSlideIn(
                 delay: const Duration(milliseconds: 2000),

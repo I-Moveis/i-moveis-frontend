@@ -6,6 +6,7 @@ import '../../features/admin/presentation/pages/admin_contracts_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_listings_page.dart';
 import '../../features/admin/presentation/pages/admin_users_page.dart';
+import '../../features/admin_users/presentation/pages/admin_user_form_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -15,6 +16,7 @@ import '../../features/chat/presentation/pages/conversations_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/listing/presentation/pages/create_listing_page.dart';
+import '../../features/listing/presentation/pages/edit_listing_page.dart';
 import '../../features/listing/presentation/pages/listing_analytics_page.dart';
 import '../../features/listing/presentation/pages/my_properties_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
@@ -30,6 +32,10 @@ import '../../features/search/presentation/pages/map_search_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/shell/presentation/pages/main_shell_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/visits/presentation/pages/edit_visit_page.dart';
+import '../../features/visits/presentation/pages/landlord_visits_page.dart';
+import '../../features/visits/presentation/pages/my_visits_page.dart';
+import '../../features/visits/presentation/pages/visit_detail_page.dart';
 
 // Navigator keys for each shell branch.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -173,7 +179,37 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                         path: 'analytics',
                         builder: (_, _) => const ListingAnalyticsPage(),
                       ),
+                      GoRoute(
+                        path: ':id/edit',
+                        builder: (_, state) => EditListingPage(
+                          propertyId: state.pathParameters['id']!,
+                        ),
+                      ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'my-visits',
+                    builder: (_, _) => const MyVisitsPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (_, state) => VisitDetailPage(
+                          visitId: state.pathParameters['id']!,
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: 'edit',
+                            builder: (_, state) => EditVisitPage(
+                              visitId: state.pathParameters['id']!,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'landlord-visits',
+                    builder: (_, _) => const LandlordVisitsPage(),
                   ),
                 ],
               ),
@@ -239,6 +275,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'users',
             builder: (_, _) => const AdminUsersPage(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (_, _) => const AdminUserFormPage(),
+              ),
+              GoRoute(
+                path: ':id/edit',
+                builder: (_, state) => AdminUserFormPage(
+                  userId: state.pathParameters['id'],
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'listings',

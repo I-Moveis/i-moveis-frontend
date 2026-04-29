@@ -1,70 +1,133 @@
-import 'dart:io';
 import 'package:app/core/error/failures.dart';
+import 'package:app/core/network/network_exception.dart';
+import 'package:dio/dio.dart';
+
 import '../../domain/entities/property.dart';
+import '../../domain/entities/property_input.dart';
 import '../../domain/repositories/property_repository.dart';
 import '../../domain/usecases/search_properties_usecase.dart';
 import '../../presentation/providers/search_filters_provider.dart';
 import '../datasources/property_datasources.dart';
 
 class PropertyRepositoryImpl implements PropertyRepository {
-  final PropertyRemoteDataSource remoteDataSource;
-  final PropertyLocalDataSource localDataSource;
-
   PropertyRepositoryImpl({
     required this.remoteDataSource,
     required this.localDataSource,
   });
 
+  final PropertyRemoteDataSource remoteDataSource;
+  final PropertyLocalDataSource localDataSource;
+
   @override
-  Future<SearchResult> searchProperties(SearchFilters filters, {int page = 1}) async {
+  Future<SearchResult> searchProperties(
+    SearchFilters filters, {
+    int page = 1,
+  }) async {
     try {
-      // Network-First strategy
-      final remoteProperties = await remoteDataSource.searchProperties(filters, page: page);
-      
-      // Update cache
-      await localDataSource.cacheProperties(filters, remoteProperties, page: page);
-      
-      return SearchResult(
-        properties: remoteProperties, 
-        isOffline: false,
-        currentPage: page,
-        hasNextPage: remoteProperties.length >= 10, // Assuming 10 is the page size
+      final remotePage =
+          await remoteDataSource.searchProperties(filters, page: page);
+
+      await localDataSource.cacheProperties(
+        filters,
+        remotePage.properties,
+        page: page,
       );
-    } on SocketException {
-      return await _handleOfflineFallback(filters, page, isNetworkError: true);
-    } catch (e) {
-      // For any other error (e.g. 500), also try fallback
-      try {
-        return await _handleOfflineFallback(filters, page, isNetworkError: false);
-      } catch (fallbackError) {
-        // If fallback also fails or cache is empty, map the original error
-        if (fallbackError is Failure) rethrow;
-        throw const ServerFailure();
-      }
+
+      return SearchResult(
+        properties: remotePage.properties,
+        isOffline: false,
+        totalResults: remotePage.total,
+        currentPage: remotePage.page,
+        hasNextPage: remotePage.hasNextPage,
+      );
+    } on DioException catch (e) {
+      final netErr = e.error;
+      final isConnectivity = netErr is NetworkException &&
+          (netErr.kind == NetworkErrorKind.noConnection ||
+              netErr.kind == NetworkErrorKind.timeout);
+      return _handleOfflineFallback(
+        filters,
+        page,
+        isNetworkError: isConnectivity,
+      );
+    } on NetworkException catch (e) {
+      // Datasources may also throw NetworkException directly (e.g. in tests).
+      final isConnectivity = e.kind == NetworkErrorKind.noConnection ||
+          e.kind == NetworkErrorKind.timeout;
+      return _handleOfflineFallback(
+        filters,
+        page,
+        isNetworkError: isConnectivity,
+      );
     }
   }
 
   Future<SearchResult> _handleOfflineFallback(
-    SearchFilters filters, 
-    int page, 
-    {required bool isNetworkError}
-  ) async {
-    final cachedProperties = await localDataSource.getCachedProperties(filters, page: page);
-    
+    SearchFilters filters,
+    int page, {
+    required bool isNetworkError,
+  }) async {
+    final cachedProperties =
+        await localDataSource.getCachedProperties(filters, page: page);
+
     if (cachedProperties.isNotEmpty) {
       return SearchResult(
-        properties: cachedProperties, 
+        properties: cachedProperties,
         isOffline: true,
         currentPage: page,
-        hasNextPage: false, // Limited info in cache fallback
       );
     }
-    
-    // If cache is empty, throw specific failure based on the original cause
+
     if (isNetworkError) {
       throw const NetworkFailure();
     } else {
       throw const ServerFailure();
+    }
+  }
+
+  @override
+  Future<Property> create(PropertyInput input) {
+    return _guardMutation(() => remoteDataSource.create(input));
+  }
+
+  @override
+  Future<Property> update(String id, PropertyInput input) {
+    return _guardMutation(() => remoteDataSource.update(id, input));
+  }
+
+  @override
+  Future<void> delete(String id) {
+    return _guardMutation(() => remoteDataSource.delete(id));
+  }
+
+  Future<T> _guardMutation<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on DioException catch (e) {
+      throw _toFailure(e.error);
+    } on NetworkException catch (e) {
+      throw _toFailure(e);
+    }
+  }
+
+  Failure _toFailure(Object? source) {
+    if (source is! NetworkException) return const ServerFailure();
+    switch (source.kind) {
+      case NetworkErrorKind.noConnection:
+      case NetworkErrorKind.timeout:
+        return const NetworkFailure();
+      case NetworkErrorKind.notFound:
+        return const ServerFailure('Imóvel não encontrado');
+      case NetworkErrorKind.forbidden:
+        return const ServerFailure('Sem permissão para esta ação');
+      case NetworkErrorKind.unauthorized:
+        return const ServerFailure('Sessão expirada. Entre novamente.');
+      case NetworkErrorKind.badRequest:
+      case NetworkErrorKind.conflict:
+      case NetworkErrorKind.serverError:
+      case NetworkErrorKind.cancelled:
+      case NetworkErrorKind.unknown:
+        return const ServerFailure();
     }
   }
 }

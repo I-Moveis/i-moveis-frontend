@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -169,29 +170,34 @@ class _RegisterPageState extends State<RegisterPage>
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (name.isEmpty ||
-        email.isEmpty ||
-        phone.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos')),
-      );
-      return;
-    }
+    // In Auth0 mode, form inputs and terms checkbox live on the hosted
+    // signup screen, not on this page. Skip local validation so the CTA
+    // still dispatches when inputs are visually collapsed.
+    if (kUseMockAuth) {
+      if (name.isEmpty ||
+          email.isEmpty ||
+          phone.isEmpty ||
+          password.isEmpty ||
+          confirmPassword.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preencha todos os campos')),
+        );
+        return;
+      }
 
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Senhas não correspondem')),
-      );
-      return;
-    }
+      if (password != confirmPassword) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Senhas não correspondem')),
+        );
+        return;
+      }
 
-    if (!_acceptedTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aceite os termos de uso')),
-      );
-      return;
+      if (!_acceptedTerms) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aceite os termos de uso')),
+        );
+        return;
+      }
     }
 
     context.read<AuthBloc>().add(

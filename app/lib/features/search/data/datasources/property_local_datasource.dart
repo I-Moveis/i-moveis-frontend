@@ -9,11 +9,11 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
   static const String _boxName = 'properties_cache';
   static const Duration _cacheDuration = Duration(hours: 2);
 
-  Future<Box> _getBox() async {
+  Future<Box<dynamic>> _getBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox(_boxName);
+      return Hive.openBox<dynamic>(_boxName);
     }
-    return Hive.box(_boxName);
+    return Hive.box<dynamic>(_boxName);
   }
 
   @override
@@ -22,7 +22,7 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
       final box = await _getBox();
       final key = _generateKey(filters, page);
       final dynamic cachedEntry = box.get(key);
-      
+
       if (cachedEntry == null || cachedEntry is! Map) return [];
 
       // Check expiration
@@ -35,13 +35,13 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
         }
       }
 
-      final List<dynamic> data = cachedEntry['data'] as List<dynamic>? ?? [];
-      
+      final data = cachedEntry['data'] as List<dynamic>? ?? [];
+
       return data.map((m) {
         if (m is! Map) return null;
         return PropertyModel.fromMap(Map<String, dynamic>.from(m));
       }).whereType<Property>().toList();
-    } catch (e) {
+    } on Exception {
       return [];
     }
   }
@@ -54,15 +54,15 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
     try {
       final box = await _getBox();
       final key = _generateKey(filters, page);
-      final data = properties.map((e) => PropertyModel.toMap(e)).toList();
-      
+      final data = properties.map(PropertyModel.toMap).toList();
+
       final entry = {
         'timestamp': DateTime.now().toIso8601String(),
         'data': data,
       };
-      
+
       await box.put(key, entry);
-    } catch (e) {
+    } on Exception {
       // Fail silently for cache
     }
   }

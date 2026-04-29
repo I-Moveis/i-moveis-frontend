@@ -1,12 +1,12 @@
-import 'dart:io';
+import 'package:app/core/error/failures.dart';
+import 'package:app/core/network/network_exception.dart';
+import 'package:app/features/search/data/datasources/property_datasources.dart';
+import 'package:app/features/search/data/models/property_search_page.dart';
+import 'package:app/features/search/data/repositories/property_repository_impl.dart';
+import 'package:app/features/search/domain/entities/property.dart';
+import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:app/core/error/failures.dart';
-import 'package:app/features/search/domain/entities/property.dart';
-import 'package:app/features/search/data/repositories/property_repository_impl.dart';
-import 'package:app/features/search/data/datasources/property_datasources.dart';
-import 'package:app/features/search/domain/usecases/search_properties_usecase.dart';
-import 'package:app/features/search/presentation/providers/search_filters_provider.dart';
 
 class MockRemoteDataSource extends Mock implements PropertyRemoteDataSource {}
 class MockLocalDataSource extends Mock implements PropertyLocalDataSource {}
@@ -29,8 +29,7 @@ void main() {
     );
   });
 
-  final tFilters = const SearchFilters();
-  const tPage = 1;
+  const tFilters = SearchFilters();
   final tProperties = [
     const Property(
       id: '1',
@@ -47,68 +46,89 @@ void main() {
       parkingSpots: 1,
     ),
   ];
+  final tPage = PropertySearchPage(
+    properties: tProperties,
+    total: 1,
+    page: 1,
+    totalPages: 1,
+  );
 
   group('searchProperties', () {
-    test('should return remote data when remote fetch is successful and cache it', () async {
-      // arrange
+    test('returns remote data on success and caches it', () async {
       when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
-          .thenAnswer((_) async => tProperties);
+          .thenAnswer((_) async => tPage);
       when(() => mockLocalDataSource.cacheProperties(any(), any(), page: any(named: 'page')))
           .thenAnswer((_) async => {});
 
-      // act
-      final result = await repository.searchProperties(tFilters, page: tPage);
+      final result = await repository.searchProperties(tFilters);
 
-      // assert
-      verify(() => mockRemoteDataSource.searchProperties(tFilters, page: tPage));
-      verify(() => mockLocalDataSource.cacheProperties(tFilters, tProperties, page: tPage));
+      verify(() => mockRemoteDataSource.searchProperties(tFilters));
+      verify(() => mockLocalDataSource.cacheProperties(tFilters, tProperties));
       expect(result.properties, tProperties);
       expect(result.isOffline, false);
+      expect(result.totalResults, 1);
+      expect(result.hasNextPage, false);
     });
 
-    test('should return cached data when remote fetch fails with SocketException (offline fallback)', () async {
-      // arrange
+    test('falls back to cache on noConnection and flags offline', () async {
       when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
-          .thenThrow(const SocketException('No internet'));
+          .thenThrow(const NetworkException(
+        kind: NetworkErrorKind.noConnection,
+        message: 'offline',
+      ));
       when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
           .thenAnswer((_) async => tProperties);
 
-      // act
-      final result = await repository.searchProperties(tFilters, page: tPage);
+      final result = await repository.searchProperties(tFilters);
 
-      // assert
-      verify(() => mockRemoteDataSource.searchProperties(tFilters, page: tPage));
-      verify(() => mockLocalDataSource.getCachedProperties(tFilters, page: tPage));
+      verify(() => mockLocalDataSource.getCachedProperties(tFilters));
       expect(result.properties, tProperties);
       expect(result.isOffline, true);
     });
 
-    test('should throw NetworkFailure when remote fails with SocketException and cache is empty', () async {
-      // arrange
+    test('throws NetworkFailure when noConnection and cache empty', () async {
       when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
-          .thenThrow(const SocketException('No internet'));
+          .thenThrow(const NetworkException(
+        kind: NetworkErrorKind.noConnection,
+        message: 'offline',
+      ));
       when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
           .thenAnswer((_) async => []);
 
-      // act
-      final call = repository.searchProperties;
-
-      // assert
-      expect(() => call(tFilters, page: tPage), throwsA(isA<NetworkFailure>()));
+      expect(
+        () => repository.searchProperties(tFilters),
+        throwsA(isA<NetworkFailure>()),
+      );
     });
 
-    test('should throw ServerFailure when remote fails with generic exception and cache is empty', () async {
-      // arrange
+    test('throws ServerFailure on serverError and cache empty', () async {
       when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
-          .thenThrow(Exception('Server Error'));
+          .thenThrow(const NetworkException(
+        kind: NetworkErrorKind.serverError,
+        message: '500',
+      ));
       when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
           .thenAnswer((_) async => []);
 
-      // act
-      final call = repository.searchProperties;
+      expect(
+        () => repository.searchProperties(tFilters),
+        throwsA(isA<ServerFailure>()),
+      );
+    });
 
-      // assert
-      expect(() => call(tFilters, page: tPage), throwsA(isA<ServerFailure>()));
+    test('falls back to cache on serverError without offline flag? (serves stale as offline)', () async {
+      when(() => mockRemoteDataSource.searchProperties(any(), page: any(named: 'page')))
+          .thenThrow(const NetworkException(
+        kind: NetworkErrorKind.serverError,
+        message: '500',
+      ));
+      when(() => mockLocalDataSource.getCachedProperties(any(), page: any(named: 'page')))
+          .thenAnswer((_) async => tProperties);
+
+      final result = await repository.searchProperties(tFilters);
+
+      expect(result.properties, tProperties);
+      expect(result.isOffline, true);
     });
   });
 }

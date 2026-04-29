@@ -6,7 +6,7 @@ final List<Property> kMockProperties = [
     title: 'Apartamento Vila Madalena',
     latitude: -23.5872,
     longitude: -46.6789,
-    price: 'R\$ 2.500',
+    price: r'R$ 2.500',
     priceValue: 2500,
     description:
         'Apartamento amplo e bem iluminado, com vista para o parque. Localização privilegiada, próximo a transporte público e comércio local.',
@@ -17,7 +17,6 @@ final List<Property> kMockProperties = [
     parkingSpots: 1,
     condoFee: 450,
     taxes: 250,
-    thumbnailIconCode: 0xe06a, // Icons.apartment_rounded
     address: 'Vila Madalena, São Paulo - SP',
     amenities: ['Piscina', 'Academia', 'Portaria 24h', 'Elevador', 'Varanda'],
     badges: ['Exclusivo', 'Novo'],
@@ -34,7 +33,7 @@ final List<Property> kMockProperties = [
     title: 'Cobertura Jardins',
     latitude: -23.5613,
     longitude: -46.6565,
-    price: 'R\$ 8.900',
+    price: r'R$ 8.900',
     priceValue: 8900,
     description:
         'Cobertura duplex com terraço privativo e vista panorâmica da cidade. Acabamento premium, cozinha gourmet e área de lazer completa.',
@@ -45,7 +44,6 @@ final List<Property> kMockProperties = [
     parkingSpots: 2,
     condoFee: 1200,
     taxes: 800,
-    thumbnailIconCode: 0xe06a,
     address: 'Jardins, São Paulo - SP',
     amenities: [
       'Piscina',
@@ -69,7 +67,7 @@ final List<Property> kMockProperties = [
     title: 'Casa Pinheiros',
     latitude: -23.5672,
     longitude: -46.6921,
-    price: 'R\$ 5.200',
+    price: r'R$ 5.200',
     priceValue: 5200,
     description:
         'Casa independente em rua tranquila, com jardim e área de churrasqueira. Ideal para famílias que buscam espaço e conforto.',
@@ -78,7 +76,6 @@ final List<Property> kMockProperties = [
     bedrooms: 4,
     bathrooms: 3,
     parkingSpots: 3,
-    condoFee: 0,
     taxes: 620,
     thumbnailIconCode: 0xe318, // Icons.home_rounded
     address: 'Pinheiros, São Paulo - SP',
@@ -96,7 +93,7 @@ final List<Property> kMockProperties = [
     title: 'Studio Consolação',
     latitude: -23.5440,
     longitude: -46.6441,
-    price: 'R\$ 1.800',
+    price: r'R$ 1.800',
     priceValue: 1800,
     description:
         'Studio moderno e compacto, totalmente mobiliado. Perfeito para profissionais que buscam praticidade no coração da cidade.',
@@ -122,7 +119,7 @@ final List<Property> kMockProperties = [
     title: 'Loft Vila Madalena',
     latitude: -23.5872,
     longitude: -46.6789,
-    price: 'R\$ 3.100',
+    price: r'R$ 3.100',
     priceValue: 3100,
     description:
         'Loft industrial chic com pé-direito alto e mezanino. Próximo aos bares e restaurantes da Vila Madalena.',
@@ -149,7 +146,7 @@ final List<Property> kMockProperties = [
     title: 'Apartamento Bela Vista',
     latitude: -23.5729,
     longitude: -46.6420,
-    price: 'R\$ 2.200',
+    price: r'R$ 2.200',
     priceValue: 2200,
     description:
         'Apartamento reformado com cozinha americana integrada à sala. Bairro bem servido de metrô e comércio.',
@@ -160,10 +157,8 @@ final List<Property> kMockProperties = [
     parkingSpots: 1,
     condoFee: 390,
     taxes: 180,
-    thumbnailIconCode: 0xe06a,
     address: 'Bela Vista, São Paulo - SP',
     amenities: ['Portaria 24h', 'Elevador', 'Academia', 'Piscina'],
-    badges: [],
     ownerName: 'André',
     ownerMemberSince: 'Membro desde 2023',
     imageUrls: [
@@ -176,7 +171,7 @@ final List<Property> kMockProperties = [
     title: 'Casa Higienópolis',
     latitude: -23.5505,
     longitude: -46.6706,
-    price: 'R\$ 9.500',
+    price: r'R$ 9.500',
     priceValue: 9500,
     description:
         'Casa histórica totalmente restaurada em um dos bairros mais nobres de São Paulo. Amplo jardim, piscina aquecida e dependências completas.',
@@ -185,7 +180,6 @@ final List<Property> kMockProperties = [
     bedrooms: 5,
     bathrooms: 4,
     parkingSpots: 4,
-    condoFee: 0,
     taxes: 1400,
     thumbnailIconCode: 0xe586, // Icons.villa_rounded
     address: 'Higienópolis, São Paulo - SP',
@@ -211,7 +205,7 @@ final List<Property> kMockProperties = [
     title: 'Apartamento República',
     latitude: -23.5475,
     longitude: -46.6361,
-    price: 'R\$ 1.650',
+    price: r'R$ 1.650',
     priceValue: 1650,
     description:
         'Apartamento compacto e bem localizado, a poucos passos do metrô República. Ideal para quem valoriza mobilidade urbana.',
@@ -222,10 +216,8 @@ final List<Property> kMockProperties = [
     parkingSpots: 0,
     condoFee: 280,
     taxes: 95,
-    thumbnailIconCode: 0xe06a,
     address: 'República, São Paulo - SP',
     amenities: ['Portaria 24h', 'Elevador'],
-    badges: [],
     ownerName: 'Lucas',
     ownerMemberSince: 'Membro desde 2024',
     imageUrls: [

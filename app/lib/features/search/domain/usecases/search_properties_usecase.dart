@@ -10,11 +10,6 @@ final searchPropertiesUseCaseProvider = Provider<SearchPropertiesUseCase>((ref) 
 });
 
 class SearchResult {
-  final List<Property> properties;
-  final bool isOffline;
-  final int totalResults;
-  final int currentPage;
-  final bool hasNextPage;
 
   SearchResult({
     required this.properties,
@@ -23,6 +18,11 @@ class SearchResult {
     this.currentPage = 1,
     this.hasNextPage = false,
   });
+  final List<Property> properties;
+  final bool isOffline;
+  final int totalResults;
+  final int currentPage;
+  final bool hasNextPage;
 }
 
 // Contract for search use case — abstract to allow mocking in tests and
@@ -33,9 +33,9 @@ abstract class SearchPropertiesUseCase {
 }
 
 class SearchPropertiesUseCaseImpl implements SearchPropertiesUseCase {
-  final PropertyRepository _repository;
 
   SearchPropertiesUseCaseImpl(this._repository);
+  final PropertyRepository _repository;
 
   @override
   Future<SearchResult> execute(SearchFilters filters, {int page = 1}) async {

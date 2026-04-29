@@ -6,9 +6,9 @@ import 'package:app/features/search/presentation/providers/search_filters_provid
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
 class MockSearchPropertiesUseCase extends Mock implements SearchPropertiesUseCase {}
 class MockSharedPreferences extends Mock implements SharedPreferences {}
 
@@ -46,7 +46,7 @@ void main() {
 
       await tester.runAsync(() async {
         await tester.pumpWidget(createWidgetUnderTest());
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       });
       await tester.pump(const Duration(seconds: 2));
       expect(find.text('Nenhum resultado encontrado'), findsOneWidget);
@@ -61,7 +61,7 @@ void main() {
 
       await tester.runAsync(() async {
         await tester.pumpWidget(createWidgetUnderTest());
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       });
       await tester.pump(const Duration(seconds: 2));
       // Find the toggle icon in the header
@@ -101,7 +101,7 @@ void main() {
 
       await tester.runAsync(() async {
         await tester.pumpWidget(createWidgetUnderTest());
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       });
       await tester.pump(const Duration(seconds: 2));
       expect(find.text('Modo Offline — Resultados podem estar desatualizados'), findsOneWidget);

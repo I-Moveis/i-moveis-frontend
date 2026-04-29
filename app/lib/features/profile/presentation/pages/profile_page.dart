@@ -57,7 +57,7 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               AppMenuGroup(items: [
                 AppMenuGroupItem(icon: Icons.description_outlined, label: 'Minhas propostas', onTap: () {}),
-                AppMenuGroupItem(icon: Icons.calendar_today_outlined, label: 'Minhas visitas', onTap: () {}),
+                AppMenuGroupItem(icon: Icons.calendar_today_outlined, label: 'Minhas visitas', onTap: () => context.go('/profile/my-visits')),
                 AppMenuGroupItem(icon: Icons.article_outlined, label: 'Meus contratos', onTap: () {}),
               ]),
 
@@ -69,6 +69,7 @@ class ProfilePage extends StatelessWidget {
               AppMenuGroup(items: [
                 AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus imóveis', onTap: () => context.go('/profile/my-properties')),
                 AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar imóvel', onTap: () => context.go('/profile/my-properties/create')),
+                AppMenuGroupItem(icon: Icons.event_note_outlined, label: 'Visitas nos meus imóveis', onTap: () => context.go('/profile/landlord-visits')),
               ]),
 
               const SizedBox(height: AppSpacing.xxl),

@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants.dart';
+import '../../../../core/providers/auth0_provider.dart';
+import '../../../../core/providers/dio_provider.dart';
 import '../../../../core/providers/secure_storage_provider.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
+import '../../data/datasources/auth0_auth_remote_datasource.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/mock_auth_remote_datasource.dart';
@@ -17,9 +21,18 @@ import '../../domain/usecases/social_login_usecase.dart';
 // ── Data sources ────────────────────────────────────────────────────────────
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
-  // Use mock data source if backend is unavailable for UI testing
-  return MockAuthRemoteDataSourceImpl();
-  // return AuthRemoteDataSourceImpl(ref.watch(dioProvider));
+  if (kUseMockAuth) {
+    return MockAuthRemoteDataSourceImpl();
+  }
+  final auth0 = ref.watch(auth0Provider);
+  if (auth0 == null) {
+    throw StateError(
+      'Auth0 não configurado. Passe --dart-define=AUTH0_DOMAIN=... '
+      '--dart-define=AUTH0_CLIENT_ID=... --dart-define=AUTH0_AUDIENCE=... '
+      'ou rode com --dart-define=USE_MOCK_DATA=true.',
+    );
+  }
+  return Auth0AuthRemoteDataSource(auth0);
 });
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
@@ -35,6 +48,7 @@ final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   return AuthRepositoryImpl(
     remote: ref.watch(authRemoteDataSourceProvider),
     local: ref.watch(authLocalDataSourceProvider),
+    dio: ref.watch(dioProvider),
   );
 });
 

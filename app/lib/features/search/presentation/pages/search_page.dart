@@ -6,12 +6,10 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/search_filters_provider.dart';
 import '../providers/search_notifier.dart';
-import '../providers/search_view_provider.dart';
 import '../widgets/brutalist_shimmer.dart';
 import '../widgets/filter_chip_bar.dart';
 import '../widgets/property_list_tile.dart';
 import '../widgets/search_bar_widget.dart';
-import 'map_search_page.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
 class SearchPage extends ConsumerStatefulWidget {
@@ -70,16 +68,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       }
     });
 
-    final viewMode = ref.watch(searchViewProvider);
     final titleColor = BrutalistPalette.title(isDark);
     final searchState = ref.watch(searchNotifierProvider);
 
     return BrutalistPageScaffold(
       builder: (context, _, entrance, pulse) {
-        if (viewMode == SearchViewMode.map) {
-          return const MapSearchPage();
-        }
-
         final fade = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
         );
@@ -107,7 +100,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => ref.read(searchViewProvider.notifier).toggle(),
+                            onTap: () => context.push('/search/map'),
                             child: Container(
                               width: 44,
                               height: 44,
@@ -116,7 +109,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 borderRadius: AppRadius.borderMd,
                               ),
                               child: Icon(
-                                viewMode == SearchViewMode.list ? Icons.map_outlined : Icons.list_outlined,
+                                Icons.map_outlined,
                                 size: 20,
                                 color: BrutalistPalette.muted(isDark),
                               ),

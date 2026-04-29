@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../design_system/design_system.dart';
@@ -8,7 +9,6 @@ import '../../data/mock_properties_datasource.dart';
 import '../../domain/entities/map_property.dart';
 import '../map_style.dart';
 import '../providers/map_providers.dart';
-import '../providers/search_view_provider.dart';
 import '../widgets/map_location_fab.dart';
 import '../widgets/map_property_preview.dart';
 import '../widgets/map_search_top_bar.dart';
@@ -54,6 +54,17 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
         .toSet();
   }
 
+  void _handleBack() {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      // Fallback only: reachable if this page is somehow shown as the initial
+      // route on the Search branch. Sends the user back to the list screen.
+      router.go('/search');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -65,7 +76,13 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
     final locationGranted = permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
@@ -93,9 +110,7 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
             child: Column(
               children: [
                 MapSearchTopBar(
-                  onBack: () => ref
-                      .read(searchViewProvider.notifier)
-                      .set(SearchViewMode.list),
+                  onBack: _handleBack,
                   onSearchTap: () {},
                 ),
                 const Spacer(),
@@ -187,6 +202,7 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

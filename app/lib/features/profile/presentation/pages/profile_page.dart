@@ -21,6 +21,20 @@ class ProfilePage extends StatelessWidget {
         final mutedColor = BrutalistPalette.muted(isDark);
         final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
+        final authUser = context.select<AuthBloc, ({String name, String email, String? avatarUrl})?>(
+          (bloc) => bloc.state.maybeWhen(
+            authenticated: (user) => (
+              name: user.name.isNotEmpty ? user.name : 'Usuário',
+              email: user.email,
+              avatarUrl: user.avatarUrl,
+            ),
+            orElse: () => null,
+          ),
+        );
+        final displayName = authUser?.name ?? 'Usuário';
+        final displayEmail = authUser?.email ?? '';
+        final avatarUrl = authUser?.avatarUrl;
+
         return Opacity(opacity: fade.value, child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [SliverToBoxAdapter(child: Padding(
@@ -31,13 +45,23 @@ class ProfilePage extends StatelessWidget {
               // Avatar + info
               Container(
                 width: 72, height: 72,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: accentColor.withValues(alpha: 0.1)),
-                child: Icon(Icons.person_rounded, size: 32, color: accentColor.withValues(alpha: 0.6)),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accentColor.withValues(alpha: 0.1),
+                  image: avatarUrl != null && avatarUrl.isNotEmpty
+                      ? DecorationImage(image: NetworkImage(avatarUrl), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: avatarUrl == null || avatarUrl.isEmpty
+                    ? Icon(Icons.person_rounded, size: 32, color: accentColor.withValues(alpha: 0.6))
+                    : null,
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text('Usuário', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
-              const SizedBox(height: AppSpacing.xxs),
-              Text('usuario@email.com', style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
+              Text(displayName, style: AppTypography.headlineLarge.copyWith(color: titleColor)),
+              if (displayEmail.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xxs),
+                Text(displayEmail, style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
+              ],
               const SizedBox(height: AppSpacing.xl),
               GestureDetector(
                 onTap: () => context.go('/profile/edit'),

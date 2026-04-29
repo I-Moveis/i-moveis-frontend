@@ -14,7 +14,7 @@ void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      
+
       // Initialize Hive
       await Hive.initFlutter();
 

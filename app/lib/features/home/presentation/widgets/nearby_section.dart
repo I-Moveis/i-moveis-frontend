@@ -46,7 +46,7 @@ class NearbySection extends ConsumerWidget {
           title: 'Perto de você',
           action: userPosition != null ? 'Ver mapa' : null,
           onAction:
-              userPosition != null ? () => context.go('/search/map') : null,
+              userPosition != null ? () => context.push('/search/map') : null,
         ),
         if (userPosition == null)
           Padding(

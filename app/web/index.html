@@ -32,8 +32,14 @@
   <title>app</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Maps JavaScript API. Replace YOUR_API_KEY_HERE before building. See app/MAPS_SETUP.md -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&loading=async" async></script>
+  <!-- Google Maps JavaScript API. Locally reads from env.js -->
+  <script src="env.js"></script>
+  <script>
+    var script = document.createElement('script');
+    script.src = "https://maps.googleapis.com/maps/api/js?key=" + (window.MAPS_API_KEY || "YOUR_API_KEY_HERE") + "&loading=async";
+    script.async = true;
+    document.head.appendChild(script);
+  </script>
 
   <!-- Hide Google Maps chrome (logo, attribution, fullscreen, keyboard shortcuts).
        NOTE: hiding the Google logo and attribution technically violates the

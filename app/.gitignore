@@ -67,3 +67,7 @@ ios/**/*.xcodeproj/project.pbxproj
 # Web build artifacts
 /web/build/
 /web/docs/
+
+# Environment variables
+/.env
+/web/env.js

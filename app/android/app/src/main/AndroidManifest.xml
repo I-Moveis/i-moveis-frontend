@@ -9,7 +9,7 @@
         <!-- Google Maps API key. Replace YOUR_API_KEY_HERE before building. See app/MAPS_SETUP.md -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDzoe9LQNJ6i-a5YIU7vRV7xmNk_c7qnzw"/>
+            android:value="YOUR_API_KEY_HERE"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,47 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
-/// Chat tab — cozy conversation list with rounded cards.
+/// Chat tab — cozy conversation list with role-based filtering.
 class ConversationsPage extends StatelessWidget {
   const ConversationsPage({super.key});
 
-  static const _conversations = [
-    _ConversationData(name: 'Ricardo Mendes', initials: 'RM', message: 'Olá, o apartamento ainda está disponível?', time: '10:30', unread: true),
-    _ConversationData(name: 'Ana Souza', initials: 'AS', message: 'Podemos agendar a visita para sexta?', time: '09:15', unread: true),
-    _ConversationData(name: 'Carlos Lima', initials: 'CL', message: 'Contrato assinado! Obrigado.', time: 'Ontem', unread: false),
+  static const _tenantConversations = [
+    _ConversationData(name: 'Suporte I-Moveis', initials: 'IM', message: 'Como podemos te ajudar hoje?', time: '14:20', unread: false),
+    _ConversationData(name: 'Proprietário João', initials: 'PJ', message: 'O contrato está pronto para assinatura.', time: '10:30', unread: true),
+  ];
+
+  static const _landlordConversations = [
+    _ConversationData(name: 'Ricardo Mendes', initials: 'RM', message: 'Interessado no Apartamento Jardins', time: '10:30', unread: true),
+    _ConversationData(name: 'Ana Souza', initials: 'AS', message: 'Pergunta sobre Studio Pinheiros', time: '09:15', unread: true),
+    _ConversationData(name: 'Carlos Lima', initials: 'CL', message: 'Comprovante do aluguel enviado.', time: 'Ontem', unread: false),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return BrutalistPageScaffold(
-      builder: (context, isDark, entrance, pulse) {
-        final fade = Tween<double>(begin: 0, end: 1).animate(
-          CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isOwner = state.maybeWhen(
+          authenticated: (user) => user.isOwner,
+          orElse: () => false,
         );
 
-        final titleColor = BrutalistPalette.title(isDark);
-        final mutedColor = BrutalistPalette.muted(isDark);
-        final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+        final conversations = isOwner ? _landlordConversations : _tenantConversations;
 
-        return Opacity(opacity: fade.value, child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const SizedBox(height: AppSpacing.xl),
-                Text('Conversas', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
-                const SizedBox(height: AppSpacing.xxl),
-                for (int i = 0; i < _conversations.length; i++) ...[
-                  _buildCard(context, _conversations[i], i, isDark, titleColor, mutedColor, accentColor),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-              ]),
-            )),
-          ],
-        ));
+        return BrutalistPageScaffold(
+          builder: (context, isDark, entrance, pulse) {
+            final fade = Tween<double>(begin: 0, end: 1).animate(
+              CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
+            );
+
+            final titleColor = BrutalistPalette.title(isDark);
+            final mutedColor = BrutalistPalette.muted(isDark);
+            final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+
+            return Opacity(opacity: fade.value, child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const SizedBox(height: AppSpacing.xl),
+                    Text('Conversas', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
+                    const SizedBox(height: AppSpacing.xxl),
+                    if (conversations.isEmpty)
+                      _buildEmptyState(isDark, titleColor, mutedColor, accentColor)
+                    else
+                      for (int i = 0; i < conversations.length; i++) ...[
+                        _buildCard(context, conversations[i], i, isDark, titleColor, mutedColor, accentColor),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                  ]),
+                )),
+              ],
+            ));
+          },
+        );
       },
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 100),
+          Icon(Icons.chat_bubble_outline_rounded, size: 64, color: mutedColor.withValues(alpha: 0.3)),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Nenhuma conversa', style: AppTypography.headlineSmall.copyWith(color: titleColor)),
+          const SizedBox(height: AppSpacing.xs),
+          Text('Suas mensagens aparecerão aqui.', style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
+        ],
+      ),
     );
   }
 

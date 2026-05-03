@@ -16,7 +16,7 @@ const Duration kApiReceiveTimeout = Duration(seconds: 30);
 /// backend. Default is `false` for backend testing.
 const bool kUseMockData = bool.fromEnvironment(
   'USE_MOCK_DATA',
-  defaultValue: false,
+  defaultValue: true,
 );
 
 /// When true, auth layer uses mock (fake token/user) instead of Auth0.

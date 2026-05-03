@@ -9,6 +9,7 @@ import 'design_system/design_system.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/providers/auth_providers.dart';
 import 'features/auth/presentation/providers/auth_status_provider.dart';
+import 'core/providers/current_user_provider.dart';
 import 'features/home/presentation/bloc/category_bloc.dart';
 import 'features/onboarding/presentation/cubit/onboarding_cubit.dart';
 
@@ -43,6 +44,7 @@ class MyApp extends ConsumerWidget {
             socialLoginUseCase: ref.read(socialLoginUseCaseProvider),
             getCurrentSessionUseCase:
                 ref.read(getCurrentSessionUseCaseProvider),
+            demoLoginUseCase: ref.read(demoLoginUseCaseProvider),
           ),
         ),
         BlocProvider<CategoryBloc>(create: (_) => CategoryBloc()),
@@ -55,13 +57,13 @@ class MyApp extends ConsumerWidget {
           state.when(
             initial: () {},
             loading: () {},
-            authenticated: (_) => ref
-                .read(authStatusProvider.notifier)
-                .set(AuthStatus.authenticated),
+            authenticated: (_) {
+              ref.read(authStatusProvider.notifier).set(AuthStatus.authenticated);
+              ref.invalidate(currentUserIdProvider);
+            },
             unauthenticated: () {
-              ref
-                  .read(authStatusProvider.notifier)
-                  .set(AuthStatus.unauthenticated);
+              ref.read(authStatusProvider.notifier).set(AuthStatus.unauthenticated);
+              ref.invalidate(currentUserIdProvider);
               goRouter.go('/login');
             },
             error: (_) {},

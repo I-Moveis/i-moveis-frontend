@@ -11,6 +11,7 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/mock_auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/i_auth_repository.dart';
+import '../../domain/usecases/demo_login_usecase.dart';
 import '../../domain/usecases/get_current_session_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
@@ -76,4 +77,8 @@ final resetPasswordUseCaseProvider = Provider<ResetPasswordUseCase>(
 
 final getCurrentSessionUseCaseProvider = Provider<GetCurrentSessionUseCase>(
   (ref) => GetCurrentSessionUseCase(ref.watch(authRepositoryProvider)),
+);
+
+final demoLoginUseCaseProvider = Provider<DemoLoginUseCase>(
+  (ref) => DemoLoginUseCase(ref.watch(authRepositoryProvider)),
 );

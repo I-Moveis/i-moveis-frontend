@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
 import '../bloc/auth_bloc.dart';
-import '../bloc/demo_role.dart';
+import '../../domain/entities/demo_role.dart';
 import '../bloc/social_provider.dart';
 
 /// Login page — Brutalist Elegance x Japanese Creative Web

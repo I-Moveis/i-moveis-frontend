@@ -3,12 +3,15 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../core/network/network_exception.dart';
+import '../../domain/entities/demo_role.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/failures/auth_failure.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../../presentation/bloc/social_provider.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../models/auth_session_model.dart';
+import '../models/auth_user_model.dart';
 
 class AuthRepositoryImpl implements IAuthRepository {
   AuthRepositoryImpl({
@@ -134,6 +137,40 @@ class AuthRepositoryImpl implements IAuthRepository {
         // refresh flow exists.
         refreshToken: '',
       ),
+    );
+  }
+
+  @override
+  Future<Either<AuthFailure, AuthSession>> demoLogin(DemoRole role) async {
+    final model = _fakeSessionFor(role);
+    await _local.saveSession(model);
+    return Right(model.toEntity());
+  }
+
+  AuthSessionModel _fakeSessionFor(DemoRole role) {
+    final user = switch (role) {
+      DemoRole.client => const AuthUserModel(
+          id: 'demo-client',
+          name: 'Cliente Demo',
+          email: 'cliente@demo.com',
+        ),
+      DemoRole.owner => const AuthUserModel(
+          id: 'demo-owner',
+          name: 'Proprietário Demo',
+          email: 'proprietario@demo.com',
+          isOwner: true,
+        ),
+      DemoRole.admin => const AuthUserModel(
+          id: 'demo-admin',
+          name: 'Admin Demo',
+          email: 'admin@demo.com',
+          isAdmin: true,
+        ),
+    };
+    return AuthSessionModel(
+      user: user,
+      accessToken: 'demo-access-token',
+      refreshToken: 'demo-refresh-token',
     );
   }
 

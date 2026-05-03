@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 
+import '../../domain/entities/demo_role.dart';
 import '../../presentation/bloc/social_provider.dart';
 import '../entities/auth_session.dart';
 import '../failures/auth_failure.dart';
@@ -29,4 +30,6 @@ abstract class IAuthRepository {
 
   /// Returns the cached session if there is a valid stored access token.
   Future<Either<AuthFailure, AuthSession?>> currentSession();
+
+  Future<Either<AuthFailure, AuthSession>> demoLogin(DemoRole role);
 }

@@ -2,12 +2,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/entities/auth_user.dart';
+import '../../domain/usecases/demo_login_usecase.dart';
 import '../../domain/usecases/get_current_session_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/social_login_usecase.dart';
-import 'demo_role.dart';
+import '../../domain/entities/demo_role.dart';
 import 'social_provider.dart';
 
 part 'auth_event.dart';
@@ -21,11 +22,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required LogoutUseCase logoutUseCase,
     required SocialLoginUseCase socialLoginUseCase,
     required GetCurrentSessionUseCase getCurrentSessionUseCase,
+    required DemoLoginUseCase demoLoginUseCase,
   })  : _login = loginUseCase,
         _register = registerUseCase,
         _logout = logoutUseCase,
         _socialLogin = socialLoginUseCase,
         _getCurrentSession = getCurrentSessionUseCase,
+        _demoLogin = demoLoginUseCase,
         super(const AuthState.initial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
@@ -40,6 +43,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LogoutUseCase _logout;
   final SocialLoginUseCase _socialLogin;
   final GetCurrentSessionUseCase _getCurrentSession;
+  final DemoLoginUseCase _demoLogin;
 
   Future<void> _onLoginRequested(
     LoginRequested event,
@@ -119,32 +123,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthState.loading());
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    emit(AuthState.authenticated(user: _fakeUserFor(event.role)));
-  }
-
-  AuthUser _fakeUserFor(DemoRole role) {
-    switch (role) {
-      case DemoRole.client:
-        return const AuthUser(
-          id: 'demo-client',
-          name: 'Cliente Demo',
-          email: 'cliente@demo.com',
-        );
-      case DemoRole.owner:
-        return const AuthUser(
-          id: 'demo-owner',
-          name: 'Proprietário Demo',
-          email: 'proprietario@demo.com',
-          isOwner: true,
-        );
-      case DemoRole.admin:
-        return const AuthUser(
-          id: 'demo-admin',
-          name: 'Admin Demo',
-          email: 'admin@demo.com',
-          isAdmin: true,
-        );
-    }
+    final result = await _demoLogin.execute(event.role);
+    result.fold(
+      (failure) => emit(AuthState.error(message: failure.message)),
+      (session) => emit(AuthState.authenticated(user: session.user)),
+    );
   }
 }

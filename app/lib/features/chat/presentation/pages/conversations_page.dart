@@ -14,9 +14,9 @@ class ConversationsPage extends StatelessWidget {
   ];
 
   static const _landlordConversations = [
-    _ConversationData(name: 'Ricardo Mendes', initials: 'RM', message: 'Interessado no Apartamento Jardins', time: '10:30', unread: true),
-    _ConversationData(name: 'Ana Souza', initials: 'AS', message: 'Pergunta sobre Studio Pinheiros', time: '09:15', unread: true),
-    _ConversationData(name: 'Carlos Lima', initials: 'CL', message: 'Comprovante do aluguel enviado.', time: 'Ontem', unread: false),
+    _ConversationData(name: 'João Silva', initials: 'JS', message: 'Enviado comprovante de PIX.', time: '10:30', unread: true),
+    _ConversationData(name: 'Maria Oliveira', initials: 'MO', message: 'Pode conferir o contrato?', time: '09:15', unread: true),
+    _ConversationData(name: 'Pedro Santos', initials: 'PS', message: 'Vou enviar o RG amanhã.', time: 'Ontem', unread: false),
   ];
 
   @override

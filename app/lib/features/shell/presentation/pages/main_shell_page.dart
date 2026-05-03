@@ -31,7 +31,7 @@ class MainShellPage extends ConsumerWidget {
           tabs = [
             (icon: Icons.home_rounded, label: 'Dashboard', branchIndex: 0),
             (icon: Icons.group_rounded, label: 'Inquilinos', branchIndex: 1), 
-            (icon: Icons.business_rounded, label: 'Imóveis', branchIndex: 2), 
+            (icon: Icons.business_rounded, label: 'Imóveis', branchIndex: 5), 
             (icon: Icons.chat_bubble_rounded, label: 'Chat', branchIndex: 3),
             (icon: Icons.person_rounded, label: 'Perfil', branchIndex: 4),
           ];

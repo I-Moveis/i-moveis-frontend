@@ -44,6 +44,7 @@ final _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
 final _favoritesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'favorites');
 final _chatNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'chat');
 final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
+final _myPropertiesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'my-properties');
 
 /// Paths allowed for users without an authenticated session.
 const _publicPaths = <String>{
@@ -93,6 +94,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (_, _) => const ForgotPasswordPage(),
+      ),
+
+      // Legacy redirect for moved properties route
+      GoRoute(
+        path: '/profile/my-properties',
+        redirect: (_, __) => '/my-properties',
       ),
 
       // ── Main shell (bottom nav) ──────────────────────────────
@@ -168,26 +175,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     builder: (_, _) => const SettingsPage(),
                   ),
                   GoRoute(
-                    path: 'my-properties',
-                    builder: (_, _) => const MyPropertiesPage(),
-                    routes: [
-                      GoRoute(
-                        path: 'create',
-                        builder: (_, _) => const CreateListingPage(),
-                      ),
-                      GoRoute(
-                        path: 'analytics',
-                        builder: (_, _) => const ListingAnalyticsPage(),
-                      ),
-                      GoRoute(
-                        path: ':id/edit',
-                        builder: (_, state) => EditListingPage(
-                          propertyId: state.pathParameters['id']!,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
                     path: 'my-visits',
                     builder: (_, _) => const MyVisitsPage(),
                     routes: [
@@ -210,6 +197,33 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'landlord-visits',
                     builder: (_, _) => const LandlordVisitsPage(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Branch 5: My Properties (Landlord specific top-level)
+          StatefulShellBranch(
+            navigatorKey: _myPropertiesNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/my-properties',
+                builder: (_, _) => const MyPropertiesPage(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, _) => const CreateListingPage(),
+                  ),
+                  GoRoute(
+                    path: 'analytics',
+                    builder: (_, _) => const ListingAnalyticsPage(),
+                  ),
+                  GoRoute(
+                    path: ':id/edit',
+                    builder: (_, state) => EditListingPage(
+                      propertyId: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),
@@ -300,5 +314,4 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
-
 });

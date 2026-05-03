@@ -36,6 +36,9 @@ import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
 import '../../features/visits/presentation/pages/visit_detail_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_documents_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
 
 // Navigator keys for each shell branch.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -130,6 +133,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'map',
                     builder: (_, _) => const MapSearchPage(),
+                  ),
+                  GoRoute(
+                    path: 'documents',
+                    builder: (_, state) => TenantDocumentsPage(
+                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'rent-history',
+                    builder: (_, state) => TenantRentHistoryPage(
+                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'contract',
+                    builder: (_, state) => TenantContractPage(
+                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                    ),
                   ),
                 ],
               ),

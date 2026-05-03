@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
 
 class TenantsPage extends StatelessWidget {
@@ -62,11 +63,18 @@ class TenantsPage extends StatelessWidget {
                       Text('Meus Inquilinos', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
                       const SizedBox(height: AppSpacing.xxs),
                       Text('Gerencie quem mora nos seus imóveis', style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
-                      const SizedBox(height: AppSpacing.xxl),
-                      for (final tenant in _tenants) ...[
-                        _buildTenantCard(context, tenant, isDark, titleColor, mutedColor, accentColor),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        itemCount: _tenants.length,
+                        itemBuilder: (context, index) => Column(
+                          children: [
+                            _buildTenantCard(context, _tenants[index], index, isDark, titleColor, mutedColor, accentColor),
+                            const SizedBox(height: AppSpacing.md),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: AppSpacing.massive),
                     ],
                   ),
@@ -79,13 +87,17 @@ class TenantsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTenantCard(BuildContext context, _TenantData tenant, bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
+  Widget _buildTenantCard(BuildContext context, _TenantData tenant, int index, bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final statusColor = tenant.status.contains('OK') ? Colors.green : (tenant.status.contains('Pendente') ? Colors.orange : accentColor);
+    final statusColor = tenant.status == 'Documentação OK' 
+        ? AppColors.success 
+        : tenant.status == 'Aguardando Assinatura'
+            ? AppColors.warning
+            : AppColors.error;
 
     return GestureDetector(
-      onTap: () => _showTenantDetails(context, tenant, isDark),
+      onTap: () => _showTenantDetails(context, tenant, index, isDark),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -159,20 +171,21 @@ class TenantsPage extends StatelessWidget {
     );
   }
 
-  void _showTenantDetails(BuildContext context, _TenantData tenant, bool isDark) {
+  void _showTenantDetails(BuildContext context, _TenantData tenant, int index, bool isDark) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _TenantDetailsSheet(tenant: tenant, isDark: isDark),
+      builder: (context) => _TenantDetailsSheet(tenant: tenant, index: index, isDark: isDark),
     );
   }
 }
 
 class _TenantDetailsSheet extends StatelessWidget {
   final _TenantData tenant;
+  final int index;
   final bool isDark;
-  const _TenantDetailsSheet({required this.tenant, required this.isDark});
+  const _TenantDetailsSheet({required this.tenant, required this.index, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -230,10 +243,38 @@ class _TenantDetailsSheet extends StatelessWidget {
                   const AppSectionHeader(title: 'Ações de Gestão'),
                   const SizedBox(height: AppSpacing.md),
                   AppMenuGroup(items: [
-                    AppMenuGroupItem(icon: Icons.chat_outlined, label: 'Abrir Chat com Inquilino', onTap: () {}),
-                    AppMenuGroupItem(icon: Icons.description_outlined, label: 'Ver Documentos Enviados', onTap: () {}),
-                    AppMenuGroupItem(icon: Icons.history_rounded, label: 'Histórico de Aluguéis', onTap: () {}),
-                    AppMenuGroupItem(icon: Icons.gavel_rounded, label: 'Visualizar Contrato Digital', onTap: () {}),
+                    AppMenuGroupItem(
+                      icon: Icons.chat_outlined, 
+                      label: 'Abrir Chat com Inquilino', 
+                      onTap: () {
+                        Navigator.pop(context); // Close sheet
+                        context.go('/chat/conversation-$index');
+                      },
+                    ),
+                    AppMenuGroupItem(
+                      icon: Icons.description_outlined, 
+                      label: 'Ver Documentos Enviados', 
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/search/documents?name=${Uri.encodeComponent(tenant.name)}');
+                      },
+                    ),
+                    AppMenuGroupItem(
+                      icon: Icons.history_rounded, 
+                      label: 'Histórico de Aluguéis', 
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/search/rent-history?name=${Uri.encodeComponent(tenant.name)}');
+                      },
+                    ),
+                    AppMenuGroupItem(
+                      icon: Icons.gavel_rounded, 
+                      label: 'Visualizar Contrato Digital', 
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/search/contract?name=${Uri.encodeComponent(tenant.name)}');
+                      },
+                    ),
                   ]),
                   const SizedBox(height: AppSpacing.xxl),
                   const AppSectionHeader(title: 'Informações do Contrato'),

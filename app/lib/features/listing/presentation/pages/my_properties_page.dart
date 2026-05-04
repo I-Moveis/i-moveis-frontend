@@ -10,7 +10,7 @@ import '../providers/my_properties_notifier.dart';
 class MyPropertiesPage extends ConsumerWidget {
   const MyPropertiesPage({
     super.key,
-    this.showBack = true,
+    this.showBack = false,
     this.title = 'Meus imóveis',
   });
 
@@ -93,10 +93,10 @@ class MyPropertiesPage extends ConsumerWidget {
                               property: p,
                               isDark: isDark,
                               mutedColor: mutedColor,
-                              onAnalytics: () => context.go(
-                                  '/profile/my-properties/analytics'),
+                              onAnalytics: () => context.push(
+                                  '/my-properties/${p.id}/analytics'),
                               onEdit: () => context.push(
-                                  '/profile/my-properties/${p.id}/edit'),
+                                  '/my-properties/${p.id}/edit'),
                               onDelete: () =>
                                   _confirmDelete(context, ref, p.id),
                             ),

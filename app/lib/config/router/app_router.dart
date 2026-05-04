@@ -39,6 +39,7 @@ import '../../features/visits/presentation/pages/visit_detail_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_documents_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
+import '../../features/listing/presentation/pages/property_management_dossier_page.dart';
 
 // Navigator keys for each shell branch.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -230,17 +231,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/my-properties',
-                builder: (_, _) => const MyPropertiesPage(),
+                builder: (_, _) => const MyPropertiesPage(showBack: false),
                 routes: [
                   GoRoute(
                     path: 'create',
                     builder: (_, _) => const CreateListingPage(),
                   ),
                   GoRoute(
-                    path: 'analytics',
-                    builder: (_, _) => const ListingAnalyticsPage(),
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: ':id/analytics',
+                    builder: (_, state) => ListingAnalyticsPage(
+                      propertyId: state.pathParameters['id']!,
+                    ),
                   ),
                   GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
                     path: ':id/edit',
                     builder: (_, state) => EditListingPage(
                       propertyId: state.pathParameters['id']!,
@@ -251,6 +256,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/management-dossier',
+        builder: (_, _) => const PropertyManagementDossierPage(),
       ),
 
       // ── Chat detail (full screen, outside shell) ──────────────

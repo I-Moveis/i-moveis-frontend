@@ -1,29 +1,43 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../listing/presentation/providers/my_properties_notifier.dart';
+import '../../../search/domain/entities/property.dart';
 
-class LandlordDashboardPage extends StatelessWidget {
+class LandlordDashboardPage extends ConsumerWidget {
   const LandlordDashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final propertiesAsync = ref.watch(myPropertiesNotifierProvider);
+
     return BrutalistPageScaffold(
       waveSpeed: 0.15,
       waveAmplitude: 0.3,
       waveCount: 3,
       builder: (context, isDark, entrance, pulse) {
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _HeaderSection(isDark: isDark)),
-            SliverToBoxAdapter(child: _StatsSection(isDark: isDark)),
-            SliverToBoxAdapter(child: _QuickActionsSection(isDark: isDark)),
-            SliverToBoxAdapter(child: _RentedPropertiesSection(isDark: isDark)),
-            SliverToBoxAdapter(child: _RecentTenantsSection(isDark: isDark)),
-            SliverToBoxAdapter(child: _ChartsSection(isDark: isDark)),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
+        return propertiesAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Erro ao carregar dados: $e')),
+          data: (properties) => CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _HeaderSection(isDark: isDark)),
+              SliverToBoxAdapter(child: _StatsSection(isDark: isDark)),
+              SliverToBoxAdapter(child: _QuickActionsSection(isDark: isDark)),
+              SliverToBoxAdapter(
+                child: _RentedPropertiesSection(
+                  isDark: isDark,
+                  properties: properties,
+                ),
+              ),
+              SliverToBoxAdapter(child: _RecentTenantsSection(isDark: isDark)),
+              SliverToBoxAdapter(child: _ChartsSection(isDark: isDark)),
+              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
+          ),
         );
       },
     );
@@ -32,7 +46,7 @@ class LandlordDashboardPage extends StatelessWidget {
 
 class _HeaderSection extends StatelessWidget {
   final bool isDark;
-  const _HeaderSection({super.key, required this.isDark});
+  const _HeaderSection({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +94,7 @@ class _HeaderSection extends StatelessWidget {
 
 class _StatsSection extends StatelessWidget {
   final bool isDark;
-  const _StatsSection({super.key, required this.isDark});
+  const _StatsSection({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +141,7 @@ class _StatsSection extends StatelessWidget {
 
 class _ChartsSection extends StatelessWidget {
   final bool isDark;
-  const _ChartsSection({super.key, required this.isDark});
+  const _ChartsSection({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +204,7 @@ class _ChartsSection extends StatelessWidget {
 
 class _QuickActionsSection extends StatelessWidget {
   final bool isDark;
-  const _QuickActionsSection({super.key, required this.isDark});
+  const _QuickActionsSection({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -209,13 +223,13 @@ class _QuickActionsSection extends StatelessWidget {
               _ActionItem(
                 icon: Icons.add_business_rounded,
                 label: 'Novo Imóvel',
-                onTap: () => context.push('/profile/my-properties/create'),
+                onTap: () => context.push('/my-properties/create'),
                 isDark: isDark,
               ),
               _ActionItem(
                 icon: Icons.business_rounded,
                 label: 'Gerenciar',
-                onTap: () => context.go('/favorites'),
+                onTap: () => context.push('/management-dossier'),
                 isDark: isDark,
               ),
               _ActionItem(
@@ -284,40 +298,118 @@ class _ActionItem extends StatelessWidget {
 }
 
 class _RentedPropertiesSection extends StatelessWidget {
+  const _RentedPropertiesSection({
+    required this.isDark,
+    required this.properties,
+  });
+
   final bool isDark;
-  const _RentedPropertiesSection({super.key, required this.isDark});
+  final List<Property> properties;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 32),
-        const AppSectionHeader(title: 'Imóveis Locados', action: 'Ver todos'),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 140,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            children: [
-              _PropertyTile(
-                title: 'Apartamento Jardins',
-                tenant: 'João Silva',
-                price: r'R$ 4.500',
-                isDark: isDark,
-              ),
-              const SizedBox(width: 12),
-              _PropertyTile(
-                title: 'Studio Pinheiros',
-                tenant: 'Maria Oliveira',
-                price: r'R$ 2.800',
-                isDark: isDark,
-              ),
-            ],
+        const SizedBox(height: AppSpacing.xxl),
+        AppSectionHeader(
+          title: 'Imóveis Locados',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (properties.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+            child: Text(
+              'Nenhum imóvel locado.',
+              style: AppTypography.bodyMedium.copyWith(color: BrutalistPalette.muted(isDark)),
+            ),
+          )
+        else
+          SizedBox(
+            height: 140,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+              itemCount: properties.length > 3 ? 4 : properties.length,
+              itemBuilder: (context, index) {
+                if (index == 3 && properties.length > 3) {
+                  return _SeeMoreTile(
+                    count: properties.length - 3,
+                    isDark: isDark,
+                    onTap: () => context.go('/my-properties'),
+                  );
+                }
+
+                final property = properties[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  child: _PropertyTile(
+                    title: property.title,
+                    tenant: 'Inquilino ${index + 1}',
+                    price: property.price,
+                    isDark: isDark,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SeeMoreTile extends StatelessWidget {
+  const _SeeMoreTile({
+    required this.count,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final int count;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 100,
+        margin: const EdgeInsets.only(right: AppSpacing.md),
+        decoration: BoxDecoration(
+          color: BrutalistPalette.subtleBg(isDark),
+          borderRadius: AppRadius.borderMd,
+          border: Border.all(
+            color: BrutalistPalette.surfaceBorder(isDark),
+            width: 1.5,
           ),
         ),
-      ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_circle_outline_rounded,
+              color: BrutalistPalette.accentPeach(isDark),
+              size: 32,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Ver mais',
+              style: AppTypography.labelSmall.copyWith(
+                color: BrutalistPalette.muted(isDark),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              '$count',
+              style: AppTypography.titleMedium.copyWith(
+                color: BrutalistPalette.title(isDark),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

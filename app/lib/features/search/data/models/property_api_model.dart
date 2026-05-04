@@ -181,11 +181,18 @@ int _thumbnailIcon(String apiType) {
 }
 
 String _buildAddress(Map<String, dynamic> json) {
+  // Try multiple common keys for the main address/street part
+  final mainAddress = json['address'] ?? 
+                     json['street'] ?? 
+                     json['street_address'] ?? 
+                     json['location'] ?? 
+                     '';
+                     
   final parts = <String>[
-    (json['address'] as String?) ?? '',
+    mainAddress.toString(),
     (json['city'] as String?) ?? '',
     (json['state'] as String?) ?? '',
-  ].where((s) => s.isNotEmpty).toList();
+  ].where((s) => s.isNotEmpty && s != 'null').toList();
   return parts.join(', ');
 }
 

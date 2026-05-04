@@ -173,8 +173,8 @@ class ProfilePage extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         AppMenuGroup(items: [
           // Redirect to the bottom nav tab "Imóveis" (which is the favorites branch for landlords)
-          AppMenuGroupItem(icon: Icons.business_rounded, label: 'Gerenciar Imóveis', onTap: () => context.go('/favorites')),
-          AppMenuGroupItem(icon: Icons.add_business_rounded, label: 'Anunciar Novo Imóvel', onTap: () => context.go('/profile/my-properties/create')),
+          AppMenuGroupItem(icon: Icons.business_rounded, label: 'Gerenciar Imóveis', onTap: () => context.go('/my-properties')),
+          AppMenuGroupItem(icon: Icons.add_business_rounded, label: 'Anunciar Novo Imóvel', onTap: () => context.go('/my-properties/create')),
           AppMenuGroupItem(icon: Icons.folder_open_rounded, label: 'Documentação e IPTU', onTap: () {}),
         ]),
         const SizedBox(height: AppSpacing.xxl),

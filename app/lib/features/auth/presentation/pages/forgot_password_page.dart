@@ -360,9 +360,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
     final restBorder = BrutalistPalette.cardBorder(isDark);
 
     final fieldBg = isFocused
-        ? (isDark
-            ? AppColors.blackLight.withValues(alpha: 0.8)
-            : AppColors.white.withValues(alpha: 0.95))
+        ? (isDark ? AppColors.blackLighter : AppColors.white)
         : BrutalistPalette.surfaceBg(isDark);
 
     final labelColor = isFocused

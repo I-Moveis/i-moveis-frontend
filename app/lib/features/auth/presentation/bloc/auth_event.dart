@@ -12,6 +12,7 @@ class AuthEvent with _$AuthEvent {
     required String email,
     required String phone,
     required String password,
+    required String role,
   }) = RegisterRequested;
 
   const factory AuthEvent.logoutRequested() = LogoutRequested;
@@ -21,6 +22,10 @@ class AuthEvent with _$AuthEvent {
   }) = SocialLoginRequested;
 
   const factory AuthEvent.checkSessionRequested() = CheckSessionRequested;
+
+  /// Re-puxa a sessão atual do storage local após `/users/me` ter sido
+  /// regravado. Usado pela tela de Editar Perfil depois do PATCH.
+  const factory AuthEvent.sessionRefreshRequested() = SessionRefreshRequested;
 
   const factory AuthEvent.demoLoginRequested({
     required DemoRole role,

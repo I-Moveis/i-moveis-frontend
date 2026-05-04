@@ -69,6 +69,9 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
     if (filters.location.isNotEmpty) {
       params['city'] = filters.location;
     }
+    if (filters.state.isNotEmpty) {
+      params['state'] = filters.state;
+    }
 
     if (filters.priceRange.start > 0) {
       params['minPrice'] = filters.priceRange.start;
@@ -80,6 +83,15 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
     if (filters.bedrooms.isNotEmpty) {
       params['minBedrooms'] = filters.bedrooms.reduce(math.min);
     }
+    if (filters.bathrooms.isNotEmpty) {
+      params['minBathrooms'] = filters.bathrooms.reduce(math.min);
+    }
+
+    final area = filters.areaRange;
+    if (area != null) {
+      if (area.start > 0) params['minArea'] = area.start;
+      if (area.end > 0) params['maxArea'] = area.end;
+    }
 
     if (filters.propertyTypes.length == 1) {
       final apiType = _uiTypeToApi(filters.propertyTypes.first);
@@ -89,8 +101,30 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
 
     if (filters.hasParking) params['minParkingSpots'] = 1;
     if (filters.isPetFriendly) params['petsAllowed'] = true;
+    if (filters.isFurnished) params['isFurnished'] = true;
+    if (filters.nearSubway) params['nearSubway'] = true;
+    if (filters.isFeatured) params['isFeatured'] = true;
 
-    // TODO(api-gap): transactionTypes, hasWifi, hasPool have no API equivalent.
+    if (filters.orderBy != null && filters.orderBy!.isNotEmpty) {
+      params['orderBy'] = filters.orderBy;
+    }
+
+    if (filters.latitude != null &&
+        filters.longitude != null &&
+        filters.radiusKm != null) {
+      params['lat'] = filters.latitude;
+      params['lng'] = filters.longitude;
+      params['radius'] = filters.radiusKm;
+    }
+
+    if (filters.landlordId != null && filters.landlordId!.isNotEmpty) {
+      params['landlordId'] = filters.landlordId;
+    }
+    if (filters.tenantId != null && filters.tenantId!.isNotEmpty) {
+      params['tenantId'] = filters.tenantId;
+    }
+
+    // NOTE (api-gap): transactionTypes, hasWifi, hasPool have no API equivalent.
 
     return params;
   }
@@ -125,6 +159,23 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
   @override
   Future<void> delete(String id) async {
     await _dio.delete<void>('/properties/$id');
+  }
+
+  @override
+  Future<Property> moderate({
+    required String id,
+    required String decision,
+    String? reason,
+  }) async {
+    final body = <String, dynamic>{'decision': decision};
+    if (reason != null && reason.isNotEmpty) {
+      body['reason'] = reason;
+    }
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/properties/$id/moderation',
+      data: body,
+    );
+    return propertyFromApiJson(response.data ?? const {});
   }
 }
 

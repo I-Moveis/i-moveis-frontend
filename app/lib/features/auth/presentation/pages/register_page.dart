@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -163,41 +162,45 @@ class _RegisterPageState extends State<RegisterPage>
     super.dispose();
   }
 
+  static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   void _handleRegister() {
-    final name = _nameController.text;
-    final email = _emailController.text;
-    final phone = _phoneController.text;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    // In Auth0 mode, form inputs and terms checkbox live on the hosted
-    // signup screen, not on this page. Skip local validation so the CTA
-    // still dispatches when inputs are visually collapsed.
-    if (kUseMockAuth) {
-      if (name.isEmpty ||
-          email.isEmpty ||
-          phone.isEmpty ||
-          password.isEmpty ||
-          confirmPassword.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preencha todos os campos')),
-        );
-        return;
-      }
+    if (name.isEmpty ||
+        email.isEmpty ||
+        phone.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
 
-      if (password != confirmPassword) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Senhas não correspondem')),
-        );
-        return;
-      }
+    if (!_emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('E-mail inválido')),
+      );
+      return;
+    }
 
-      if (!_acceptedTerms) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aceite os termos de uso')),
-        );
-        return;
-      }
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Senhas não correspondem')),
+      );
+      return;
+    }
+
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aceite os termos de uso')),
+      );
+      return;
     }
 
     context.read<AuthBloc>().add(
@@ -206,6 +209,7 @@ class _RegisterPageState extends State<RegisterPage>
             email: email,
             phone: phone,
             password: password,
+            role: _isOwner ? 'LANDLORD' : 'TENANT',
           ),
         );
   }
@@ -228,10 +232,7 @@ class _RegisterPageState extends State<RegisterPage>
         );
       },
       builder: (context, state) {
-        state.whenOrNull(
-          loading: () => _isLoading = true,
-        );
-
+        _isLoading = state is Loading;
         return _buildRegisterStack(isDark);
       },
     );
@@ -594,12 +595,8 @@ class _RegisterPageState extends State<RegisterPage>
     final restBorder = isDark ? AppColors.blackLightest : AppColors.lightBorder;
 
     final fieldBg = isDark
-        ? (isFocused
-            ? AppColors.blackLight.withValues(alpha: 0.8)
-            : AppColors.blackLight.withValues(alpha: 0.4))
-        : (isFocused
-            ? AppColors.white.withValues(alpha: 0.95)
-            : AppColors.white.withValues(alpha: 0.9));
+        ? (isFocused ? AppColors.blackLighter : AppColors.blackLight)
+        : (isFocused ? AppColors.white : AppColors.white);
 
     final labelColor = isFocused
         ? BrutalistPalette.accentPeach(isDark)

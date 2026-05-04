@@ -143,6 +143,36 @@ class PropertyRemoteDataSourceImpl implements PropertyRemoteDataSource {
     if (!_deletedIds.contains(id)) _deletedIds.add(id);
   }
 
+  @override
+  Future<Property> moderate({
+    required String id,
+    required String decision,
+    String? reason,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final idx = _created.indexWhere((p) => p.id == id);
+    if (idx == -1) {
+      return Property(
+        id: id,
+        title: '',
+        latitude: 0,
+        longitude: 0,
+        price: '',
+        priceValue: 0,
+        description: '',
+        type: '',
+        area: 0,
+        bedrooms: 0,
+        bathrooms: 0,
+        parkingSpots: 0,
+        moderationStatus: decision,
+      );
+    }
+    final updated = _created[idx].copyWith(moderationStatus: decision);
+    _created[idx] = updated;
+    return updated;
+  }
+
   String _typeDisplay(String? apiType) {
     switch (apiType) {
       case 'HOUSE':

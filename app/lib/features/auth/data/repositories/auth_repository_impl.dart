@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../core/network/network_exception.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/failures/auth_failure.dart';
 import '../../domain/repositories/i_auth_repository.dart';
@@ -15,20 +16,32 @@ class AuthRepositoryImpl implements IAuthRepository {
     required AuthRemoteDataSource remote,
     required AuthLocalDataSource local,
     required Dio dio,
+    FcmService? fcm,
   })  : _remote = remote,
         _local = local,
-        _dio = dio;
+        _dio = dio,
+        _fcm = fcm;
 
   final AuthRemoteDataSource _remote;
   final AuthLocalDataSource _local;
   final Dio _dio;
+  final FcmService? _fcm;
 
-  /// After Auth0 login/register/social succeeds, swap the cached Auth0 `sub`
-  /// for the backend UUID by calling `/users/me`. No-op on mock builds
+  /// After Firebase login/register/social succeeds, swap the cached Firebase
+  /// `uid` for the backend UUID by calling `/users/me`. No-op on mock builds
   /// since the mock userId is already the authoritative one.
   Future<void> _syncBackendIdentity() async {
     if (kUseMockAuth) return;
     await _local.syncFromBackend(_dio);
+  }
+
+  /// Registra o FCM token no backend (`PATCH /users/me/fcm-token`).
+  /// Silencioso em mock / sem Firebase — qualquer erro só vira log.
+  Future<void> _registerFcmToken() async {
+    if (kUseMockAuth) return;
+    final fcm = _fcm;
+    if (fcm == null) return;
+    await fcm.registerTokenWithBackend(_dio);
   }
 
   @override
@@ -40,6 +53,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       final model = await _remote.login(email: email, password: password);
       await _local.saveSession(model);
       await _syncBackendIdentity();
+      await _registerFcmToken();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e));
@@ -54,6 +68,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String email,
     required String phone,
     required String password,
+    required String role,
   }) async {
     try {
       final model = await _remote.register(
@@ -61,9 +76,11 @@ class AuthRepositoryImpl implements IAuthRepository {
         email: email,
         phone: phone,
         password: password,
+        role: role,
       );
       await _local.saveSession(model);
       await _syncBackendIdentity();
+      await _registerFcmToken();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e, isRegister: true));
@@ -80,6 +97,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       final model = await _remote.socialLogin(provider);
       await _local.saveSession(model);
       await _syncBackendIdentity();
+      await _registerFcmToken();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e));

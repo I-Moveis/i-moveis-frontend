@@ -26,6 +26,8 @@ class Property {
     this.badges = const [],
     this.ownerName = '',
     this.ownerMemberSince = '',
+    this.landlordId,
+    this.moderationStatus,
   });
 
   final String id;
@@ -61,6 +63,15 @@ class Property {
   /// Owner membership info (e.g. "Membro desde 2023")
   final String ownerMemberSince;
 
+  /// UUID do proprietário (LANDLORD). Só é preenchido quando o endpoint
+  /// retorna o campo (ex: /properties/:id, /admin/properties).
+  /// GET /properties/search historicamente não devolve.
+  final String? landlordId;
+
+  /// `PENDING` | `APPROVED` | `REJECTED`. Null para fontes públicas que
+  /// filtram internamente para APPROVED.
+  final String? moderationStatus;
+
   double get totalPrice => priceValue + condoFee + taxes;
 
   Property copyWith({
@@ -86,6 +97,8 @@ class Property {
     List<String>? badges,
     String? ownerName,
     String? ownerMemberSince,
+    String? landlordId,
+    String? moderationStatus,
   }) {
     return Property(
       id: id ?? this.id,
@@ -110,6 +123,8 @@ class Property {
       badges: badges ?? this.badges,
       ownerName: ownerName ?? this.ownerName,
       ownerMemberSince: ownerMemberSince ?? this.ownerMemberSince,
+      landlordId: landlordId ?? this.landlordId,
+      moderationStatus: moderationStatus ?? this.moderationStatus,
     );
   }
 

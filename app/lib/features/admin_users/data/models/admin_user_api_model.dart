@@ -4,7 +4,7 @@ import '../../domain/entities/admin_user_input.dart';
 AdminUser adminUserFromApiJson(Map<String, dynamic> json) {
   return AdminUser(
     id: json['id'] as String,
-    auth0Sub: json['auth0Sub'] as String?,
+    firebaseUid: json['firebaseUid'] as String?,
     name: (json['name'] as String?) ?? '',
     phoneNumber: (json['phoneNumber'] as String?) ?? '',
     role: (json['role'] as String?) ?? 'TENANT',

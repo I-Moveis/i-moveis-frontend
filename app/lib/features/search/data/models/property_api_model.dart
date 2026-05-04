@@ -35,6 +35,9 @@ Property propertyFromApiJson(Map<String, dynamic> json) {
     address: address,
     amenities: _deriveAmenities(json),
     badges: _deriveBadges(json),
+    landlordId: _pick(json, 'landlordId', 'landlord_id') as String?,
+    moderationStatus:
+        _pick(json, 'moderationStatus', 'moderation_status') as String?,
   );
 }
 
@@ -146,7 +149,7 @@ String _formatPrice(double value) {
   return 'R\$ ${value.round()}';
 }
 
-// TODO(presentation-leak): `_typeLabel` and `_thumbnailIcon` translate API
+// NOTE (presentation-leak): `_typeLabel` and `_thumbnailIcon` translate API
 // enums into PT-BR labels and Material icon codepoints. That's a presentation
 // concern currently living inside the domain entity's fields (type is a free
 // String, thumbnailIconCode is an int). Move to a formatter in the

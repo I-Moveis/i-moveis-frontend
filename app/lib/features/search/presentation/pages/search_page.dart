@@ -13,7 +13,11 @@ import '../widgets/search_bar_widget.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
 class SearchPage extends ConsumerStatefulWidget {
-  const SearchPage({super.key});
+  const SearchPage({super.key, this.initialFilters});
+
+  /// Filtros pré-aplicados (ex: vindos de um deep link do bot WhatsApp).
+  /// Quando não nulo, substitui os filtros persistidos e re-dispara a busca.
+  final SearchFilters? initialFilters;
 
   @override
   ConsumerState<SearchPage> createState() => _SearchPageState();
@@ -27,6 +31,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    final incoming = widget.initialFilters;
+    if (incoming != null) {
+      // Aplica depois do primeiro frame para garantir que os providers já
+      // foram construídos — `build()` do Notifier roda antes do `initState`
+      // do widget que o consome, mas mutar state aqui mesmo ainda dispararia
+      // rebuild durante o próprio initState.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(searchFiltersProvider.notifier).applyAll(incoming);
+      });
+    }
   }
 
   @override
@@ -167,28 +183,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
                     sliver: SliverMainAxisGroup(
                       slivers: [
-                        if (state.isOffline)
-                          SliverToBoxAdapter(
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs, horizontal: AppSpacing.md),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppColors.error.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.05),
-                                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                                borderRadius: AppRadius.borderSm,
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.cloud_off_rounded, size: 14, color: AppColors.error),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Text(
-                                    'Modo Offline — Resultados podem estar desatualizados',
-                                    style: AppTypography.labelSmall.copyWith(color: AppColors.error),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
                         (context, index) {

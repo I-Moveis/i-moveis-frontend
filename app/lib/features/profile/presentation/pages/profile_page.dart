@@ -21,12 +21,14 @@ class ProfilePage extends StatelessWidget {
         final mutedColor = BrutalistPalette.muted(isDark);
         final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
-        final authUser = context.select<AuthBloc, ({String name, String email, String? avatarUrl})?>(
+        final authUser = context.select<AuthBloc, ({String name, String email, String? avatarUrl, bool isOwner, bool isAdmin})?>(
           (bloc) => bloc.state.maybeWhen(
             authenticated: (user) => (
               name: user.name.isNotEmpty ? user.name : 'Usuário',
               email: user.email,
               avatarUrl: user.avatarUrl,
+              isOwner: user.isOwner,
+              isAdmin: user.isAdmin,
             ),
             orElse: () => null,
           ),
@@ -34,6 +36,7 @@ class ProfilePage extends StatelessWidget {
         final displayName = authUser?.name ?? 'Usuário';
         final displayEmail = authUser?.email ?? '';
         final avatarUrl = authUser?.avatarUrl;
+        final isOwner = authUser?.isOwner ?? false;
 
         return Opacity(opacity: fade.value, child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -85,16 +88,17 @@ class ProfilePage extends StatelessWidget {
                 AppMenuGroupItem(icon: Icons.article_outlined, label: 'Meus contratos', onTap: () {}),
               ]),
 
-              const SizedBox(height: AppSpacing.xxl),
-
-              // Imóveis
-              const AppSectionHeader(title: 'Imóveis'),
-              const SizedBox(height: AppSpacing.md),
-              AppMenuGroup(items: [
-                AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus imóveis', onTap: () => context.go('/profile/my-properties')),
-                AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar imóvel', onTap: () => context.go('/profile/my-properties/create')),
-                AppMenuGroupItem(icon: Icons.event_note_outlined, label: 'Visitas nos meus imóveis', onTap: () => context.go('/profile/landlord-visits')),
-              ]),
+              // Imóveis — só para proprietários (LANDLORD).
+              if (isOwner) ...[
+                const SizedBox(height: AppSpacing.xxl),
+                const AppSectionHeader(title: 'Imóveis'),
+                const SizedBox(height: AppSpacing.md),
+                AppMenuGroup(items: [
+                  AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus imóveis', onTap: () => context.go('/profile/my-properties')),
+                  AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar imóvel', onTap: () => context.go('/profile/my-properties/create')),
+                  AppMenuGroupItem(icon: Icons.event_note_outlined, label: 'Visitas nos meus imóveis', onTap: () => context.go('/profile/landlord-visits')),
+                ]),
+              ],
 
               const SizedBox(height: AppSpacing.xxl),
 

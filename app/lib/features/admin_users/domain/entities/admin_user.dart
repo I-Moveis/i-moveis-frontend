@@ -9,12 +9,12 @@ class AdminUser {
     required this.name,
     required this.phoneNumber,
     required this.role,
-    this.auth0Sub,
+    this.firebaseUid,
     this.createdAt,
   });
 
   final String id;
-  final String? auth0Sub;
+  final String? firebaseUid;
   final String name;
   final String phoneNumber;
 
@@ -37,7 +37,7 @@ class AdminUser {
 
   AdminUser copyWith({
     String? id,
-    String? auth0Sub,
+    String? firebaseUid,
     String? name,
     String? phoneNumber,
     String? role,
@@ -45,7 +45,7 @@ class AdminUser {
   }) {
     return AdminUser(
       id: id ?? this.id,
-      auth0Sub: auth0Sub ?? this.auth0Sub,
+      firebaseUid: firebaseUid ?? this.firebaseUid,
       name: name ?? this.name,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       role: role ?? this.role,

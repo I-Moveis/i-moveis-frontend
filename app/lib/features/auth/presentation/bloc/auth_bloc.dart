@@ -32,6 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutRequested>(_onLogoutRequested);
     on<SocialLoginRequested>(_onSocialLoginRequested);
     on<CheckSessionRequested>(_onCheckSessionRequested);
+    on<SessionRefreshRequested>(_onSessionRefreshRequested);
     on<DemoLoginRequested>(_onDemoLoginRequested);
   }
 
@@ -66,6 +67,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       email: event.email,
       phone: event.phone,
       password: event.password,
+      role: event.role,
     );
     result.fold(
       (failure) => emit(AuthState.error(message: failure.message)),
@@ -105,6 +107,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (session == null) {
           emit(const AuthState.unauthenticated());
         } else {
+          emit(AuthState.authenticated(user: session.user));
+        }
+      },
+    );
+  }
+
+  /// Re-lê a sessão do storage (após um PATCH `/users/me` ter regravado o
+  /// perfil). Só troca o state se ainda houver sessão ativa — se o usuário
+  /// não estiver autenticado, mantém o state atual.
+  Future<void> _onSessionRefreshRequested(
+    SessionRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _getCurrentSession.execute();
+    result.fold(
+      (_) {},
+      (session) {
+        if (session != null) {
           emit(AuthState.authenticated(user: session.user));
         }
       },

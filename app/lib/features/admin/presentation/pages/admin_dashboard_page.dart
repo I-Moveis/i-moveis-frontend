@@ -3,14 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../admin_users/presentation/providers/admin_users_notifier.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../listing/presentation/providers/my_properties_notifier.dart';
+import '../providers/admin_metrics_notifier.dart';
 
-/// Admin dashboard — live user/property counts aggregated client-side from
-/// the list providers. Contracts/pending cards stay placeholder because
-/// the backend doesn't expose those endpoints (see BACKEND_GAPS.md).
+/// Admin dashboard — lê `GET /admin/metrics` via [adminMetricsNotifierProvider].
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
 
@@ -20,11 +18,17 @@ class AdminDashboardPage extends ConsumerWidget {
       builder: (context, isDark, entrance, pulse) {
         final titleColor = BrutalistPalette.title(isDark);
 
-        final users = ref.watch(adminUsersNotifierProvider);
-        final properties = ref.watch(myPropertiesNotifierProvider);
-
-        final userCount = users.value?.length;
-        final propertyCount = properties.value?.length;
+        final metricsAsync = ref.watch(adminMetricsNotifierProvider);
+        final metrics = metricsAsync.value;
+        final userCount = metrics?.totalUsers;
+        final propertyCount = metrics?.totalProperties;
+        final visitCount = metrics?.totalVisits;
+        final pendingCount = metrics?.pendingModeration;
+        final errorMessage = metricsAsync.hasError
+            ? (metricsAsync.error is Failure
+                ? (metricsAsync.error! as Failure).message
+                : 'Erro ao carregar métricas.')
+            : null;
 
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -69,6 +73,15 @@ class AdminDashboardPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xxl),
                     const AppSectionHeader(title: 'Métricas'),
                     const SizedBox(height: AppSpacing.md),
+                    if (errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: Text(
+                          errorMessage,
+                          style: AppTypography.bodySmall
+                              .copyWith(color: AppColors.error),
+                        ),
+                      ),
                     Row(children: [
                       AppMetricCard(
                         icon: Icons.people_outline,
@@ -83,19 +96,18 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
                     ]),
                     const SizedBox(height: AppSpacing.md),
-                    const Row(children: [
-                      // Contracts & pending lack backend endpoints — show 0
-                      // rather than fake numbers. Card stays visually
-                      // consistent.
+                    Row(children: [
                       AppMetricCard(
-                          icon: Icons.article_outlined,
-                          value: 0,
-                          label: 'Contratos'),
-                      SizedBox(width: AppSpacing.md),
+                        icon: Icons.event_available_outlined,
+                        value: visitCount ?? 0,
+                        label: 'Visitas',
+                      ),
+                      const SizedBox(width: AppSpacing.md),
                       AppMetricCard(
-                          icon: Icons.pending_outlined,
-                          value: 0,
-                          label: 'Pendentes'),
+                        icon: Icons.pending_outlined,
+                        value: pendingCount ?? 0,
+                        label: 'Pendentes',
+                      ),
                     ]),
                     const SizedBox(height: AppSpacing.xxl),
                     const AppSectionHeader(title: 'Acesso rápido'),

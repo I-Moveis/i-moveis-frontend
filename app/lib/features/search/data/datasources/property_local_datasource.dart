@@ -39,7 +39,8 @@ class PropertyLocalDataSourceImpl implements PropertyLocalDataSource {
 
       return data.map((m) {
         if (m is! Map) return null;
-        return PropertyModel.fromMap(Map<String, dynamic>.from(m));
+        final map = Map<String, dynamic>.from(m);
+        return PropertyModel.fromMap(map);
       }).whereType<Property>().toList();
     } on Exception {
       return [];

@@ -79,6 +79,21 @@ class _CountUpTextState extends State<_CountUpText>
   }
 
   @override
+  void didUpdateWidget(_CountUpText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _animation = IntTween(
+        begin: oldWidget.value,
+        end: widget.value,
+      ).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      );
+      _controller.reset();
+      _controller.forward();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();

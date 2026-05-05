@@ -12,6 +12,7 @@ import 'core/services/fcm_service.dart';
 import 'core/services/fcm_service_provider.dart';
 import 'features/search/data/providers/data_providers.dart';
 import 'features/search/domain/usecases/search_properties_usecase.dart';
+import 'core/constants.dart';
 import 'firebase_options.dart';
 
 void main() {
@@ -34,13 +35,16 @@ void main() {
       // FirebaseMessaging.instance via default arg, o que resolve o app
       // `[DEFAULT]` no momento da construção.
       var firebaseReady = false;
-      try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-        firebaseReady = true;
-      } on Object catch (e, st) {
-        debugPrint('[main] Firebase.initializeApp falhou: $e\n$st');
+      // Initialize Firebase/FCM. Protected for mock builds or missing config.
+      if (!kUseMockAuth) {
+        try {
+          await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform,
+          );
+          firebaseReady = true;
+        } on Object catch (e, st) {
+          debugPrint('[main] Firebase.initializeApp falhou: $e\n$st');
+        }
       }
 
       FcmService? fcmService;

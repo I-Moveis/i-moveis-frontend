@@ -8,7 +8,14 @@ import '../../../search/domain/entities/property.dart';
 import '../providers/my_properties_notifier.dart';
 
 class MyPropertiesPage extends ConsumerWidget {
-  const MyPropertiesPage({super.key});
+  const MyPropertiesPage({
+    super.key,
+    this.showBack = false,
+    this.title = 'Meus imóveis',
+  });
+
+  final bool showBack;
+  final String title;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +29,10 @@ class MyPropertiesPage extends ConsumerWidget {
         final async = ref.watch(myPropertiesNotifierProvider);
 
         return Column(children: [
-          const BrutalistAppBar(title: 'Meus imóveis'),
+          BrutalistAppBar(
+            title: title,
+            showBack: showBack,
+          ),
           Expanded(
             child: async.when(
               loading: () => const Center(
@@ -83,10 +93,10 @@ class MyPropertiesPage extends ConsumerWidget {
                               property: p,
                               isDark: isDark,
                               mutedColor: mutedColor,
-                              onAnalytics: () => context.go(
-                                  '/profile/my-properties/analytics'),
+                              onAnalytics: () => context.push(
+                                  '/my-properties/${p.id}/analytics'),
                               onEdit: () => context.push(
-                                  '/profile/my-properties/${p.id}/edit'),
+                                  '/my-properties/${p.id}/edit'),
                               onDelete: () =>
                                   _confirmDelete(context, ref, p.id),
                             ),

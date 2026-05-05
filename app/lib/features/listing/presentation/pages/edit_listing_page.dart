@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../property/presentation/providers/property_detail_provider.dart';
 import '../../../search/domain/entities/property.dart';
 import '../../../search/domain/entities/property_input.dart';
 import '../providers/edit_listing_notifier.dart';
+import '../providers/my_properties_notifier.dart';
 import '../widgets/listing_form_fields.dart';
 
 class EditListingPage extends ConsumerStatefulWidget {
@@ -64,37 +64,64 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
 
-    final price = double.tryParse(_price.text.replaceAll(',', '.'));
-    if (_title.text.trim().isEmpty ||
-        _description.text.trim().isEmpty ||
-        _address.text.trim().isEmpty ||
-        price == null ||
-        price <= 0) {
+    // Basic cleaning and parsing
+    final titleText = _title.text.trim();
+    final addressText = _address.text.trim();
+    final price = double.tryParse(_price.text.replaceAll(',', '.').replaceAll('R\$', '').trim());
+
+    if (titleText.isEmpty || addressText.isEmpty || price == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Preencha os campos obrigatórios.')),
+        const SnackBar(
+          content: Text('Por favor, preencha Título, Endereço e Preço corretamente.'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
+    }
+
+    // Intelligent address parsing (split by comma if possible)
+    final addressParts = addressText.split(',');
+    String? city, state;
+    String finalAddress = addressText;
+
+    if (addressParts.length >= 2) {
+      finalAddress = addressParts[0].trim();
+      city = addressParts[1].trim();
+      if (addressParts.length >= 3) {
+        state = addressParts[2].trim();
+      }
     }
 
     try {
       await ref.read(editListingNotifierProvider.notifier).submit(
             widget.propertyId,
             PropertyInput(
-              title: _title.text.trim(),
+              title: titleText,
               description: _description.text.trim(),
               price: price,
-              address: _address.text.trim(),
-              bedrooms: int.tryParse(_bedrooms.text),
-              bathrooms: int.tryParse(_bathrooms.text),
-              parkingSpots: int.tryParse(_parking.text),
-              area: double.tryParse(_area.text.replaceAll(',', '.')),
+              address: finalAddress,
+              city: city,
+              state: state,
+              bedrooms: int.tryParse(_bedrooms.text) ?? 0,
+              bathrooms: int.tryParse(_bathrooms.text) ?? 0,
+              parkingSpots: int.tryParse(_parking.text) ?? 0,
+              area: double.tryParse(_area.text.replaceAll(',', '.')) ?? 0,
               status: _status,
             ),
           );
+      
+      // Refresh the list to show updated data
+      ref.invalidate(myPropertiesNotifierProvider);
+      
       messenger.showSnackBar(
-        const SnackBar(content: Text('Imóvel atualizado.')),
+        const SnackBar(
+          content: Text('Imóvel atualizado com sucesso!'),
+          backgroundColor: AppColors.success,
+        ),
       );
-      router.pop();
+      
+      // Auto-return to previous screen
+      if (mounted) router.pop();
     } on Failure catch (f) {
       messenger.showSnackBar(SnackBar(content: Text(f.message)));
     }
@@ -102,7 +129,7 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(propertyDetailProvider(widget.propertyId));
+    final propertiesAsync = ref.watch(myPropertiesNotifierProvider);
     final submitting = ref.watch(editListingNotifierProvider).submitting;
 
     return BrutalistPageScaffold(
@@ -111,21 +138,27 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
         return Column(children: [
           const BrutalistAppBar(title: 'Editar imóvel'),
           Expanded(
-            child: async.when(
+            child: propertiesAsync.when(
               loading: () => const Center(
                   child: CircularProgressIndicator(strokeWidth: 2)),
               error: (e, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.xl),
                   child: Text(
-                    e is Failure ? e.message : 'Erro ao carregar imóvel.',
+                    e is Failure ? e.message : 'Erro ao carregar dados.',
                     style: AppTypography.bodyMedium.copyWith(
                         color: BrutalistPalette.title(isDark)),
                   ),
                 ),
               ),
-              data: (property) {
+              data: (properties) {
+                final property = properties.firstWhere(
+                  (p) => p.id == widget.propertyId,
+                  orElse: () => properties.first,
+                );
+                
                 _hydrate(property);
+
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(

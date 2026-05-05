@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../search/domain/entities/property.dart';
 import '../providers/home_properties_providers.dart';
+import './landlord_dashboard_page.dart';
 
-/// Home page — Cozy & warm, Airbnb-inspired with sunset wave backdrop.
-///
-/// Friendly greeting, rounded cards, soft pastels, generous spacing.
-/// Puxa imóveis reais do backend via três `FutureProvider`s (destaques /
-/// perto / mais procurados), cada um com uma ordenação diferente.
+/// Home page — Wrapper that switches between Tenant Home and Landlord Dashboard.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -89,6 +88,23 @@ class _HomePageState extends ConsumerState<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isOwner = state.maybeWhen(
+          authenticated: (user) => user.isOwner,
+          orElse: () => false,
+        );
+
+        if (isOwner) {
+          return const LandlordDashboardPage();
+        }
+
+        return _buildTenantHome(context);
+      },
+    );
+  }
+
+  Widget _buildTenantHome(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Stack(
@@ -144,23 +160,16 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  HEADER — friendly greeting, warm and human
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildHeader(bool isDark) {
     final titleColor = isDark ? AppColors.white : AppColors.black;
-    final subtitleColor =
-        isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
-    final mutedColor =
-        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    final subtitleColor = isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
+    final mutedColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
     final accentColor = BrutalistPalette.accentPeach(isDark);
 
     return Opacity(
       opacity: _headerFade.value,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.screenHorizontal,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -171,19 +180,9 @@ class _HomePageState extends ConsumerState<HomePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Olá!',
-                        style: AppTypography.bodyLarge.copyWith(
-                          color: subtitleColor,
-                        ),
-                      ),
+                      Text('Olá!', style: AppTypography.bodyLarge.copyWith(color: subtitleColor)),
                       const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        'Encontre seu lar',
-                        style: AppTypography.headlineLarge.copyWith(
-                          color: titleColor,
-                        ),
-                      ),
+                      Text('Encontre seu lar', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
                     ],
                   ),
                 ),
@@ -192,29 +191,15 @@ class _HomePageState extends ConsumerState<HomePage>
                   child: Container(
                     width: 44,
                     height: 44,
-                    decoration: BoxDecoration(
-                      color: BrutalistPalette.subtleBg(isDark),
-                      borderRadius: AppRadius.borderMd,
-                    ),
+                    decoration: BoxDecoration(color: BrutalistPalette.subtleBg(isDark), borderRadius: AppRadius.borderMd),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Icon(
-                          Icons.notifications_outlined,
-                          size: 22,
-                          color: mutedColor,
-                        ),
+                        Icon(Icons.notifications_outlined, size: 22, color: mutedColor),
                         Positioned(
                           top: 11,
                           right: 13,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: accentColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
+                          child: Container(width: 7, height: 7, decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle)),
                         ),
                       ],
                     ),
@@ -229,36 +214,22 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  SEARCH BAR — rounded, inviting, tap-to-search
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildSearchBar(bool isDark) {
     final bgColor = BrutalistPalette.surfaceBg(isDark);
     final accentColor = BrutalistPalette.accentOrange(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final hintColor =
-        isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
-    final iconColor =
-        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    final hintColor = isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
+    final iconColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
 
     return Opacity(
       opacity: _searchFade.value,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.screenHorizontal,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
         child: GestureDetector(
           onTap: () => context.go('/search'),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.mdLg,
-            ),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: AppRadius.borderXl,
-              border: Border.all(color: borderColor),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.mdLg),
+            decoration: BoxDecoration(color: bgColor, borderRadius: AppRadius.borderXl, border: Border.all(color: borderColor)),
             child: Row(
               children: [
                 Icon(Icons.search_rounded, size: 20, color: iconColor),
@@ -280,9 +251,6 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  CATEGORIES — rounded pill chips (visual only for now)
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildCategories(bool isDark) {
     return Opacity(
       opacity: _searchFade.value,
@@ -292,21 +260,14 @@ class _HomePageState extends ConsumerState<HomePage>
           height: 44,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenHorizontal,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
             itemCount: _categories.length,
             itemBuilder: (context, i) {
               final cat = _categories[i];
               final isSelected = i == _selectedCategory;
               return Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: AppChip(
-                  label: cat.label,
-                  icon: cat.icon,
-                  isSelected: isSelected,
-                  onTap: () => setState(() => _selectedCategory = i),
-                ),
+                child: AppChip(label: cat.label, icon: cat.icon, isSelected: isSelected, onTap: () => setState(() => _selectedCategory = i)),
               );
             },
           ),
@@ -315,9 +276,6 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  FEATURED — horizontal cards with image placeholder + badge
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildFeaturedSection(bool isDark) {
     final asyncValue = ref.watch(featuredHomePropertiesProvider);
 
@@ -368,12 +326,9 @@ class _HomePageState extends ConsumerState<HomePage>
   Widget _buildFeaturedCard(Property property, bool isDark) {
     final cardBg = isDark ? AppColors.blackLight : AppColors.white;
     final titleColor = isDark ? AppColors.white : AppColors.black;
-    final mutedColor =
-        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    final mutedColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
     final accentColor = BrutalistPalette.accentOrange(isDark);
-    final tagBg = isDark
-        ? BrutalistPalette.warmPeach.withValues(alpha: 0.12)
-        : BrutalistPalette.deepOrange.withValues(alpha: 0.08);
+    final tagBg = isDark ? BrutalistPalette.warmPeach.withValues(alpha: 0.12) : BrutalistPalette.deepOrange.withValues(alpha: 0.08);
     final imageBg = BrutalistPalette.imagePlaceholderBg(isDark);
 
     final badge = property.badges.isNotEmpty ? property.badges.first : null;
@@ -384,11 +339,7 @@ class _HomePageState extends ConsumerState<HomePage>
       onTap: () => context.push('/property/${property.id}'),
       child: Container(
         width: 240,
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: AppRadius.borderXl,
-          boxShadow: BrutalistPalette.subtleShadow(isDark),
-        ),
+        decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderXl, boxShadow: BrutalistPalette.subtleShadow(isDark)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,14 +409,7 @@ class _HomePageState extends ConsumerState<HomePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    property.title,
-                    style: AppTypography.titleLargeBold.copyWith(
-                      color: titleColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(property.title, style: AppTypography.titleLargeBold.copyWith(color: titleColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: AppSpacing.xxs),
                   Row(
                     children: [
@@ -525,9 +469,6 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  NEARBY — compact horizontal cards
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildNearbySection(bool isDark) {
     final asyncValue = ref.watch(nearbyHomePropertiesProvider);
 
@@ -578,8 +519,7 @@ class _HomePageState extends ConsumerState<HomePage>
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final titleColor = isDark ? AppColors.white : AppColors.black;
-    final mutedColor =
-        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    final mutedColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
     final accentColor = BrutalistPalette.accentOrange(isDark);
 
     return GestureDetector(
@@ -587,11 +527,7 @@ class _HomePageState extends ConsumerState<HomePage>
       child: Container(
         width: 180,
         padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(color: borderColor),
-        ),
+        decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderLg, border: Border.all(color: borderColor)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -642,9 +578,6 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  TRENDING — vertical list with rank number
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildTrendingSection(bool isDark) {
     final asyncValue = ref.watch(trendingHomePropertiesProvider);
 
@@ -690,8 +623,7 @@ class _HomePageState extends ConsumerState<HomePage>
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final titleColor = isDark ? AppColors.white : AppColors.black;
-    final mutedColor =
-        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    final mutedColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
     final accentColor = BrutalistPalette.accentOrange(isDark);
     final rankColor = isDark
         ? BrutalistPalette.warmAmber.withValues(alpha: 0.3)
@@ -703,11 +635,7 @@ class _HomePageState extends ConsumerState<HomePage>
       onTap: () => context.push('/property/${property.id}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(color: borderColor),
-        ),
+        decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderLg, border: Border.all(color: borderColor)),
         child: Row(
           children: [
             SizedBox(
@@ -740,14 +668,7 @@ class _HomePageState extends ConsumerState<HomePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    property.title,
-                    style: AppTypography.titleLargeBold.copyWith(
-                      color: titleColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(property.title, style: AppTypography.titleLargeBold.copyWith(color: titleColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     property.address.isNotEmpty ? property.address : '—',
@@ -755,20 +676,8 @@ class _HomePageState extends ConsumerState<HomePage>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    '${property.price}/mês',
-                    style: AppTypography.titleSmallAccent.copyWith(
-                      color: accentColor,
-                    ),
-                  ),
                 ],
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: mutedColor.withValues(alpha: 0.5),
             ),
           ],
         ),
@@ -779,8 +688,8 @@ class _HomePageState extends ConsumerState<HomePage>
   // ═══════════════════════════════════════════════════════════════
   //  PLACEHOLDERS / STATES
   // ═══════════════════════════════════════════════════════════════
-  Widget _buildImagePlaceholder(bool isDark, Color? bg) {
-    final color = bg ?? BrutalistPalette.imagePlaceholderBg(isDark);
+  Widget _buildImagePlaceholder(bool isDark, Color? bgColor) {
+    final color = bgColor ?? BrutalistPalette.imagePlaceholderBg(isDark);
     return ColoredBox(
       color: color,
       child: Center(

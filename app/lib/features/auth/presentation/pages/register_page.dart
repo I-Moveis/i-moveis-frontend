@@ -209,7 +209,7 @@ class _RegisterPageState extends State<RegisterPage>
             email: email,
             phone: phone,
             password: password,
-            role: _isOwner ? 'LANDLORD' : 'TENANT',
+            isOwner: _isOwner,
           ),
         );
   }
@@ -222,7 +222,7 @@ class _RegisterPageState extends State<RegisterPage>
       listener: (context, state) {
         state.whenOrNull(
           authenticated: (user) {
-            context.go('/home');
+            context.go(user.isOwner ? '/my-properties' : '/home');
           },
           error: (message) {
             ScaffoldMessenger.of(context).showSnackBar(

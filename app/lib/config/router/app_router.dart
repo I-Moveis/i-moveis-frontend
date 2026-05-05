@@ -38,6 +38,10 @@ import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
 import '../../features/visits/presentation/pages/visit_detail_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_documents_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
+import '../../features/listing/presentation/pages/property_management_dossier_page.dart';
 
 // Navigator keys for each shell branch.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -46,6 +50,7 @@ final _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
 final _favoritesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'favorites');
 final _chatNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'chat');
 final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
+final _myPropertiesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'my-properties');
 
 /// Paths allowed for users without an authenticated session.
 const _publicPaths = <String>{
@@ -101,6 +106,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const RoleOnboardingPage(),
       ),
 
+      // Legacy redirect for moved properties route
+      GoRoute(
+        path: '/profile/my-properties',
+        redirect: (_, __) => '/my-properties',
+      ),
+
       // ── Main shell (bottom nav) ──────────────────────────────
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) => MainShellPage(
@@ -139,6 +150,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'map',
                     builder: (_, _) => const MapSearchPage(),
+                  ),
+                  GoRoute(
+                    path: 'documents',
+                    builder: (_, state) => TenantDocumentsPage(
+                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'rent-history',
+                    builder: (_, state) => TenantRentHistoryPage(
+                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'contract',
+                    builder: (_, state) => TenantContractPage(
+                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                    ),
                   ),
                 ],
               ),
@@ -184,26 +213,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                     builder: (_, _) => const SettingsPage(),
                   ),
                   GoRoute(
-                    path: 'my-properties',
-                    builder: (_, _) => const MyPropertiesPage(),
-                    routes: [
-                      GoRoute(
-                        path: 'create',
-                        builder: (_, _) => const CreateListingPage(),
-                      ),
-                      GoRoute(
-                        path: 'analytics',
-                        builder: (_, _) => const ListingAnalyticsPage(),
-                      ),
-                      GoRoute(
-                        path: ':id/edit',
-                        builder: (_, state) => EditListingPage(
-                          propertyId: state.pathParameters['id']!,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
                     path: 'my-visits',
                     builder: (_, _) => const MyVisitsPage(),
                     routes: [
@@ -231,7 +240,44 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+
+          // Branch 5: My Properties (Landlord specific top-level)
+          StatefulShellBranch(
+            navigatorKey: _myPropertiesNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/my-properties',
+                builder: (_, _) => const MyPropertiesPage(showBack: false),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, _) => const CreateListingPage(),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: ':id/analytics',
+                    builder: (_, state) => ListingAnalyticsPage(
+                      propertyId: state.pathParameters['id']!,
+                    ),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: ':id/edit',
+                    builder: (_, state) => EditListingPage(
+                      propertyId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
+      ),
+
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/management-dossier',
+        builder: (_, _) => const PropertyManagementDossierPage(),
       ),
 
       // ── Chat detail (full screen, outside shell) ──────────────
@@ -316,5 +362,4 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
-
 });

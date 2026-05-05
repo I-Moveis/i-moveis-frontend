@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
 import '../bloc/auth_bloc.dart';
-import '../bloc/demo_role.dart';
+import '../../domain/entities/demo_role.dart';
 import '../bloc/social_provider.dart';
 
 /// Login page — Brutalist Elegance x Japanese Creative Web
@@ -163,16 +163,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         state.whenOrNull(
           authenticated: (user) {
             setState(() => _loadingSocial = null);
-            final String destination;
-            if (user.needsRoleOnboarding) {
-              destination = '/onboarding/role';
-            } else if (user.isAdmin) {
-              destination = '/admin';
-            } else if (user.isOwner) {
-              destination = '/profile/my-properties';
-            } else {
-              destination = '/home';
-            }
+            final destination = user.isAdmin
+                ? '/admin'
+                : user.isOwner
+                    ? '/my-properties'
+                    : '/home';
             context.go(destination);
           },
           unauthenticated: () {

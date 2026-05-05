@@ -44,17 +44,18 @@ class MockAuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String role,
   }) async {
     await Future<void>.delayed(const Duration(seconds: 1));
+    final user = AuthUserModel(
+      id: 'mock-user-123',
+      name: name.isNotEmpty ? name : _mockUser.name,
+      email: email.isNotEmpty ? email : _mockUser.email,
+      phone: phone.isNotEmpty ? phone : _mockUser.phone,
+      isOwner: role == 'LANDLORD',
+      isAdmin: role == 'ADMIN',
+    );
     return AuthSessionModel(
-      user: AuthUserModel(
-        id: _mockUser.id,
-        name: name,
-        email: email,
-        phone: phone,
-        isOwner: role == 'LANDLORD',
-        isAdmin: role == 'ADMIN',
-      ),
-      accessToken: _mockSession.accessToken,
-      refreshToken: _mockSession.refreshToken,
+      user: user,
+      accessToken: 'mock-jwt-token-xyz',
+      refreshToken: 'mock-refresh-token-abc',
     );
   }
 

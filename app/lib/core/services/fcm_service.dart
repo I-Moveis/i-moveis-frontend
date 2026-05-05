@@ -37,10 +37,10 @@ Future<void> fcmBackgroundHandler(RemoteMessage message) async {
 ///      `flutter_local_notifications`.
 class FcmService {
   FcmService({FirebaseMessaging? messaging, FlutterLocalNotificationsPlugin? localPlugin})
-      : _messaging = messaging ?? FirebaseMessaging.instance,
+      : _messaging = messaging,
         _local = localPlugin ?? FlutterLocalNotificationsPlugin();
 
-  final FirebaseMessaging _messaging;
+  final FirebaseMessaging? _messaging;
   final FlutterLocalNotificationsPlugin _local;
 
   /// Canal default exposto no AndroidManifest via
@@ -71,10 +71,10 @@ class FcmService {
 
     // No iOS/web é necessário pedir permissão antes de receber pushs. Android
     // também pede, em 13+ via POST_NOTIFICATIONS.
-    await _messaging.requestPermission();
+    await _messaging?.requestPermission();
 
     // Apresenta banner + badge quando app está em foreground (iOS).
-    await _messaging.setForegroundNotificationPresentationOptions(
+    await _messaging?.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
@@ -129,14 +129,14 @@ class FcmService {
   Future<String?> registerTokenWithBackend(Dio dio) async {
     try {
       final token = kIsWeb
-          ? await _messaging.getToken(vapidKey: _kWebVapidKey)
-          : await _messaging.getToken();
+          ? await _messaging?.getToken(vapidKey: _kWebVapidKey)
+          : await _messaging?.getToken();
       if (token == null || token.isEmpty) return null;
       await _patchFcmToken(dio, token);
       _cachedToken = token;
 
       // Se o token rotacionar enquanto o app está vivo, re-sincroniza.
-      _messaging.onTokenRefresh.listen((newToken) {
+      _messaging?.onTokenRefresh.listen((newToken) {
         if (newToken == _cachedToken) return;
         _cachedToken = newToken;
         unawaited(_patchFcmToken(dio, newToken));

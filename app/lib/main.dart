@@ -12,8 +12,8 @@ import 'core/services/fcm_service.dart';
 import 'core/services/fcm_service_provider.dart';
 import 'features/search/data/providers/data_providers.dart';
 import 'features/search/domain/usecases/search_properties_usecase.dart';
-import 'firebase_options.dart';
 import 'core/constants.dart';
+import 'firebase_options.dart';
 
 void main() {
   runZonedGuarded(

@@ -1,3 +1,10 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+/// Câmera inicial do mapa quando a tela abre sem localização do usuário.
+/// São Paulo — centro geográfico usado pelos pins de demo.
+const LatLng kMapInitialCenter = LatLng(-23.5613, -46.6565);
+const double kMapInitialZoom = 13.5;
+
 // Google Maps style JSON for the MapSearchPage.
 //
 // Hex literals below are a feature-local exception to the "no hardcoded

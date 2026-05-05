@@ -4,56 +4,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../data/mock_properties_datasource.dart';
-import '../../domain/entities/map_property.dart';
 
-class SearchFilter {
-  SearchFilter({this.minPrice, this.maxPrice});
+import '../../domain/entities/property.dart';
+import '../../domain/usecases/search_properties_usecase.dart';
+import 'search_filters_provider.dart';
 
-  final double? minPrice;
-  final double? maxPrice;
-}
-
-class SearchFilterNotifier extends Notifier<SearchFilter> {
-  @override
-  SearchFilter build() => SearchFilter();
-
-  void updateFilter({double? min, double? max}) {
-    state = SearchFilter(
-      minPrice: min ?? state.minPrice,
-      maxPrice: max ?? state.maxPrice,
-    );
-  }
-}
-
-final searchFilterProvider =
-    NotifierProvider<SearchFilterNotifier, SearchFilter>(
-  SearchFilterNotifier.new,
-);
-
-final mockPropertiesProvider = FutureProvider<List<MapProperty>>((ref) async {
-  final filter = ref.watch(searchFilterProvider);
-
-  await Future<void>.delayed(const Duration(milliseconds: 800));
-
-  var filteredList = kMockMapProperties.toList();
-
-  if (filter.minPrice != null) {
-    filteredList = filteredList.where((p) {
-      final priceNum =
-          double.tryParse(p.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
-      return priceNum >= filter.minPrice!;
-    }).toList();
-  }
-  if (filter.maxPrice != null) {
-    filteredList = filteredList.where((p) {
-      final priceNum =
-          double.tryParse(p.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
-      return priceNum <= filter.maxPrice!;
-    }).toList();
-  }
-
-  return filteredList;
+/// Puxa imóveis reais do backend pra plotar no mapa. Reusa o
+/// `SearchPropertiesUseCase` + os filtros atuais. Filtra fora os imóveis sem
+/// coordenadas (lat/lng == 0), que não fazem sentido no mapa.
+final mapPropertiesProvider = FutureProvider<List<Property>>((ref) async {
+  final usecase = ref.watch(searchPropertiesUseCaseProvider);
+  final filters = ref.watch(searchFiltersProvider);
+  final result = await usecase.execute(filters);
+  return result.properties
+      .where((p) => p.latitude != 0 && p.longitude != 0)
+      .toList();
 });
 
 class SelectedPropertyIdNotifier extends Notifier<String?> {

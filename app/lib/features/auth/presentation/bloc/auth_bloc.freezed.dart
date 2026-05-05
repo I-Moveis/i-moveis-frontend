@@ -577,36 +577,6 @@ as DemoRole,
 
 }
 
-/// @nodoc
-
-
-class SessionRefreshRequested implements AuthEvent {
-  const SessionRefreshRequested();
-  
-
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionRefreshRequested);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-  return 'AuthEvent.sessionRefreshRequested()';
-}
-
-
-}
-
-
 
 
 /// @nodoc

@@ -13,10 +13,11 @@ const Duration kApiConnectTimeout = Duration(seconds: 15);
 const Duration kApiReceiveTimeout = Duration(seconds: 30);
 
 /// When true, data layers return hardcoded mock data instead of hitting the
-/// backend. Default is `false` for backend testing.
+/// backend. Default is `true` on this branch so the demo works without a
+/// running backend (admin login, listings, users — all mocked).
 const bool kUseMockData = bool.fromEnvironment(
   'USE_MOCK_DATA',
-  defaultValue: false,
+  defaultValue: true,
 );
 
 /// When true, auth layer uses mock (fake token/user) instead of Auth0.

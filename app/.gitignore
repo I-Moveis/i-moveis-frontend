@@ -71,3 +71,13 @@ ios/**/*.xcodeproj/project.pbxproj
 # Environment variables
 /.env
 /web/env.js
+
+# Firebase configuration — geradas localmente por `flutterfire configure`.
+# Não são segredos estritos (as apiKeys estão protegidas por SHA-1 Android
+# e domain referrer web), mas ficam fora do git pra evitar misturar
+# projetos dev/staging/prod entre devs. Cada dev roda:
+#   flutterfire configure --platforms=android,web
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/lib/firebase_options.dart
+/web/firebase-messaging-sw.js

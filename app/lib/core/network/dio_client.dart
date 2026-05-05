@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../constants.dart';
 import '../storage/secure_token_storage.dart';
@@ -8,7 +9,10 @@ import 'interceptors/logging_interceptor.dart';
 
 /// Builds the Dio instance with base options and the standard interceptor
 /// stack used by the app. Intended to be called from a Riverpod provider.
-Dio buildDioClient({required SecureTokenStorage tokenStorage}) {
+Dio buildDioClient({
+  required SecureTokenStorage tokenStorage,
+  FirebaseAuth? firebaseAuth,
+}) {
   final dio = Dio(
     BaseOptions(
       baseUrl: kApiBaseUrl,
@@ -17,7 +21,7 @@ Dio buildDioClient({required SecureTokenStorage tokenStorage}) {
       contentType: Headers.jsonContentType,
     ),
   )..interceptors.addAll([
-      AuthInterceptor(tokenStorage),
+      AuthInterceptor(storage: tokenStorage, firebaseAuth: firebaseAuth),
       LoggingInterceptor(),
       ErrorMapperInterceptor(),
     ]);

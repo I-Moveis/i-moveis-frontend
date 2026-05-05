@@ -42,7 +42,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
     required String email,
     required String phone,
     required String password,
-    bool isOwner = false,
+    required String role,
   }) async {
     try {
       final credentials = await _auth0.webAuthentication().login(

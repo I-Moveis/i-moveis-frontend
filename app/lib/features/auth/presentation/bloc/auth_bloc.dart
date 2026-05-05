@@ -36,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SocialLoginRequested>(_onSocialLoginRequested);
     on<CheckSessionRequested>(_onCheckSessionRequested);
     on<DemoLoginRequested>(_onDemoLoginRequested);
+    on<SessionRefreshRequested>(_onSessionRefreshRequested);
   }
 
   final LoginUseCase _login;
@@ -128,6 +129,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthState.error(message: failure.message)),
       (session) => emit(AuthState.authenticated(user: session.user)),
+    );
+  }
+
+  Future<void> _onSessionRefreshRequested(
+    SessionRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _getCurrentSession.execute();
+    result.fold(
+      (_) => null, // Ignore failures during background refresh
+      (session) {
+        if (session != null) {
+          emit(AuthState.authenticated(user: session.user));
+        }
+      },
     );
   }
 }

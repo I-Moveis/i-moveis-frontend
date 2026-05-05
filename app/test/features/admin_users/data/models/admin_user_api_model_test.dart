@@ -7,14 +7,14 @@ void main() {
     test('parses full payload', () {
       final u = adminUserFromApiJson({
         'id': 'u1',
-        'auth0Sub': 'auth0|abc',
+        'firebaseUid': 'firebase-uid-abc',
         'name': 'Mariana',
         'phoneNumber': '+5511999999999',
         'role': 'LANDLORD',
         'createdAt': '2026-04-01T12:00:00.000Z',
       });
       expect(u.id, 'u1');
-      expect(u.auth0Sub, 'auth0|abc');
+      expect(u.firebaseUid, 'firebase-uid-abc');
       expect(u.role, 'LANDLORD');
       expect(u.roleLabel, 'Proprietário');
       expect(u.createdAt, isNotNull);

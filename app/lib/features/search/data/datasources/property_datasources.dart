@@ -14,6 +14,15 @@ abstract class PropertyRemoteDataSource {
   Future<Property> update(String id, PropertyInput input);
 
   Future<void> delete(String id);
+
+  /// `PUT /api/properties/:id/moderation` — ADMIN.
+  /// [decision] deve ser `APPROVED` ou `REJECTED`.
+  /// [reason] é obrigatório quando decision=REJECTED.
+  Future<Property> moderate({
+    required String id,
+    required String decision,
+    String? reason,
+  });
 }
 
 abstract class PropertyLocalDataSource {

@@ -1,14 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants.dart';
-import '../../../../core/providers/auth0_provider.dart';
 import '../../../../core/providers/dio_provider.dart';
+import '../../../../core/providers/firebase_auth_provider.dart';
 import '../../../../core/providers/secure_storage_provider.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
-import '../../data/datasources/auth0_auth_remote_datasource.dart';
+import '../../../../core/services/fcm_service_provider.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/auth0_auth_remote_datasource.dart';
+import '../../data/datasources/firebase_auth_remote_datasource.dart';
 import '../../data/datasources/mock_auth_remote_datasource.dart';
+import 'package:auth0_flutter/auth0_flutter.dart' as auth0;
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../../domain/usecases/demo_login_usecase.dart';
@@ -25,15 +28,17 @@ final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
   if (kUseMockAuth) {
     return MockAuthRemoteDataSourceImpl();
   }
-  final auth0 = ref.watch(auth0Provider);
-  if (auth0 == null) {
-    throw StateError(
-      'Auth0 não configurado. Passe --dart-define=AUTH0_DOMAIN=... '
-      '--dart-define=AUTH0_CLIENT_ID=... --dart-define=AUTH0_AUDIENCE=... '
-      'ou rode com --dart-define=USE_MOCK_DATA=true.',
+
+  if (kAuth0Configured) {
+    return Auth0AuthRemoteDataSource(
+      auth0.Auth0(kAuth0Domain, kAuth0ClientId),
     );
   }
-  return Auth0AuthRemoteDataSource(auth0);
+
+  return FirebaseAuthRemoteDataSource(
+    firebaseAuth: ref.watch(firebaseAuthProvider),
+    dio: ref.watch(dioProvider),
+  );
 });
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
@@ -50,6 +55,7 @@ final authRepositoryProvider = Provider<IAuthRepository>((ref) {
     remote: ref.watch(authRemoteDataSourceProvider),
     local: ref.watch(authLocalDataSourceProvider),
     dio: ref.watch(dioProvider),
+    fcm: ref.watch(fcmServiceProvider),
   );
 });
 

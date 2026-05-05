@@ -127,9 +127,7 @@ class _DesignShowcasePageState extends State<DesignShowcasePage> {
                         const SizedBox(height: AppSpacing.xl),
 
                         GestureDetector(
-                          onTap: () {
-                            // TODO: Navigate back when LoginPage is available
-                          },
+                          onTap: () => Navigator.of(context).maybePop(),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.lg,

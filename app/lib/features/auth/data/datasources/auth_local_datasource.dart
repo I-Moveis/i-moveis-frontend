@@ -17,11 +17,11 @@ abstract class AuthLocalDataSource {
   Future<bool> hasSession();
   Future<void> clear();
 
-  /// After Auth0 login, fetches `/api/users/me` via [dio] and rewrites the
+  /// After Firebase login, fetches `/api/users/me` via [dio] and rewrites the
   /// cached user and the `SecureTokenStorage.userId` with the backend UUID
-  /// (not the Auth0 `sub`). Swallows errors so a transient API hiccup
-  /// doesn't kill the login flow — callers can still use the cached Auth0
-  /// profile until the next restore.
+  /// (not the Firebase `uid`). Swallows errors so a transient API hiccup
+  /// doesn't kill the login flow — callers can still use the cached profile
+  /// until the next restore.
   Future<void> syncFromBackend(Dio dio);
 }
 
@@ -85,7 +85,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       if (backendId == null || backendId.isEmpty) return;
 
       // Merge backend fields into the currently cached user so we keep the
-      // Auth0-provided name/email/avatar while upgrading the id to the
+      // Firebase-provided name/email/avatar while upgrading the id to the
       // backend UUID.
       final cached = await readCachedUser();
       final role = (body['role'] as String?) ?? 'TENANT';

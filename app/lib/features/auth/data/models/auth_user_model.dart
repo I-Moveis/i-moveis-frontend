@@ -11,6 +11,7 @@ class AuthUserModel {
     this.avatarUrl,
     this.isOwner = false,
     this.isAdmin = false,
+    this.needsRoleOnboarding = false,
   });
 
   factory AuthUserModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +23,7 @@ class AuthUserModel {
       avatarUrl: json['avatar_url'] as String?,
       isOwner: json['is_owner'] as bool? ?? false,
       isAdmin: json['is_admin'] as bool? ?? false,
+      needsRoleOnboarding: json['needs_role_onboarding'] as bool? ?? false,
     );
   }
 
@@ -34,6 +36,7 @@ class AuthUserModel {
       avatarUrl: user.avatarUrl,
       isOwner: user.isOwner,
       isAdmin: user.isAdmin,
+      needsRoleOnboarding: user.needsRoleOnboarding,
     );
   }
 
@@ -44,6 +47,7 @@ class AuthUserModel {
   final String? avatarUrl;
   final bool isOwner;
   final bool isAdmin;
+  final bool needsRoleOnboarding;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -53,6 +57,7 @@ class AuthUserModel {
         'avatar_url': avatarUrl,
         'is_owner': isOwner,
         'is_admin': isAdmin,
+        'needs_role_onboarding': needsRoleOnboarding,
       };
 
   AuthUser toEntity() => AuthUser(
@@ -63,5 +68,6 @@ class AuthUserModel {
         avatarUrl: avatarUrl,
         isOwner: isOwner,
         isAdmin: isAdmin,
+        needsRoleOnboarding: needsRoleOnboarding,
       );
 }

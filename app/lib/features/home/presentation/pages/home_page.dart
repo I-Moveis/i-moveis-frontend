@@ -1,42 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../search/domain/entities/property.dart';
+import '../providers/home_properties_providers.dart';
 import './landlord_dashboard_page.dart';
 
 /// Home page — Wrapper that switches between Tenant Home and Landlord Dashboard.
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isOwner = state.maybeWhen(
-          authenticated: (user) => user.isOwner,
-          orElse: () => false,
-        );
-
-        if (isOwner) {
-          return const LandlordDashboardPage();
-        }
-
-        return const _TenantHomeContent();
-      },
-    );
-  }
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-/// Original Tenant Home content.
-class _TenantHomeContent extends StatefulWidget {
-  const _TenantHomeContent({super.key});
-
-  @override
-  State<_TenantHomeContent> createState() => _TenantHomeContentState();
-}
-
-class _TenantHomeContentState extends State<_TenantHomeContent>
+class _HomePageState extends ConsumerState<HomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _entranceController;
   late final Animation<double> _headerFade;
@@ -52,90 +33,6 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
     (icon: Icons.business_rounded, label: 'Studio'),
     (icon: Icons.pets_rounded, label: 'Pet friendly'),
     (icon: Icons.weekend_rounded, label: 'Mobiliado'),
-  ];
-
-  static const _featuredProperties = [
-    _PropertyData(
-      title: 'Cobertura Duplex',
-      location: 'Jardins, São Paulo',
-      price: r'R$ 4.200',
-      area: '180m²',
-      beds: 3,
-      tag: 'Destaque',
-      index: 1,
-    ),
-    _PropertyData(
-      title: 'Loft Industrial',
-      location: 'Vila Madalena, SP',
-      price: r'R$ 3.800',
-      area: '120m²',
-      beds: 2,
-      tag: 'Novo',
-      index: 2,
-    ),
-    _PropertyData(
-      title: 'Studio Premium',
-      location: 'Pinheiros, SP',
-      price: r'R$ 2.500',
-      area: '45m²',
-      beds: 1,
-      tag: 'Exclusivo',
-      index: 3,
-    ),
-  ];
-
-  static const _nearbyProperties = [
-    _PropertyData(
-      title: 'Apê Moderno',
-      location: 'Moema, SP',
-      price: r'R$ 2.800',
-      area: '65m²',
-      beds: 2,
-      index: 1,
-    ),
-    _PropertyData(
-      title: 'Casa com Jardim',
-      location: 'Brooklin, SP',
-      price: r'R$ 5.500',
-      area: '220m²',
-      beds: 4,
-      index: 2,
-    ),
-    _PropertyData(
-      title: 'Kitnet Compacta',
-      location: 'Consolação, SP',
-      price: r'R$ 1.200',
-      area: '28m²',
-      beds: 1,
-      index: 3,
-    ),
-  ];
-
-  static const _trendingProperties = [
-    _PropertyData(
-      title: 'Penthouse Vista Mar',
-      location: 'Leblon, RJ',
-      price: r'R$ 12.000',
-      area: '300m²',
-      beds: 4,
-      index: 1,
-    ),
-    _PropertyData(
-      title: 'Flat Executivo',
-      location: 'Itaim Bibi, SP',
-      price: r'R$ 3.200',
-      area: '55m²',
-      beds: 1,
-      index: 2,
-    ),
-    _PropertyData(
-      title: 'Townhouse Privê',
-      location: 'Vila Nova, SP',
-      price: r'R$ 7.800',
-      area: '190m²',
-      beds: 3,
-      index: 3,
-    ),
   ];
 
   @override
@@ -177,8 +74,37 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
     super.dispose();
   }
 
+  Future<void> _refreshAll() async {
+    ref
+      ..invalidate(featuredHomePropertiesProvider)
+      ..invalidate(nearbyHomePropertiesProvider)
+      ..invalidate(trendingHomePropertiesProvider);
+    await Future.wait([
+      ref.read(featuredHomePropertiesProvider.future),
+      ref.read(nearbyHomePropertiesProvider.future),
+      ref.read(trendingHomePropertiesProvider.future),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isOwner = state.maybeWhen(
+          authenticated: (user) => user.isOwner,
+          orElse: () => false,
+        );
+
+        if (isOwner) {
+          return const LandlordDashboardPage();
+        }
+
+        return _buildTenantHome(context);
+      },
+    );
+  }
+
+  Widget _buildTenantHome(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Stack(
@@ -198,28 +124,33 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
             child: AnimatedBuilder(
               animation: _entranceController,
               builder: (context, _) {
-                return CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(child: _buildHeader(isDark)),
-                    SliverToBoxAdapter(child: _buildSearchBar(isDark)),
-                    SliverToBoxAdapter(child: _buildCategories(isDark)),
-                    SliverToBoxAdapter(
-                      child: Opacity(
-                        opacity: _contentFade.value,
-                        child: Column(
-                          children: [
-                            _buildFeaturedSection(isDark),
-                            const SizedBox(height: AppSpacing.xxxl),
-                            _buildNearbySection(isDark),
-                            const SizedBox(height: AppSpacing.xxxl),
-                            _buildTrendingSection(isDark),
-                            const SizedBox(height: AppSpacing.huge),
-                          ],
+                return RefreshIndicator(
+                  onRefresh: _refreshAll,
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    slivers: [
+                      SliverToBoxAdapter(child: _buildHeader(isDark)),
+                      SliverToBoxAdapter(child: _buildSearchBar(isDark)),
+                      SliverToBoxAdapter(child: _buildCategories(isDark)),
+                      SliverToBoxAdapter(
+                        child: Opacity(
+                          opacity: _contentFade.value,
+                          child: Column(
+                            children: [
+                              _buildFeaturedSection(isDark),
+                              const SizedBox(height: AppSpacing.xxxl),
+                              _buildNearbySection(isDark),
+                              const SizedBox(height: AppSpacing.xxxl),
+                              _buildTrendingSection(isDark),
+                              const SizedBox(height: AppSpacing.huge),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
@@ -303,7 +234,12 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
               children: [
                 Icon(Icons.search_rounded, size: 20, color: iconColor),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(child: Text('Onde você quer morar?', style: AppTypography.bodyLarge.copyWith(color: hintColor))),
+                Expanded(
+                  child: Text(
+                    'Onde você quer morar?',
+                    style: AppTypography.bodyLarge.copyWith(color: hintColor),
+                  ),
+                ),
                 Container(width: 1, height: 20, color: borderColor),
                 const SizedBox(width: AppSpacing.md),
                 Icon(Icons.tune_rounded, size: 18, color: accentColor),
@@ -341,29 +277,53 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
   }
 
   Widget _buildFeaturedSection(bool isDark) {
+    final asyncValue = ref.watch(featuredHomePropertiesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.xxl),
-        const AppSectionHeader(title: 'Destaques', action: 'Ver todos'),
+        AppSectionHeader(
+          title: 'Destaques',
+          action: 'Ver todos',
+          onAction: () => context.go('/search'),
+        ),
         const SizedBox(height: AppSpacing.lg),
         SizedBox(
           height: 270,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-            itemCount: _featuredProperties.length,
-            itemBuilder: (context, i) {
-              return Padding(padding: const EdgeInsets.only(right: AppSpacing.lg), child: _buildFeaturedCard(_featuredProperties[i], isDark));
+          child: asyncValue.when(
+            data: (items) {
+              if (items.isEmpty) {
+                return _buildEmptyRow(
+                  isDark,
+                  'Nenhum destaque no momento.',
+                );
+              }
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenHorizontal,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, i) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.lg),
+                  child: _buildFeaturedCard(items[i], isDark),
+                ),
+              );
             },
+            loading: () => _buildFeaturedSkeleton(isDark),
+            error: (err, _) => _buildErrorRow(
+              isDark,
+              onRetry: () => ref.invalidate(featuredHomePropertiesProvider),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFeaturedCard(_PropertyData property, bool isDark) {
+  Widget _buildFeaturedCard(Property property, bool isDark) {
     final cardBg = isDark ? AppColors.blackLight : AppColors.white;
     final titleColor = isDark ? AppColors.white : AppColors.black;
     final mutedColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
@@ -371,8 +331,12 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
     final tagBg = isDark ? BrutalistPalette.warmPeach.withValues(alpha: 0.12) : BrutalistPalette.deepOrange.withValues(alpha: 0.08);
     final imageBg = BrutalistPalette.imagePlaceholderBg(isDark);
 
+    final badge = property.badges.isNotEmpty ? property.badges.first : null;
+    final firstImage =
+        property.imageUrls.isNotEmpty ? property.imageUrls.first : null;
+
     return GestureDetector(
-      onTap: () => context.push('/property/${property.index}'),
+      onTap: () => context.push('/property/${property.id}'),
       child: Container(
         width: 240,
         decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderXl, boxShadow: BrutalistPalette.subtleShadow(isDark)),
@@ -384,15 +348,38 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  ColoredBox(color: imageBg, child: Center(child: Icon(Icons.home_rounded, size: 48, color: (isDark ? Colors.white : BrutalistPalette.warmBrown).withValues(alpha: 0.12)))),
-                  if (property.tag != null)
+                  if (firstImage != null)
+                    Image.network(
+                      firstImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) =>
+                          _buildImagePlaceholder(isDark, imageBg),
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return _buildImagePlaceholder(isDark, imageBg);
+                      },
+                    )
+                  else
+                    _buildImagePlaceholder(isDark, imageBg),
+                  if (badge != null)
                     Positioned(
                       top: AppSpacing.md,
                       left: AppSpacing.md,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
-                        decoration: BoxDecoration(color: tagBg, borderRadius: AppRadius.borderFull),
-                        child: Text(property.tag!, style: AppTypography.propertyTag.copyWith(color: accentColor)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xxs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: tagBg,
+                          borderRadius: AppRadius.borderFull,
+                        ),
+                        child: Text(
+                          badge,
+                          style: AppTypography.propertyTag.copyWith(
+                            color: accentColor,
+                          ),
+                        ),
                       ),
                     ),
                   Positioned(
@@ -401,8 +388,17 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
                     child: Container(
                       width: 32,
                       height: 32,
-                      decoration: BoxDecoration(color: BrutalistPalette.overlayPillBg(isDark), shape: BoxShape.circle),
-                      child: Icon(Icons.favorite_outline_rounded, size: 16, color: mutedColor),
+                      decoration: BoxDecoration(
+                        color: BrutalistPalette.overlayPillBg(isDark),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        property.isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_outline_rounded,
+                        size: 16,
+                        color: property.isFavorite ? accentColor : mutedColor,
+                      ),
                     ),
                   ),
                 ],
@@ -415,9 +411,55 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
                 children: [
                   Text(property.title, style: AppTypography.titleLargeBold.copyWith(color: titleColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: AppSpacing.xxs),
-                  Row(children: [Icon(Icons.place_outlined, size: 13, color: mutedColor), const SizedBox(width: AppSpacing.xxs), Text(property.location, style: AppTypography.bodySmall.copyWith(color: mutedColor))]),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.place_outlined,
+                        size: 13,
+                        color: mutedColor,
+                      ),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Expanded(
+                        child: Text(
+                          property.address.isNotEmpty
+                              ? property.address
+                              : '—',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: mutedColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: AppSpacing.sm),
-                  Row(children: [Text('${property.price}/mês', style: AppTypography.titleMediumAccent.copyWith(color: accentColor)), const Spacer(), AppStatRow(icon: Icons.straighten_rounded, value: property.area, color: mutedColor), const SizedBox(width: AppSpacing.sm), AppStatRow(icon: Icons.bed_rounded, value: '${property.beds}q', color: mutedColor)]),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '${property.price}/mês',
+                          style: AppTypography.titleMediumAccent.copyWith(
+                            color: accentColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      AppStatRow(
+                        icon: Icons.straighten_rounded,
+                        value: '${property.area.toInt()}m²',
+                        color: mutedColor,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      AppStatRow(
+                        icon: Icons.bed_rounded,
+                        value: '${property.bedrooms}q',
+                        color: mutedColor,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -428,28 +470,52 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
   }
 
   Widget _buildNearbySection(bool isDark) {
+    final asyncValue = ref.watch(nearbyHomePropertiesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionHeader(title: 'Perto de você', action: 'Ver mapa'),
+        AppSectionHeader(
+          title: 'Perto de você',
+          action: 'Ver mapa',
+          onAction: () => context.go('/search/map'),
+        ),
         const SizedBox(height: AppSpacing.lg),
         SizedBox(
           height: 150,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-            itemCount: _nearbyProperties.length,
-            itemBuilder: (context, i) {
-              return Padding(padding: const EdgeInsets.only(right: AppSpacing.md), child: _buildNearbyCard(_nearbyProperties[i], isDark));
+          child: asyncValue.when(
+            data: (items) {
+              if (items.isEmpty) {
+                return _buildEmptyRow(
+                  isDark,
+                  'Nenhum imóvel disponível agora.',
+                );
+              }
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenHorizontal,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, i) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  child: _buildNearbyCard(items[i], isDark),
+                ),
+              );
             },
+            loading: () => _buildNearbySkeleton(isDark),
+            error: (err, _) => _buildErrorRow(
+              isDark,
+              onRetry: () => ref.invalidate(nearbyHomePropertiesProvider),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildNearbyCard(_PropertyData property, bool isDark) {
+  Widget _buildNearbyCard(Property property, bool isDark) {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final titleColor = isDark ? AppColors.white : AppColors.black;
@@ -457,7 +523,7 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
     final accentColor = BrutalistPalette.accentOrange(isDark);
 
     return GestureDetector(
-      onTap: () => context.push('/property/${property.index}'),
+      onTap: () => context.push('/property/${property.id}'),
       child: Container(
         width: 180,
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -466,8 +532,46 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(property.title, style: AppTypography.titleLargeBold.copyWith(color: titleColor), maxLines: 1, overflow: TextOverflow.ellipsis), const SizedBox(height: AppSpacing.xxs), Text(property.location, style: AppTypography.bodySmall.copyWith(color: mutedColor))]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('${property.price}/mês', style: AppTypography.titleSmallAccent.copyWith(color: accentColor)), AppStatRow(icon: Icons.straighten_rounded, value: property.area, color: mutedColor)]),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  property.title,
+                  style: AppTypography.titleLargeBold.copyWith(
+                    color: titleColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  property.address.isNotEmpty ? property.address : '—',
+                  style: AppTypography.bodySmall.copyWith(color: mutedColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    '${property.price}/mês',
+                    style: AppTypography.titleSmallAccent.copyWith(
+                      color: accentColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                AppStatRow(
+                  icon: Icons.straighten_rounded,
+                  value: '${property.area.toInt()}m²',
+                  color: mutedColor,
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -475,44 +579,90 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
   }
 
   Widget _buildTrendingSection(bool isDark) {
+    final asyncValue = ref.watch(trendingHomePropertiesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const AppSectionHeader(title: 'Mais procurados'),
         const SizedBox(height: AppSpacing.lg),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-          child: Column(
-            children: [
-              for (int i = 0; i < _trendingProperties.length; i++) ...[
-                _buildTrendingItem(_trendingProperties[i], i, isDark),
-                if (i < _trendingProperties.length - 1) const SizedBox(height: AppSpacing.md),
-              ],
-            ],
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenHorizontal,
+          ),
+          child: asyncValue.when(
+            data: (items) {
+              if (items.isEmpty) {
+                return _buildEmptyBox(
+                  isDark,
+                  'Sem dados de popularidade ainda.',
+                );
+              }
+              return Column(
+                children: [
+                  for (int i = 0; i < items.length; i++) ...[
+                    _buildTrendingItem(items[i], i, isDark),
+                    if (i < items.length - 1)
+                      const SizedBox(height: AppSpacing.md),
+                  ],
+                ],
+              );
+            },
+            loading: () => _buildTrendingSkeleton(isDark),
+            error: (err, _) => _buildErrorRow(
+              isDark,
+              onRetry: () => ref.invalidate(trendingHomePropertiesProvider),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTrendingItem(_PropertyData property, int rank, bool isDark) {
+  Widget _buildTrendingItem(Property property, int rank, bool isDark) {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final titleColor = isDark ? AppColors.white : AppColors.black;
     final mutedColor = isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
     final accentColor = BrutalistPalette.accentOrange(isDark);
-    final rankColor = isDark ? BrutalistPalette.warmAmber.withValues(alpha: 0.3) : BrutalistPalette.deepAmber.withValues(alpha: 0.2);
+    final rankColor = isDark
+        ? BrutalistPalette.warmAmber.withValues(alpha: 0.3)
+        : BrutalistPalette.deepAmber.withValues(alpha: 0.2);
+    final firstImage =
+        property.imageUrls.isNotEmpty ? property.imageUrls.first : null;
 
     return GestureDetector(
-      onTap: () => context.push('/property/${property.index}'),
+      onTap: () => context.push('/property/${property.id}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(color: cardBg, borderRadius: AppRadius.borderLg, border: Border.all(color: borderColor)),
         child: Row(
           children: [
-            SizedBox(width: 32, child: Text('${rank + 1}', style: AppTypography.headlineLargeBold.copyWith(color: rankColor))),
+            SizedBox(
+              width: 32,
+              child: Text(
+                '${rank + 1}',
+                style: AppTypography.headlineLargeBold.copyWith(
+                  color: rankColor,
+                ),
+              ),
+            ),
             const SizedBox(width: AppSpacing.md),
-            Container(width: 56, height: 56, decoration: BoxDecoration(color: BrutalistPalette.imagePlaceholderBg(isDark), borderRadius: AppRadius.borderMd), child: Icon(Icons.home_rounded, size: 24, color: (isDark ? Colors.white : BrutalistPalette.warmBrown).withValues(alpha: 0.12))),
+            ClipRRect(
+              borderRadius: AppRadius.borderMd,
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: firstImage != null
+                    ? Image.network(
+                        firstImage,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            _buildImagePlaceholder(isDark, null),
+                      )
+                    : _buildImagePlaceholder(isDark, null),
+              ),
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -520,27 +670,75 @@ class _TenantHomeContentState extends State<_TenantHomeContent>
                 children: [
                   Text(property.title, style: AppTypography.titleLargeBold.copyWith(color: titleColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: AppSpacing.xxs),
-                  Text(property.location, style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text('${property.price}/mês', style: AppTypography.titleSmallAccent.copyWith(color: accentColor)),
+                  Text(
+                    property.address.isNotEmpty ? property.address : '—',
+                    style: AppTypography.bodySmall.copyWith(color: mutedColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 20, color: mutedColor.withValues(alpha: 0.5)),
           ],
         ),
       ),
     );
   }
-}
 
-class _PropertyData {
-  const _PropertyData({required this.title, required this.location, required this.price, required this.area, required this.beds, required this.index, this.tag});
-  final String title;
-  final String location;
-  final String price;
-  final String area;
-  final int beds;
-  final int index;
-  final String? tag;
+  Widget _buildImagePlaceholder(bool isDark, Color? bgColor) {
+    return Container(
+      color: bgColor ?? BrutalistPalette.imagePlaceholderBg(isDark),
+      child: Center(
+        child: Icon(
+          Icons.home_rounded,
+          size: 24,
+          color: (isDark ? Colors.white : BrutalistPalette.warmBrown)
+              .withValues(alpha: 0.12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyRow(bool isDark, String message) {
+    return Center(
+      child: Text(
+        message,
+        style: AppTypography.bodyMedium.copyWith(
+          color: BrutalistPalette.muted(isDark),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyBox(bool isDark, String message) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: BrutalistPalette.surfaceBg(isDark),
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+      ),
+      child: Center(
+        child: Text(
+          message,
+          style: AppTypography.bodyMedium.copyWith(
+            color: BrutalistPalette.muted(isDark),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorRow(bool isDark, {required VoidCallback onRetry}) {
+    return Center(
+      child: IconButton(
+        onPressed: onRetry,
+        icon: const Icon(Icons.refresh_rounded),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedSkeleton(bool isDark) => const Center(child: CircularProgressIndicator());
+  Widget _buildNearbySkeleton(bool isDark) => const Center(child: CircularProgressIndicator());
+  Widget _buildTrendingSkeleton(bool isDark) => const Center(child: CircularProgressIndicator());
 }

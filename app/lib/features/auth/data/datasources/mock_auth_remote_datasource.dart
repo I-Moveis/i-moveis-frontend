@@ -41,7 +41,7 @@ class MockAuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String phone,
     required String password,
-    bool isOwner = false,
+    required String role,
   }) async {
     await Future<void>.delayed(const Duration(seconds: 1));
     final user = AuthUserModel(
@@ -49,7 +49,8 @@ class MockAuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       name: name.isNotEmpty ? name : _mockUser.name,
       email: email.isNotEmpty ? email : _mockUser.email,
       phone: phone.isNotEmpty ? phone : _mockUser.phone,
-      isOwner: isOwner,
+      isOwner: role == 'LANDLORD',
+      isAdmin: role == 'ADMIN',
     );
     return AuthSessionModel(
       user: user,

@@ -22,7 +22,7 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String phone,
     required String password,
-    bool isOwner = false,
+    required String role,
   });
 
   Future<AuthSessionModel> socialLogin(SocialProvider provider);

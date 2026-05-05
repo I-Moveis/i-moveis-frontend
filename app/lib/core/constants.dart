@@ -1,8 +1,5 @@
-/// Base URL for the i-Móveis REST API.
-///
-/// TODO(infra): read from --dart-define env var (e.g. `API_BASE_URL`) so
-/// dev/staging/prod builds can point to different backends without editing
-/// code.
+/// Base URL for the i-Móveis REST API. Sobrescrito por `--dart-define=API_BASE_URL=...`
+/// em builds de staging/prod.
 const String kApiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
   defaultValue: 'http://localhost:3000/api',
@@ -19,9 +16,10 @@ const bool kUseMockData = bool.fromEnvironment(
   defaultValue: true,
 );
 
-/// When true, auth layer uses mock (fake token/user) instead of Auth0.
-/// Default is `true` so the app runs without Auth0 credentials while still
-/// hitting the real backend for data (search, listings, etc.).
+/// When true, auth layer uses mock (fake token/user) instead of Firebase Auth.
+/// Default é `false` — o app conversa com o Firebase em dev e prod. Passa
+/// `--dart-define=USE_MOCK_AUTH=true` pra pular o Firebase em builds de UI
+/// sem projeto configurado.
 const bool kUseMockAuth = bool.fromEnvironment(
   'USE_MOCK_AUTH',
   defaultValue: true,

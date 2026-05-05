@@ -6,12 +6,9 @@ import '../../../search/data/providers/data_providers.dart';
 import '../../../search/domain/entities/property.dart';
 import '../../../search/presentation/providers/search_filters_provider.dart';
 
-/// Lists the properties owned by the current user.
-///
-/// Since the current `/properties/search` endpoint does NOT accept a
-/// `landlordId` filter (see BACKEND_GAPS.md), this notifier pulls a single
-/// large page and filters client-side. When the backend adds the filter the
-/// fetch becomes smaller; the notifier's public surface stays the same.
+/// Lista os imóveis do usuário corrente via
+/// `GET /properties/search?landlordId=<uuid>` — o backend devolve todos os
+/// status (AVAILABLE/IN_NEGOTIATION/RENTED) quando o filtro é aplicado.
 class MyPropertiesNotifier extends AsyncNotifier<List<Property>> {
   @override
   Future<List<Property>> build() async {
@@ -24,14 +21,9 @@ class MyPropertiesNotifier extends AsyncNotifier<List<Property>> {
 
   Future<List<Property>> _load(String userId) async {
     final repo = ref.read(dataPropertyRepositoryProvider);
-    // Use a permissive filter + big page. Once the backend filter exists,
-    // we swap this for a landlordId-scoped search.
-    final result = await repo.searchProperties(const SearchFilters());
-    // TODO(api-gap): filter server-side by landlordId when supported.
-    // Until then we can't actually tell from the search result payload
-    // which properties belong to this landlord (Property entity doesn't
-    // carry landlordId). Return all results in the meantime — admin view
-    // reuses this. MyPropertiesPage surfaces the caveat in a TODO banner.
+    final result = await repo.searchProperties(
+      SearchFilters(landlordId: userId),
+    );
     return result.properties;
   }
 

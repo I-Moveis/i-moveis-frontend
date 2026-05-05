@@ -26,4 +26,6 @@ class AuthEvent with _$AuthEvent {
   const factory AuthEvent.demoLoginRequested({
     required DemoRole role,
   }) = DemoLoginRequested;
+
+  const factory AuthEvent.sessionRefreshRequested() = SessionRefreshRequested;
 }

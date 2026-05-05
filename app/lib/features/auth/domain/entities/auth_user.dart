@@ -10,6 +10,7 @@ class AuthUser {
     this.avatarUrl,
     this.isOwner = false,
     this.isAdmin = false,
+    this.needsRoleOnboarding = false,
   });
 
   final String id;
@@ -20,6 +21,12 @@ class AuthUser {
   final bool isOwner;
   final bool isAdmin;
 
+  /// `true` na primeira sessão de um usuário criado via login social (Google)
+  /// — o JIT do backend criou o registro com role default (TENANT) mas o
+  /// usuário ainda não escolheu entre inquilino e proprietário. Disparado pela
+  /// UI pra mostrar a tela intersticial de role.
+  final bool needsRoleOnboarding;
+
   AuthUser copyWith({
     String? id,
     String? name,
@@ -28,6 +35,7 @@ class AuthUser {
     String? avatarUrl,
     bool? isOwner,
     bool? isAdmin,
+    bool? needsRoleOnboarding,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -37,6 +45,7 @@ class AuthUser {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       isOwner: isOwner ?? this.isOwner,
       isAdmin: isAdmin ?? this.isAdmin,
+      needsRoleOnboarding: needsRoleOnboarding ?? this.needsRoleOnboarding,
     );
   }
 
@@ -51,9 +60,18 @@ class AuthUser {
           phone == other.phone &&
           avatarUrl == other.avatarUrl &&
           isOwner == other.isOwner &&
-          isAdmin == other.isAdmin;
+          isAdmin == other.isAdmin &&
+          needsRoleOnboarding == other.needsRoleOnboarding;
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, email, phone, avatarUrl, isOwner, isAdmin);
+  int get hashCode => Object.hash(
+        id,
+        name,
+        email,
+        phone,
+        avatarUrl,
+        isOwner,
+        isAdmin,
+        needsRoleOnboarding,
+      );
 }

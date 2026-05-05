@@ -37,35 +37,44 @@ class DynamicBrutalistPalette {
   /// Faint text color (even more muted).
   Color faint(bool isDark) => isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
 
-  /// Glass background color.
-  Color glassBg(bool isDark) => isDark ? AppColors.glass : const Color(0x14000000);
+  /// Glass background. Dark mode ficou sólido (era translúcido o suficiente
+  /// pro WaveBackground passar) — mantém o "glass feel" via cor levemente
+  /// mais clara que o card padrão. Light permanece com leve alpha preto.
+  Color glassBg(bool isDark) => isDark
+      ? AppColors.blackLighter
+      : const Color(0x14000000);
 
   /// Glass border color.
-  Color glassBorderColor(bool isDark) => isDark ? AppColors.glassBorder : const Color(0x22000000);
+  Color glassBorderColor(bool isDark) => isDark
+      ? AppColors.blackLightest
+      : const Color(0x22000000);
 
-  /// Card background color.
+  /// Card background color. Solid em ambos os modos — antes o dark tinha
+  /// alpha 0.5, deixando o fundo (WaveBackground) atravessar os cards.
   Color cardBg(bool isDark) => isDark
-      ? AppColors.blackLight.withValues(alpha: 0.5)
-      : AppColors.white.withValues(alpha: 0.9);
+      ? AppColors.blackLight
+      : AppColors.white;
 
   /// Card border color.
   Color cardBorder(bool isDark) => isDark
-      ? AppColors.blackLightest.withValues(alpha: 0.5)
+      ? AppColors.blackLightest
       : AppColors.lightBorder;
 
-  /// Surface background for cards, chips, inputs.
+  /// Surface background for cards, chips, inputs. Solid em dark (era 4%
+  /// white → quase transparente).
   Color surfaceBg(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.04)
-      : Colors.white.withValues(alpha: 0.9);
+      ? AppColors.darkSurface
+      : AppColors.white;
 
   /// Surface border for cards, inputs, containers.
   Color surfaceBorder(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.06)
+      ? AppColors.blackLightest
       : Colors.black.withValues(alpha: 0.12);
 
   /// Subtle background for icon containers, buttons, progress bars.
+  /// Um degrau acima do card pra criar contraste sem vazar o fundo.
   Color subtleBg(bool isDark) => isDark
-      ? Colors.white.withValues(alpha: 0.06)
+      ? AppColors.blackLighter
       : Colors.black.withValues(alpha: 0.08);
 
   /// Image placeholder background (warm beige in light).

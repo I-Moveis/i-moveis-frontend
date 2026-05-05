@@ -34,7 +34,7 @@ void main() {
   AuthSessionModel seedSession() {
     return const AuthSessionModel(
       user: AuthUserModel(
-        id: 'auth0|abc123',
+        id: 'firebase-uid-abc123',
         name: 'João Silva',
         email: 'joao@example.com',
         avatarUrl: 'https://cdn/avatar.png',
@@ -88,7 +88,7 @@ void main() {
       expect(cached?.phone, '+5511999999999');
       expect(cached?.isOwner, true);
       expect(cached?.isAdmin, false);
-      // Auth0-provided fields stay when backend omits them.
+      // Firebase-provided fields stay when backend omits them.
       expect(cached?.email, 'joao@example.com');
       expect(cached?.avatarUrl, 'https://cdn/avatar.png');
     });
@@ -117,7 +117,7 @@ void main() {
       await sut.syncFromBackend(dio); // must not throw
 
       final cached = await sut.readCachedUser();
-      expect(cached?.id, 'auth0|abc123'); // untouched
+      expect(cached?.id, 'firebase-uid-abc123'); // untouched
     });
 
     test('skips when backend response is missing an id', () async {
@@ -133,8 +133,8 @@ void main() {
 
       await sut.syncFromBackend(dio);
 
-      expect((await sut.readCachedUser())?.id, 'auth0|abc123');
-      expect(await storage.readUserId(), 'auth0|abc123');
+      expect((await sut.readCachedUser())?.id, 'firebase-uid-abc123');
+      expect(await storage.readUserId(), 'firebase-uid-abc123');
     });
 
     test('no-op when there is no access token stored yet', () async {
@@ -163,7 +163,7 @@ void main() {
 
       await sut.syncFromBackend(dio);
 
-      expect((await sut.readCachedUser())?.id, 'auth0|abc123');
+      expect((await sut.readCachedUser())?.id, 'firebase-uid-abc123');
     });
 
     test('target path is /users/me', () async {

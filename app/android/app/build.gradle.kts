@@ -6,6 +6,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -14,6 +15,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Core library desugaring exigido por flutter_local_notifications.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -32,17 +35,12 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // Auth0 callback host — must match the AUTH0_DOMAIN constant in
-        // lib/core/constants.dart. Until a tenant exists, leave blank; fill
-        // via a local gradle.properties "auth0Domain" entry when ready.
-        manifestPlaceholders["auth0Domain"] =
-            (project.findProperty("auth0Domain") ?: "") as String
-
         val envFile = project.rootProject.file("../.env")
         val env = Properties()
         if (envFile.exists()) {
             env.load(FileInputStream(envFile))
         }
+
         val mapsApiKey = env.getProperty("MAPS_API_KEY") ?: "YOUR_API_KEY_HERE"
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
@@ -58,4 +56,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

@@ -10,6 +10,7 @@ import '../../features/admin_users/presentation/pages/admin_user_form_page.dart'
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/role_onboarding_page.dart';
 import '../../features/auth/presentation/providers/auth_status_provider.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/pages/conversations_page.dart';
@@ -30,6 +31,7 @@ import '../../features/proposal/presentation/pages/make_proposal_page.dart';
 import '../../features/schedule/presentation/pages/schedule_visit_page.dart';
 import '../../features/search/presentation/pages/map_search_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
+import '../../features/search/presentation/providers/search_filters_provider.dart';
 import '../../features/shell/presentation/pages/main_shell_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/visits/presentation/pages/edit_visit_page.dart';
@@ -99,6 +101,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/forgot-password',
         builder: (_, _) => const ForgotPasswordPage(),
       ),
+      GoRoute(
+        path: '/onboarding/role',
+        builder: (_, _) => const RoleOnboardingPage(),
+      ),
 
       // Legacy redirect for moved properties route
       GoRoute(
@@ -129,7 +135,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/search',
-                builder: (_, _) => const SearchPage(),
+                builder: (_, state) {
+                  // Deep link do bot WhatsApp chega com query params
+                  // (state, city, maxPrice). Sem params, usa filtros
+                  // persistidos do usuário.
+                  final params = state.uri.queryParameters;
+                  return SearchPage(
+                    initialFilters: params.isEmpty
+                        ? null
+                        : SearchFilters.fromQueryParams(params),
+                  );
+                },
                 routes: [
                   GoRoute(
                     path: 'map',

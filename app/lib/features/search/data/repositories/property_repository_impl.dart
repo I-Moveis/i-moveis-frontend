@@ -100,6 +100,21 @@ class PropertyRepositoryImpl implements PropertyRepository {
     return _guardMutation(() => remoteDataSource.delete(id));
   }
 
+  @override
+  Future<Property> moderate({
+    required String id,
+    required String decision,
+    String? reason,
+  }) {
+    return _guardMutation(
+      () => remoteDataSource.moderate(
+        id: id,
+        decision: decision,
+        reason: reason,
+      ),
+    );
+  }
+
   Future<T> _guardMutation<T>(Future<T> Function() action) async {
     try {
       return await action();

@@ -12,6 +12,7 @@ class AuthEvent with _$AuthEvent {
     required String email,
     required String phone,
     required String password,
+    @Default(false) bool isOwner,
   }) = RegisterRequested;
 
   const factory AuthEvent.logoutRequested() = LogoutRequested;

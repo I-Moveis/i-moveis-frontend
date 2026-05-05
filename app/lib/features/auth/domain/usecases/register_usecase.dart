@@ -14,12 +14,14 @@ class RegisterUseCase {
     required String email,
     required String phone,
     required String password,
+    bool isOwner = false,
   }) {
     return _repository.register(
       name: name,
       email: email,
       phone: phone,
       password: password,
+      isOwner: isOwner,
     );
   }
 }

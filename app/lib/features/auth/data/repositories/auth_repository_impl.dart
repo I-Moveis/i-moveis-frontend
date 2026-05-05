@@ -57,6 +57,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String email,
     required String phone,
     required String password,
+    bool isOwner = false,
   }) async {
     try {
       final model = await _remote.register(
@@ -64,6 +65,7 @@ class AuthRepositoryImpl implements IAuthRepository {
         email: email,
         phone: phone,
         password: password,
+        isOwner: isOwner,
       );
       await _local.saveSession(model);
       await _syncBackendIdentity();

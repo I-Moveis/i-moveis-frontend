@@ -1,4 +1,4 @@
-import 'package:auth0_flutter/auth0_flutter.dart';
+import 'package:auth0_flutter/auth0_flutter.dart' as auth0;
 
 import '../../../../core/constants.dart';
 import '../../presentation/bloc/social_provider.dart';
@@ -17,7 +17,7 @@ import 'auth_remote_datasource.dart';
 class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
   Auth0AuthRemoteDataSource(this._auth0);
 
-  final Auth0 _auth0;
+  final auth0.Auth0 _auth0;
 
   static const _dbConnection = 'Username-Password-Authentication';
 
@@ -31,7 +31,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
         audience: kAuth0Audience,
       );
       return sessionFromCredentials(credentials);
-    } on WebAuthenticationException catch (e) {
+    } on auth0.WebAuthenticationException catch (e) {
       throw Exception(_friendlyMessage(e));
     }
   }
@@ -42,6 +42,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
     required String email,
     required String phone,
     required String password,
+    bool isOwner = false,
   }) async {
     try {
       final credentials = await _auth0.webAuthentication().login(
@@ -49,7 +50,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
         parameters: const {'screen_hint': 'signup'},
       );
       return sessionFromCredentials(credentials);
-    } on WebAuthenticationException catch (e) {
+    } on auth0.WebAuthenticationException catch (e) {
       throw Exception(_friendlyMessage(e));
     }
   }
@@ -62,7 +63,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
         parameters: {'connection': _connectionForProvider(provider)},
       );
       return sessionFromCredentials(credentials);
-    } on WebAuthenticationException catch (e) {
+    } on auth0.WebAuthenticationException catch (e) {
       throw Exception(_friendlyMessage(e));
     }
   }
@@ -73,7 +74,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
       // `federated: true` also clears the Auth0 session cookie so the next
       // login webview doesn't silently reuse the previous session.
       await _auth0.webAuthentication().logout(federated: true);
-    } on WebAuthenticationException {
+    } on auth0.WebAuthenticationException {
       // Ignore — logout must always succeed locally even if the webview
       // step failed. The repository clears local storage unconditionally.
     }
@@ -86,7 +87,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
         email: email,
         connection: _dbConnection,
       );
-    } on ApiException catch (e) {
+    } on auth0.ApiException catch (e) {
       throw Exception(e.message);
     }
   }
@@ -96,7 +97,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
     try {
       final credentials = await _auth0.credentialsManager.credentials();
       return sessionFromCredentials(credentials).user;
-    } on CredentialsManagerException catch (e) {
+    } on auth0.CredentialsManagerException catch (e) {
       throw Exception(e.message);
     }
   }
@@ -110,7 +111,7 @@ class Auth0AuthRemoteDataSource implements AuthRemoteDataSource {
     }
   }
 
-  String _friendlyMessage(WebAuthenticationException e) {
+  String _friendlyMessage(auth0.WebAuthenticationException e) {
     if (e.isUserCancelledException) return 'Login cancelado.';
     if (e.message.isNotEmpty) return e.message;
     return 'Falha na autenticação.';

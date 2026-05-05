@@ -168,7 +168,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             setState(() => _loadingSocial = null);
             final destination = user.isAdmin
                 ? '/admin'
-                : '/home';
+                : user.isOwner
+                    ? '/my-properties'
+                    : '/home';
             context.go(destination);
           },
           unauthenticated: () {

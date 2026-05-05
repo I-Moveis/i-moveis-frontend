@@ -18,6 +18,7 @@ abstract class IAuthRepository {
     required String email,
     required String phone,
     required String password,
+    bool isOwner = false,
   });
 
   Future<Either<AuthFailure, AuthSession>> socialLogin(

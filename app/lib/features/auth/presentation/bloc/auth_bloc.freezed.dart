@@ -134,11 +134,11 @@ return demoLoginRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  String password)?  loginRequested,TResult Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult Function()?  logoutRequested,TResult Function( SocialProvider provider)?  socialLoginRequested,TResult Function()?  checkSessionRequested,TResult Function( DemoRole role)?  demoLoginRequested,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  String password)?  loginRequested,TResult Function( String name,  String email,  String phone,  String password,  bool isOwner)?  registerRequested,TResult Function()?  logoutRequested,TResult Function( SocialProvider provider)?  socialLoginRequested,TResult Function()?  checkSessionRequested,TResult Function( DemoRole role)?  demoLoginRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that.email,_that.password);case RegisterRequested() when registerRequested != null:
-return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested() when logoutRequested != null:
+return registerRequested(_that.name,_that.email,_that.phone,_that.password,_that.isOwner);case LogoutRequested() when logoutRequested != null:
 return logoutRequested();case SocialLoginRequested() when socialLoginRequested != null:
 return socialLoginRequested(_that.provider);case CheckSessionRequested() when checkSessionRequested != null:
 return checkSessionRequested();case DemoLoginRequested() when demoLoginRequested != null:
@@ -160,11 +160,11 @@ return demoLoginRequested(_that.role);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  String password)  loginRequested,required TResult Function( String name,  String email,  String phone,  String password)  registerRequested,required TResult Function()  logoutRequested,required TResult Function( SocialProvider provider)  socialLoginRequested,required TResult Function()  checkSessionRequested,required TResult Function( DemoRole role)  demoLoginRequested,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  String password)  loginRequested,required TResult Function( String name,  String email,  String phone,  String password,  bool isOwner)  registerRequested,required TResult Function()  logoutRequested,required TResult Function( SocialProvider provider)  socialLoginRequested,required TResult Function()  checkSessionRequested,required TResult Function( DemoRole role)  demoLoginRequested,}) {final _that = this;
 switch (_that) {
 case LoginRequested():
 return loginRequested(_that.email,_that.password);case RegisterRequested():
-return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested():
+return registerRequested(_that.name,_that.email,_that.phone,_that.password,_that.isOwner);case LogoutRequested():
 return logoutRequested();case SocialLoginRequested():
 return socialLoginRequested(_that.provider);case CheckSessionRequested():
 return checkSessionRequested();case DemoLoginRequested():
@@ -185,11 +185,11 @@ return demoLoginRequested(_that.role);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  String password)?  loginRequested,TResult? Function( String name,  String email,  String phone,  String password)?  registerRequested,TResult? Function()?  logoutRequested,TResult? Function( SocialProvider provider)?  socialLoginRequested,TResult? Function()?  checkSessionRequested,TResult? Function( DemoRole role)?  demoLoginRequested,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  String password)?  loginRequested,TResult? Function( String name,  String email,  String phone,  String password,  bool isOwner)?  registerRequested,TResult? Function()?  logoutRequested,TResult? Function( SocialProvider provider)?  socialLoginRequested,TResult? Function()?  checkSessionRequested,TResult? Function( DemoRole role)?  demoLoginRequested,}) {final _that = this;
 switch (_that) {
 case LoginRequested() when loginRequested != null:
 return loginRequested(_that.email,_that.password);case RegisterRequested() when registerRequested != null:
-return registerRequested(_that.name,_that.email,_that.phone,_that.password);case LogoutRequested() when logoutRequested != null:
+return registerRequested(_that.name,_that.email,_that.phone,_that.password,_that.isOwner);case LogoutRequested() when logoutRequested != null:
 return logoutRequested();case SocialLoginRequested() when socialLoginRequested != null:
 return socialLoginRequested(_that.provider);case CheckSessionRequested() when checkSessionRequested != null:
 return checkSessionRequested();case DemoLoginRequested() when demoLoginRequested != null:
@@ -273,13 +273,14 @@ as String,
 
 
 class RegisterRequested implements AuthEvent {
-  const RegisterRequested({required this.name, required this.email, required this.phone, required this.password});
-  
+  const RegisterRequested({required this.name, required this.email, required this.phone, required this.password, this.isOwner = false});
+
 
  final  String name;
  final  String email;
  final  String phone;
  final  String password;
+ final  bool isOwner;
 
 /// Create a copy of AuthEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -291,16 +292,16 @@ $RegisterRequestedCopyWith<RegisterRequested> get copyWith => _$RegisterRequeste
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisterRequested&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.password, password) || other.password == password));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisterRequested&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.password, password) || other.password == password)&&(identical(other.isOwner, isOwner) || other.isOwner == isOwner));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,email,phone,password);
+int get hashCode => Object.hash(runtimeType,name,email,phone,password,isOwner);
 
 @override
 String toString() {
-  return 'AuthEvent.registerRequested(name: $name, email: $email, phone: $phone, password: $password)';
+  return 'AuthEvent.registerRequested(name: $name, email: $email, phone: $phone, password: $password, isOwner: $isOwner)';
 }
 
 
@@ -311,7 +312,7 @@ abstract mixin class $RegisterRequestedCopyWith<$Res> implements $AuthEventCopyW
   factory $RegisterRequestedCopyWith(RegisterRequested value, $Res Function(RegisterRequested) _then) = _$RegisterRequestedCopyWithImpl;
 @useResult
 $Res call({
- String name, String email, String phone, String password
+ String name, String email, String phone, String password, bool isOwner
 });
 
 
@@ -328,13 +329,14 @@ class _$RegisterRequestedCopyWithImpl<$Res>
 
 /// Create a copy of AuthEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? name = null,Object? email = null,Object? phone = null,Object? password = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? name = null,Object? email = null,Object? phone = null,Object? password = null,Object? isOwner = null,}) {
   return _then(RegisterRequested(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isOwner: null == isOwner ? _self.isOwner : isOwner // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

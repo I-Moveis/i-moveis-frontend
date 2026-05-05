@@ -1,4 +1,4 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:flutter/material.dart';
 import '../tokens/app_colors.dart';
 import '../tokens/app_spacing.dart';
@@ -16,6 +16,7 @@ class BrutalistBarChart extends StatelessWidget {
     this.height = 240,
     this.title,
     this.valueSuffix = '',
+    this.valuePrefix = '',
   });
 
   final List<double> data;
@@ -24,6 +25,7 @@ class BrutalistBarChart extends StatelessWidget {
   final double height;
   final String? title;
   final String valueSuffix;
+  final String valuePrefix;
 
   @override
   Widget build(BuildContext context) {
@@ -52,16 +54,16 @@ class BrutalistBarChart extends StatelessWidget {
             borderRadius: AppRadius.borderLg,
             border: Border.all(color: borderColor),
           ),
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
+          child: fl.BarChart(
+            fl.BarChartData(
+              alignment: fl.BarChartAlignment.spaceAround,
               maxY: data.isEmpty ? 10 : (data.reduce((a, b) => a > b ? a : b) * 1.2),
-              barTouchData: BarTouchData(
-                touchTooltipData: BarTouchTooltipData(
+              barTouchData: fl.BarTouchData(
+                touchTooltipData: fl.BarTouchTooltipData(
                   getTooltipColor: (_) => isDark ? AppColors.blackLight : AppColors.white,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    return BarTooltipItem(
-                      '${rod.toY.toInt()}$valueSuffix',
+                    return fl.BarTooltipItem(
+                      '$valuePrefix${rod.toY.toInt()}$valueSuffix',
                       AppTypography.bodySmall.copyWith(
                         color: isDark ? AppColors.white : AppColors.black,
                         fontWeight: FontWeight.bold,
@@ -70,10 +72,10 @@ class BrutalistBarChart extends StatelessWidget {
                   },
                 ),
               ),
-              titlesData: FlTitlesData(
+              titlesData: fl.FlTitlesData(
                 show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
+                bottomTitles: fl.AxisTitles(
+                  sideTitles: fl.SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
@@ -89,8 +91,8 @@ class BrutalistBarChart extends StatelessWidget {
                     reservedSize: 28,
                   ),
                 ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
+                leftTitles: fl.AxisTitles(
+                  sideTitles: fl.SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       return Text(
@@ -101,23 +103,23 @@ class BrutalistBarChart extends StatelessWidget {
                     reservedSize: 32,
                   ),
                 ),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
+                rightTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
               ),
-              gridData: FlGridData(
+              gridData: fl.FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) => FlLine(
+                getDrawingHorizontalLine: (value) => fl.FlLine(
                   color: borderColor.withValues(alpha: 0.1),
                   strokeWidth: 1,
                 ),
               ),
-              borderData: FlBorderData(show: false),
+              borderData: fl.FlBorderData(show: false),
               barGroups: data.asMap().entries.map((entry) {
-                return BarChartGroupData(
+                return fl.BarChartGroupData(
                   x: entry.key,
                   barRods: [
-                    BarChartRodData(
+                    fl.BarChartRodData(
                       toY: entry.value,
                       color: accentColor,
                       width: 14,
@@ -147,14 +149,16 @@ class BrutalistLineChart extends StatelessWidget {
     required this.isDark,
     this.height = 240,
     this.title,
+    this.valueSuffix = '',
     this.valuePrefix = '',
   });
 
-  final List<FlSpot> points;
+  final List<fl.FlSpot> points;
   final List<String> labels;
   final bool isDark;
   final double height;
   final String? title;
+  final String valueSuffix;
   final String valuePrefix;
 
   @override
@@ -184,15 +188,15 @@ class BrutalistLineChart extends StatelessWidget {
             borderRadius: AppRadius.borderLg,
             border: Border.all(color: borderColor),
           ),
-          child: LineChart(
-            LineChartData(
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
+          child: fl.LineChart(
+            fl.LineChartData(
+              lineTouchData: fl.LineTouchData(
+                touchTooltipData: fl.LineTouchTooltipData(
                   getTooltipColor: (_) => isDark ? AppColors.blackLight : AppColors.white,
                   getTooltipItems: (touchedSpots) {
                     return touchedSpots.map((spot) {
-                      return LineTooltipItem(
-                        '$valuePrefix${spot.y.toInt()}',
+                      return fl.LineTooltipItem(
+                        '$valuePrefix${spot.y.toInt()}$valueSuffix',
                         AppTypography.bodySmall.copyWith(
                           color: isDark ? AppColors.white : AppColors.black,
                           fontWeight: FontWeight.bold,
@@ -202,18 +206,18 @@ class BrutalistLineChart extends StatelessWidget {
                   },
                 ),
               ),
-              gridData: FlGridData(
+              gridData: fl.FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) => FlLine(
+                getDrawingHorizontalLine: (value) => fl.FlLine(
                   color: borderColor.withValues(alpha: 0.1),
                   strokeWidth: 1,
                 ),
               ),
-              titlesData: FlTitlesData(
+              titlesData: fl.FlTitlesData(
                 show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
+                bottomTitles: fl.AxisTitles(
+                  sideTitles: fl.SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
@@ -229,8 +233,8 @@ class BrutalistLineChart extends StatelessWidget {
                     reservedSize: 28,
                   ),
                 ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
+                leftTitles: fl.AxisTitles(
+                  sideTitles: fl.SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       String text = value.toInt().toString();
@@ -243,27 +247,27 @@ class BrutalistLineChart extends StatelessWidget {
                     reservedSize: 32,
                   ),
                 ),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
+                rightTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
               ),
-              borderData: FlBorderData(show: false),
+              borderData: fl.FlBorderData(show: false),
               lineBarsData: [
-                LineChartBarData(
+                fl.LineChartBarData(
                   spots: points,
                   isCurved: true,
                   color: accentColor,
                   barWidth: 3,
                   isStrokeCapRound: true,
-                  dotData: FlDotData(
+                  dotData: fl.FlDotData(
                     show: true,
-                    getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                    getDotPainter: (spot, percent, barData, index) => fl.FlDotCirclePainter(
                       radius: 3,
                       color: accentColor,
                       strokeWidth: 1.5,
                       strokeColor: isDark ? AppColors.black : AppColors.white,
                     ),
                   ),
-                  belowBarData: BarAreaData(
+                  belowBarData: fl.BarAreaData(
                     show: true,
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,

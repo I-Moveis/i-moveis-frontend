@@ -1,13 +1,13 @@
-import 'package:auth0_flutter/auth0_flutter.dart';
+import 'package:auth0_flutter/auth0_flutter.dart' as auth0;
 
 import '../../../../core/constants.dart';
 import 'auth_session_model.dart';
 import 'auth_user_model.dart';
 
-/// Converts Auth0 [Credentials] to the app's [AuthSessionModel]. Roles are
+/// Converts Auth0 [auth0.Credentials] to the app's [AuthSessionModel]. Roles are
 /// read from the custom claim namespace defined in constants; absence means
 /// the default tenant role (no owner/admin privileges).
-AuthSessionModel sessionFromCredentials(Credentials credentials) {
+AuthSessionModel sessionFromCredentials(auth0.Credentials credentials) {
   final user = credentials.user;
   final (isOwner, isAdmin) = rolesFromClaims(user.customClaims);
 

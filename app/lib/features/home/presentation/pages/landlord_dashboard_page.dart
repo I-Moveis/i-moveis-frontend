@@ -1,4 +1,4 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -186,12 +186,12 @@ class _ChartsSection extends StatelessWidget {
                 labels: months,
                 valuePrefix: r'R$ ',
                 points: const [
-                  FlSpot(0, 4500),
-                  FlSpot(1, 8200),
-                  FlSpot(2, 7800),
-                  FlSpot(3, 12400),
-                  FlSpot(4, 15600),
-                  FlSpot(5, 18900),
+                  fl.FlSpot(0, 4500),
+                  fl.FlSpot(1, 8200),
+                  fl.FlSpot(2, 7800),
+                  fl.FlSpot(3, 12400),
+                  fl.FlSpot(4, 15600),
+                  fl.FlSpot(5, 18900),
                 ],
               ),
             ],

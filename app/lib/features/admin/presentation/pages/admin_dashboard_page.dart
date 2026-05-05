@@ -7,11 +7,17 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../listing/presentation/providers/my_properties_notifier.dart';
+<<<<<<< HEAD
 import '../providers/admin_metrics_notifier.dart';
 import '../providers/admin_shared_providers.dart';
 
 /// Admin dashboard with metrics, critical alerts and quick access menu.
 /// Uses [adminMetricsNotifierProvider] for main metrics.
+=======
+import '../providers/admin_shared_providers.dart';
+
+/// Admin dashboard with metrics, critical alerts and quick access menu.
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
 
@@ -42,12 +48,26 @@ class AdminDashboardPage extends ConsumerWidget {
         // occupancyRate calculated from local list if available, or just use visitCount as proxy if preferred.
         // Keeping the user's local logic for occupancyRate for now as requested ("modificações locais").
         final properties = ref.watch(myPropertiesNotifierProvider);
+<<<<<<< HEAD
         final propertyList = properties.value ?? const [];
+=======
+
+        final userCount = users.value?.length ?? 0;
+        final propertyList = properties.value ?? const [];
+        final propertyCount = propertyList.length;
+
+        // Taxa de ocupação calculada client-side a partir do status dos imóveis.
+        // O campo `type` do mock simula status — em produção usar Property.status.
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
         final rentedCount =
             propertyList.where((p) => p.type == 'RENTED').length;
         final occupancyRate = propertyCount > 0
             ? ((rentedCount / propertyCount) * 100).round()
+<<<<<<< HEAD
             : 42; 
+=======
+            : 42; // valor ilustrativo quando lista está vazia
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -95,6 +115,7 @@ class AdminDashboardPage extends ConsumerWidget {
                     // ── Métricas ─────────────────────────────────────
                     const AppSectionHeader(title: 'Métricas'),
                     const SizedBox(height: AppSpacing.md),
+<<<<<<< HEAD
                     
                     if (errorMessage != null)
                       Padding(
@@ -105,6 +126,8 @@ class AdminDashboardPage extends ConsumerWidget {
                               .copyWith(color: AppColors.error),
                         ),
                       ),
+=======
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 
                     Row(children: [
                       AppMetricCard(
@@ -122,6 +145,30 @@ class AdminDashboardPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.md),
 
                     Row(children: [
+<<<<<<< HEAD
+=======
+                      AppMetricCard(
+                        icon: Icons.donut_large_outlined,
+                        value: occupancyRate,
+                        label: 'Ocupação %',
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      // Novos anúncios: mockado — requer filtro por data no backend
+                      _MockMetricCard(
+                        icon: Icons.fiber_new_outlined,
+                        displayValue: '3',
+                        label: 'Novos (7d)',
+                        accentColor: accentColor,
+                        cardBg: cardBg,
+                        borderColor: borderColor,
+                        titleColor: titleColor,
+                        mutedColor: mutedColor,
+                      ),
+                    ]),
+                    const SizedBox(height: AppSpacing.md),
+
+                    const Row(children: [
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                       AppMetricCard(
                         icon: Icons.donut_large_outlined,
                         value: occupancyRate,
@@ -165,10 +212,16 @@ class AdminDashboardPage extends ConsumerWidget {
                       titleColor: titleColor,
                       mutedColor: mutedColor,
                       onModerationTap: () {
+<<<<<<< HEAD
                         // Using development's provider if available, otherwise fallback
                         try {
                           ref.read(adminModerationTabProvider.notifier).selectPending();
                         } catch (_) {}
+=======
+                        ref
+                            .read(adminModerationTabProvider.notifier)
+                            .selectPending();
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                         context.push('/admin/listings');
                       },
                       onReportsTap: () => context.push('/admin/reports'),

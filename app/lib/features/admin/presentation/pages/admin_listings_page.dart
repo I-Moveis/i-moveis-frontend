@@ -6,12 +6,19 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../search/domain/entities/property.dart';
 import '../providers/admin_shared_providers.dart';
+<<<<<<< HEAD
 import '../providers/moderation_queue_notifier.dart';
+=======
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 
 // Alias local para não poluir o escopo público
 typedef _ModerationTab = AdminModerationTab;
 
+<<<<<<< HEAD
 // ─── Mock pending properties (fila de moderação local/demo) ──────────────────────────────
+=======
+// ─── Mock pending properties (fila de moderação) ──────────────────────────────
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 
 final _mockPendingProperties = [
   const _PendingProperty(
@@ -82,17 +89,25 @@ class AdminListingsPage extends ConsumerWidget {
             isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
         final borderColor = BrutalistPalette.surfaceBorder(isDark);
 
+<<<<<<< HEAD
         final async = ref.watch(moderationQueueNotifierProvider);
         final notifier = ref.read(moderationQueueNotifierProvider.notifier);
         final currentStatus = notifier.status;
         
         // Tab selector local (da versão do usuário) adaptado para o provider da development
+=======
+        final async = ref.watch(myPropertiesNotifierProvider);
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
         final activeTab = ref.watch(adminModerationTabProvider);
 
         return Column(children: [
           const BrutalistAppBar(title: 'Moderação'),
 
+<<<<<<< HEAD
           // Tab selector logic from local, but mapped to development's provider status
+=======
+          // Tab selector
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.screenHorizontal, vertical: AppSpacing.md),
@@ -103,10 +118,15 @@ class AdminListingsPage extends ConsumerWidget {
                   onTap: () {
                     if (tab == _ModerationTab.all) {
                       ref.read(adminModerationTabProvider.notifier).selectAll();
+<<<<<<< HEAD
                       notifier.setStatus('APPROVED'); // Ou alguma lógica de "todos" se existir
                     } else {
                       ref.read(adminModerationTabProvider.notifier).selectPending();
                       notifier.setStatus('PENDING');
+=======
+                    } else {
+                      ref.read(adminModerationTabProvider.notifier).selectPending();
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                     }
                   },
                   child: AnimatedContainer(
@@ -158,10 +178,15 @@ class AdminListingsPage extends ConsumerWidget {
             }).toList()),
           ),
 
+<<<<<<< HEAD
           // Se estiver na aba "pendente", mostra a fila local/demo por cima ou junto
           // Mas vamos seguir a lógica da development de usar o provider real
           Expanded(
             child: activeTab == AdminModerationTab.pending && _mockPendingProperties.isNotEmpty && false // Desativado para priorizar real data, mas deixado estrutura
+=======
+          Expanded(
+            child: activeTab == AdminModerationTab.pending
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                 ? _PendingQueueList(isDark: isDark)
                 : async.when(
                     loading: () => const Center(
@@ -177,7 +202,13 @@ class AdminListingsPage extends ConsumerWidget {
                       ),
                     ),
                     data: (items) => RefreshIndicator(
+<<<<<<< HEAD
                       onRefresh: notifier.refresh,
+=======
+                      onRefresh: () => ref
+                          .read(myPropertiesNotifierProvider.notifier)
+                          .refresh(),
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                       child: ListView(
                         physics: const BouncingScrollPhysics(
                             parent: AlwaysScrollableScrollPhysics()),
@@ -186,19 +217,30 @@ class AdminListingsPage extends ConsumerWidget {
                           vertical: AppSpacing.lg,
                         ),
                         children: [
+<<<<<<< HEAD
                           if (items.isEmpty && activeTab != AdminModerationTab.pending)
+=======
+                          if (items.isEmpty)
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                             Padding(
                               padding: const EdgeInsets.all(AppSpacing.xl),
                               child: Center(
                                 child: Text(
+<<<<<<< HEAD
                                   'Nenhum imóvel ${_statusLabel(currentStatus).toLowerCase()}.',
+=======
+                                  'Nenhum imóvel a moderar.',
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                                   style: AppTypography.bodyMedium.copyWith(
                                       color: BrutalistPalette.muted(isDark)),
                                 ),
                               ),
                             )
+<<<<<<< HEAD
                           else if (items.isEmpty && activeTab == AdminModerationTab.pending)
                              _PendingQueueList(isDark: isDark) // Se a real estiver vazia, mostra a mock
+=======
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                           else
                             ...items.map((p) => Padding(
                                   padding: const EdgeInsets.only(
@@ -206,11 +248,18 @@ class AdminListingsPage extends ConsumerWidget {
                                   child: _ListingRow(
                                     property: p,
                                     isDark: isDark,
+<<<<<<< HEAD
                                     status: currentStatus,
                                     onApprove: () => _approve(context, ref, p.id),
                                     onReject: () => _reject(context, ref, p.id),
                                     onDelete: () =>
                                         _confirmDelete(context, ref, p.id),
+=======
+                                    onDelete: () =>
+                                        _confirmDelete(context, ref, p.id),
+                                    onReject: () =>
+                                        _showRejectModal(context, p.title, isDark),
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                                     onDetail: () =>
                                         _showDetailSheet(context, p, isDark),
                                   ),
@@ -338,17 +387,36 @@ class AdminListingsPage extends ConsumerWidget {
     );
     if (ok != true) return;
     try {
+<<<<<<< HEAD
       await ref
           .read(moderationQueueNotifierProvider.notifier)
           .deleteProperty(id);
       messenger.showSnackBar(
         const SnackBar(content: Text('Imóvel removido.')),
       );
+=======
+      await ref.read(myPropertiesNotifierProvider.notifier).delete(id);
+      messenger
+          .showSnackBar(const SnackBar(content: Text('Imóvel removido.')));
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
     } on Failure catch (f) {
       messenger.showSnackBar(SnackBar(content: Text(f.message)));
     }
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> _showRejectModal(
+      BuildContext context, String title, bool isDark) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RejectSheet(title: title, isDark: isDark),
+    );
+  }
+
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
   Future<void> _showDetailSheet(
       BuildContext context, Property p, bool isDark) async {
     await showModalBottomSheet<void>(
@@ -360,6 +428,7 @@ class AdminListingsPage extends ConsumerWidget {
   }
 }
 
+<<<<<<< HEAD
 String _statusLabel(String status) {
   switch (status) {
     case 'APPROVED':
@@ -373,6 +442,9 @@ String _statusLabel(String status) {
 }
 
 // ─── Existing listing row (usuário) ─────────────────────────────────────────────────────
+=======
+// ─── Existing listing row ─────────────────────────────────────────────────────
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 
 class _ListingRow extends StatelessWidget {
   const _ListingRow({
@@ -382,6 +454,10 @@ class _ListingRow extends StatelessWidget {
     required this.onApprove,
     required this.onReject,
     required this.onDelete,
+<<<<<<< HEAD
+=======
+    required this.onReject,
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
     required this.onDetail,
   });
 
@@ -391,6 +467,10 @@ class _ListingRow extends StatelessWidget {
   final VoidCallback onApprove;
   final VoidCallback onReject;
   final VoidCallback onDelete;
+<<<<<<< HEAD
+=======
+  final VoidCallback onReject;
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
   final VoidCallback onDetail;
 
   @override
@@ -400,9 +480,12 @@ class _ListingRow extends StatelessWidget {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
 
+<<<<<<< HEAD
     final showApprove = status != 'APPROVED';
     final showReject = status != 'REJECTED';
 
+=======
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
     return GestureDetector(
       onTap: onDetail,
       child: Container(
@@ -468,6 +551,7 @@ class _ListingRow extends StatelessWidget {
               ],
             ),
           ),
+<<<<<<< HEAD
           // Actions
           if (showApprove)
             Tooltip(
@@ -489,6 +573,18 @@ class _ListingRow extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
             ),
+=======
+          // Reject button
+          Tooltip(
+            message: 'Reprovar',
+            child: IconButton(
+              icon: const Icon(Icons.thumb_down_outlined,
+                  color: AppColors.warning),
+              onPressed: onReject,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
           // Delete button
           IconButton(
             tooltip: 'Remover',
@@ -729,7 +825,10 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
             ],
 
             // ── Ações ─────────────────────────────────────────────
+<<<<<<< HEAD
             // Adaptado para usar as funções da classe principal
+=======
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
             Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.xl),
@@ -738,8 +837,12 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
                   child: GestureDetector(
                     onTap: () {
                       Navigator.of(context).pop();
+<<<<<<< HEAD
                       // Nota: Esta sheet não tem acesso direto ao ref do widget pai facilmente sem passar
                       // Mas podemos usar um callback ou apenas fechar e deixar o usuário agir na lista
+=======
+                      _showRejectSheetStatic(context, p.title, isDark);
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                     },
                     child: Container(
                       padding:
@@ -751,12 +854,50 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
                             color: AppColors.warning.withValues(alpha: 0.3)),
                       ),
                       alignment: Alignment.center,
+<<<<<<< HEAD
                       child: Text('Fechar',
+=======
+                      child: Text('Reprovar',
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
                           style: AppTypography.titleSmallBold
                               .copyWith(color: AppColors.warning)),
                     ),
                   ),
                 ),
+<<<<<<< HEAD
+=======
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Tooltip(
+                    message: 'Aprovação disponível quando backend suportar',
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.08),
+                        borderRadius: AppRadius.borderFull,
+                        border: Border.all(
+                            color: AppColors.success.withValues(alpha: 0.2)),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Aprovar',
+                              style: AppTypography.titleSmallBold.copyWith(
+                                  color: AppColors.success
+                                      .withValues(alpha: 0.4))),
+                          const SizedBox(width: 4),
+                          Icon(Icons.lock_outline,
+                              size: 12,
+                              color: AppColors.success
+                                  .withValues(alpha: 0.4)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
               ]),
             ),
             const SizedBox(height: AppSpacing.massive),
@@ -765,6 +906,19 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
       ),
     );
   }
+<<<<<<< HEAD
+=======
+
+  void _showRejectSheetStatic(
+      BuildContext context, String title, bool isDark) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RejectSheet(title: title, isDark: isDark),
+    );
+  }
+>>>>>>> 963fdfd3a117512c12d6c6a9d6d6dd8bcd4fa458
 }
 
 // ─── Fila de aprovação (mockada) ──────────────────────────────────────────────

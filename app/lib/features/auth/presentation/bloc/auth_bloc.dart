@@ -35,8 +35,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutRequested>(_onLogoutRequested);
     on<SocialLoginRequested>(_onSocialLoginRequested);
     on<CheckSessionRequested>(_onCheckSessionRequested);
-    on<DemoLoginRequested>(_onDemoLoginRequested);
     on<SessionRefreshRequested>(_onSessionRefreshRequested);
+    on<DemoLoginRequested>(_onDemoLoginRequested);
   }
 
   final LoginUseCase _login;
@@ -117,6 +117,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  /// Re-lê a sessão do storage (após um PATCH `/users/me` ter regravado o
+  /// perfil). Só troca o state se ainda houver sessão ativa — se o usuário
+  /// não estiver autenticado, mantém o state atual.
+  /// Re-lê a sessão do storage (após um PATCH `/users/me` ter regravado o
+  /// perfil). Só troca o state se ainda houver sessão ativa — se o usuário
+  /// não estiver autenticado, mantém o state atual.
+  Future<void> _onSessionRefreshRequested(
+    SessionRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _getCurrentSession.execute();
+    result.fold(
+      (_) {},
+      (session) {
+        if (session != null) {
+          emit(AuthState.authenticated(user: session.user));
+        }
+      },
+    );
+  }
+
   /// Shortcut for the three dev-only login buttons on the login screen.
   /// Bypasses the network and produces a fake authenticated session so that
   /// QA/devs can switch between client/owner/admin flows without a backend.
@@ -129,21 +150,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthState.error(message: failure.message)),
       (session) => emit(AuthState.authenticated(user: session.user)),
-    );
-  }
-
-  Future<void> _onSessionRefreshRequested(
-    SessionRefreshRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    final result = await _getCurrentSession.execute();
-    result.fold(
-      (_) => null, // Ignore failures during background refresh
-      (session) {
-        if (session != null) {
-          emit(AuthState.authenticated(user: session.user));
-        }
-      },
     );
   }
 }

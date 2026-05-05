@@ -685,13 +685,17 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  //  PLACEHOLDERS / STATES
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildImagePlaceholder(bool isDark, Color? bgColor) {
-    return Container(
-      color: bgColor ?? BrutalistPalette.imagePlaceholderBg(isDark),
+    final color = bgColor ?? BrutalistPalette.imagePlaceholderBg(isDark);
+    return ColoredBox(
+      color: color,
       child: Center(
         child: Icon(
           Icons.home_rounded,
-          size: 24,
+          size: 40,
           color: (isDark ? Colors.white : BrutalistPalette.warmBrown)
               .withValues(alpha: 0.12),
         ),
@@ -699,46 +703,130 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  Widget _buildEmptyRow(bool isDark, String message) {
-    return Center(
-      child: Text(
-        message,
-        style: AppTypography.bodyMedium.copyWith(
-          color: BrutalistPalette.muted(isDark),
-        ),
+  Widget _buildFeaturedSkeleton(bool isDark) {
+    final skeletonColor = BrutalistPalette.imagePlaceholderBg(isDark);
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenHorizontal,
       ),
-    );
-  }
-
-  Widget _buildEmptyBox(bool isDark, String message) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: BrutalistPalette.surfaceBg(isDark),
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-      ),
-      child: Center(
-        child: Text(
-          message,
-          style: AppTypography.bodyMedium.copyWith(
-            color: BrutalistPalette.muted(isDark),
+      itemCount: 3,
+      itemBuilder: (_, _) => Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        child: Container(
+          width: 240,
+          decoration: BoxDecoration(
+            color: skeletonColor,
+            borderRadius: AppRadius.borderXl,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildErrorRow(bool isDark, {required VoidCallback onRetry}) {
-    return Center(
-      child: IconButton(
-        onPressed: onRetry,
-        icon: const Icon(Icons.refresh_rounded),
+  Widget _buildNearbySkeleton(bool isDark) {
+    final skeletonColor = BrutalistPalette.imagePlaceholderBg(isDark);
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenHorizontal,
+      ),
+      itemCount: 3,
+      itemBuilder: (_, _) => Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.md),
+        child: Container(
+          width: 180,
+          decoration: BoxDecoration(
+            color: skeletonColor,
+            borderRadius: AppRadius.borderLg,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildFeaturedSkeleton(bool isDark) => const Center(child: CircularProgressIndicator());
-  Widget _buildNearbySkeleton(bool isDark) => const Center(child: CircularProgressIndicator());
-  Widget _buildTrendingSkeleton(bool isDark) => const Center(child: CircularProgressIndicator());
+  Widget _buildTrendingSkeleton(bool isDark) {
+    final skeletonColor = BrutalistPalette.imagePlaceholderBg(isDark);
+    return Column(
+      children: List.generate(3, (i) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: i < 2 ? AppSpacing.md : 0),
+          child: Container(
+            height: 88,
+            decoration: BoxDecoration(
+              color: skeletonColor,
+              borderRadius: AppRadius.borderLg,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildEmptyRow(bool isDark, String message) {
+    final mutedColor =
+        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenHorizontal,
+      ),
+      child: Center(
+        child: Text(
+          message,
+          style: AppTypography.bodySmall.copyWith(color: mutedColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyBox(bool isDark, String message) {
+    final mutedColor =
+        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      alignment: Alignment.center,
+      child: Text(
+        message,
+        style: AppTypography.bodySmall.copyWith(color: mutedColor),
+      ),
+    );
+  }
+
+  Widget _buildErrorRow(bool isDark, {required VoidCallback onRetry}) {
+    final mutedColor =
+        isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
+    final accentColor = BrutalistPalette.accentOrange(isDark);
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenHorizontal,
+      ),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 16,
+              color: mutedColor,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Falha ao carregar.',
+              style: AppTypography.bodySmall.copyWith(color: mutedColor),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            GestureDetector(
+              onTap: onRetry,
+              child: Text(
+                'TENTAR DE NOVO',
+                style: AppTypography.labelSmall.copyWith(color: accentColor),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -30,8 +30,8 @@ class AuthRepositoryImpl implements IAuthRepository {
   final Dio _dio;
   final FcmService? _fcm;
 
-  /// After Auth0 login/register/social succeeds, swap the cached Auth0 `sub`
-  /// for the backend UUID by calling `/users/me`. No-op on mock builds
+  /// After Firebase login/register/social succeeds, swap the cached Firebase
+  /// `uid` for the backend UUID by calling `/users/me`. No-op on mock builds
   /// since the mock userId is already the authoritative one.
   Future<void> _syncBackendIdentity() async {
     if (kUseMockAuth) return;
@@ -100,6 +100,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       final model = await _remote.socialLogin(provider);
       await _local.saveSession(model);
       await _syncBackendIdentity();
+      await _registerFcmToken();
       return Right(model.toEntity());
     } on DioException catch (e) {
       return Left(_mapDioException(e));

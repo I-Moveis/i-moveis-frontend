@@ -23,9 +23,11 @@ class AuthEvent with _$AuthEvent {
 
   const factory AuthEvent.checkSessionRequested() = CheckSessionRequested;
 
+  /// Re-puxa a sessão atual do storage local após `/users/me` ter sido
+  /// regravado. Usado pela tela de Editar Perfil depois do PATCH.
+  const factory AuthEvent.sessionRefreshRequested() = SessionRefreshRequested;
+
   const factory AuthEvent.demoLoginRequested({
     required DemoRole role,
   }) = DemoLoginRequested;
-
-  const factory AuthEvent.sessionRefreshRequested() = SessionRefreshRequested;
 }

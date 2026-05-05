@@ -34,6 +34,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     final incoming = widget.initialFilters;
     if (incoming != null) {
+      // Aplica depois do primeiro frame para garantir que os providers já
+      // foram construídos — `build()` do Notifier roda antes do `initState`
+      // do widget que o consome, mas mutar state aqui mesmo ainda dispararia
+      // rebuild durante o próprio initState.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(searchFiltersProvider.notifier).applyAll(incoming);

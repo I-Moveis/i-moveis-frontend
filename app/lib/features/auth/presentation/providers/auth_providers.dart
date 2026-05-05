@@ -34,6 +34,7 @@ final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
     );
   }
 
+
   return FirebaseAuthRemoteDataSource(
     firebaseAuth: ref.watch(firebaseAuthProvider),
     dio: ref.watch(dioProvider),

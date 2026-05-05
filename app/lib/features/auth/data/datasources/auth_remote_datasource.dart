@@ -6,11 +6,8 @@ import '../models/auth_user_model.dart';
 ///
 /// Two implementations live alongside this interface:
 /// - `MockAuthRemoteDataSourceImpl` — in-memory session for dev/test.
-/// - `Auth0AuthRemoteDataSource` — Auth0 Universal Login via auth0_flutter.
-///
-/// The REST-backed impl that used to live here was removed: the backend
-/// fronts Auth0 directly (JWT RS256), there's no custom `/auth/login`
-/// endpoint to talk to.
+/// - `FirebaseAuthRemoteDataSource` — Firebase Authentication (email/password
+///   + Google) plus a backend upsert to `/users` for the domain record.
 abstract class AuthRemoteDataSource {
   Future<AuthSessionModel> login({
     required String email,

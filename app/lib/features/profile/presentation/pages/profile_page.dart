@@ -90,12 +90,12 @@ class ProfilePage extends ConsumerWidget {
               // Im├│veis ÔÇö s├│ para propriet├írios (LANDLORD).
               if (isOwner) ...[
                 const SizedBox(height: AppSpacing.xxl),
-                const AppSectionHeader(title: 'Im├│veis'),
+                const AppSectionHeader(title: 'Imóveis'),
                 const SizedBox(height: AppSpacing.md),
                 AppMenuGroup(items: [
-                  AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus im├│veis', onTap: () => context.go('/profile/my-properties')),
-                  AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar im├│vel', onTap: () => context.go('/profile/my-properties/create')),
-                  AppMenuGroupItem(icon: Icons.event_note_outlined, label: 'Visitas nos meus im├│veis', onTap: () => context.go('/profile/landlord-visits')),
+                  AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus imóveis', onTap: () => context.go('/profile/my-properties')),
+                  AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar imóvel', onTap: () => context.go('/profile/my-properties/create')),
+                  AppMenuGroupItem(icon: Icons.event_note_outlined, label: 'Visitas nos meus imóveis', onTap: () => context.go('/profile/landlord-visits')),
                 ]),
               ],
 

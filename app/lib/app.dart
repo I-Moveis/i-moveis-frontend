@@ -40,7 +40,7 @@ class MyApp extends ConsumerWidget {
       });
 
     return MaterialApp.router(
-      title: 'i-M├│veis',
+      title: 'i-Móveis',
       theme: AppTheme.light.copyWith(
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,

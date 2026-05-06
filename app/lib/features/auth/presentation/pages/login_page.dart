@@ -314,7 +314,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // LOGIN',
+                    'LOGIN',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -820,7 +820,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
             animation: _pulseController,
             builder: (context, _) {
               return Text(
-                'v1.0.0 // DATA-SYSTEM',
+                'v1.0.0',
                 style: AppTypography.monoSmallWide.copyWith(
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,

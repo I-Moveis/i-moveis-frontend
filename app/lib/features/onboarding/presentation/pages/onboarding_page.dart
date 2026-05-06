@@ -37,15 +37,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
       index: '01',
       titleTop: 'ENCONTRE',
       titleBottom: 'SEU LAR',
-      marker: 'DATA-SYSTEM // DISCOVER',
-      description: 'Milhares de im├│veis verificados\nesperando por voc├¬',
+      marker: 'DESCOBRIR',
+      description: 'Milhares de imóveis verificados\nesperando por você',
       lottieAsset: 'assets/animations/discover.json',
     ),
     _SlideData(
       index: '02',
       titleTop: 'AGENDE',
       titleBottom: 'VISITAS',
-      marker: 'DATA-SYSTEM // SCHEDULE',
+      marker: 'AGENDAMENTO',
       description: 'Sem telefonemas, sem espera.\nTudo pelo app',
       lottieAsset: 'assets/animations/schedule.json',
     ),
@@ -53,7 +53,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
       index: '03',
       titleTop: 'ALUGUE',
       titleBottom: 'DIGITAL',
-      marker: 'DATA-SYSTEM // CONTRACT',
+      marker: 'CONTRATO',
       description: 'Sem fiador.\nContrato 100% digital',
       lottieAsset: 'assets/animations/contract.json',
     ),
@@ -200,28 +200,31 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
         ),
         child: Align(
           alignment: Alignment.centerRight,
-          child: GestureDetector(
-            onTap: () async {
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () async {
                 await ref.read(onboardingProvider.notifier).complete();
                 if (mounted) context.go('/login');
               },
-            child: AnimatedContainer(
-              duration: AppDurations.normal,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: BrutalistPalette.glassBg(isDark),
-                borderRadius: AppRadius.borderSm,
-                border: Border.all(
-                  color: BrutalistPalette.glassBorderColor(isDark),
+              child: AnimatedContainer(
+                duration: AppDurations.normal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
                 ),
-              ),
-              child: Text(
-                'PULAR',
-                style: AppTypography.labelSmall.copyWith(
-                  color: BrutalistPalette.muted(isDark),
+                decoration: BoxDecoration(
+                  color: BrutalistPalette.glassBg(isDark),
+                  borderRadius: AppRadius.borderSm,
+                  border: Border.all(
+                    color: BrutalistPalette.glassBorderColor(isDark),
+                  ),
+                ),
+                child: Text(
+                  'PULAR',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: BrutalistPalette.muted(isDark),
+                  ),
                 ),
               ),
             ),
@@ -367,7 +370,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
               animation: _pulseController,
               builder: (context, _) {
                 return Text(
-                  'v1.0.0 // DATA-SYSTEM',
+                  'v1.0.0',
                   style: AppTypography.monoSmallWide.copyWith(
                     color: mutedColor.withValues(
                       alpha: 0.3 + _pulseController.value * 0.15,
@@ -416,7 +419,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
   // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildActionButton(bool isDark) {
     final isLastPage = _currentPage == _slides.length - 1;
-    final buttonLabel = isLastPage ? 'COME├çAR' : 'PR├ôXIMO';
+    final buttonLabel = isLastPage ? 'COMEÇAR' : 'PRÓXIMO';
 
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -440,52 +443,54 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage>
             ? BrutalistPalette.warmOrange.withValues(alpha: 0.2)
             : BrutalistPalette.deepOrange.withValues(alpha: 0.15);
 
-        return GestureDetector(
-          onTap: _goToNext,
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-                stops: [
-                  0.0,
-                  (0.5 + sin(shimmerValue * 2 * pi) * 0.2)
-                      .clamp(0.0, 1.0),
-                  1.0,
-                ],
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: _goToNext,
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                  stops: [
+                    0.0,
+                    (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                borderRadius: AppRadius.borderSm,
+                boxShadow: AppShadows.buttonGlow(glowColor),
               ),
-              borderRadius: AppRadius.borderSm,
-              boxShadow: AppShadows.buttonGlow(glowColor),
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.borderSm,
-              child: Material(
-                color: Colors.transparent,
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: AppDurations.normal,
-                        child: Text(
-                          buttonLabel,
-                          key: ValueKey(buttonLabel),
-                          style: AppTypography.buttonLabel.copyWith(
-                            color: buttonTextColor,
+              child: ClipRRect(
+                borderRadius: AppRadius.borderSm,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedSwitcher(
+                          duration: AppDurations.normal,
+                          child: Text(
+                            buttonLabel,
+                            key: ValueKey(buttonLabel),
+                            style: AppTypography.buttonLabel.copyWith(
+                              color: buttonTextColor,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                        color: buttonTextColor.withValues(alpha: 0.7),
-                      ),
-                    ],
+                        const SizedBox(width: AppSpacing.sm),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                          color: buttonTextColor.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

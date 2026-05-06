@@ -196,7 +196,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Senhas n├úo correspondem')),
+        const SnackBar(content: Text('Senhas não correspondem')),
       );
       return;
     }
@@ -312,37 +312,40 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
       opacity: _headerFade.value,
       child: Align(
         alignment: Alignment.centerLeft,
-        child: GestureDetector(
-          onTap: () => context.pop(),
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: BrutalistPalette.glassBg(isDark),
-              borderRadius: AppRadius.borderSm,
-              border: Border.all(
-                color: BrutalistPalette.glassBorderColor(isDark),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => context.pop(),
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_back_rounded,
-                  size: 16,
-                  color: BrutalistPalette.muted(isDark),
+              decoration: BoxDecoration(
+                color: BrutalistPalette.glassBg(isDark),
+                borderRadius: AppRadius.borderSm,
+                border: Border.all(
+                  color: BrutalistPalette.glassBorderColor(isDark),
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'VOLTAR',
-                  style: AppTypography.labelSmall.copyWith(
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_back_rounded,
+                    size: 16,
                     color: BrutalistPalette.muted(isDark),
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'VOLTAR',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: BrutalistPalette.muted(isDark),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -413,7 +416,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // REGISTRO',
+                    'REGISTRO',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -733,7 +736,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Ative para anunciar im├│veis',
+                  'Ative para anunciar imóveis',
                   style: AppTypography.bodySmall.copyWith(
                     color: BrutalistPalette.muted(isDark),
                   ),
@@ -768,40 +771,43 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
   Widget _buildTermsCheckbox(bool isDark) {
     final accentColor = BrutalistPalette.accentPeach(isDark);
 
-    return GestureDetector(
-      onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
-      child: Row(
-        children: [
-          AnimatedContainer(
-            duration: AppDurations.normal,
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: _acceptedTerms
-                  ? accentColor.withValues(alpha: 0.2)
-                  : Colors.transparent,
-              borderRadius: AppRadius.borderXs,
-              border: Border.all(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: AppDurations.normal,
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
                 color: _acceptedTerms
-                    ? accentColor
-                    : (isDark
-                        ? AppColors.blackLightest
-                        : AppColors.lightBorder),
-                width: 1.5,
+                    ? accentColor.withValues(alpha: 0.2)
+                    : Colors.transparent,
+                borderRadius: AppRadius.borderXs,
+                border: Border.all(
+                  color: _acceptedTerms
+                      ? accentColor
+                      : (isDark
+                          ? AppColors.blackLightest
+                          : AppColors.lightBorder),
+                  width: 1.5,
+                ),
+              ),
+              child: _acceptedTerms
+                  ? Icon(Icons.check_rounded, size: 14, color: accentColor)
+                  : null,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              'ACEITO OS TERMOS DE USO',
+              style: AppTypography.labelSmall.copyWith(
+                color: BrutalistPalette.muted(isDark),
               ),
             ),
-            child: _acceptedTerms
-                ? Icon(Icons.check_rounded, size: 14, color: accentColor)
-                : null,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Text(
-            'ACEITO OS TERMOS DE USO',
-            style: AppTypography.labelSmall.copyWith(
-              color: BrutalistPalette.muted(isDark),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -832,57 +838,59 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
         final glowColor = BrutalistPalette.accentOrange(isDark)
             .withValues(alpha: isDark ? 0.2 : 0.15);
 
-        return GestureDetector(
-          onTap: _isLoading ? null : _handleRegister,
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-                stops: [
-                  0.0,
-                  (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
-                  1.0,
-                ],
+        return MouseRegion(
+          cursor: _isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: _isLoading ? null : _handleRegister,
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                  stops: [
+                    0.0,
+                    (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                borderRadius: AppRadius.borderSm,
+                boxShadow: AppShadows.buttonGlow(glowColor),
               ),
-              borderRadius: AppRadius.borderSm,
-              boxShadow: AppShadows.buttonGlow(glowColor),
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.borderSm,
-              child: Material(
-                color: Colors.transparent,
-                child: Center(
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: loadingColor,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'CRIAR CONTA',
-                              style: AppTypography.buttonLabel.copyWith(
-                                color: buttonTextColor,
+              child: ClipRRect(
+                borderRadius: AppRadius.borderSm,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: loadingColor,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'CRIAR CONTA',
+                                style: AppTypography.buttonLabel.copyWith(
+                                  color: buttonTextColor,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color:
-                                  buttonTextColor.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: buttonTextColor.withValues(alpha: 0.7),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -907,18 +915,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'J├ü TEM CONTA?',
+                'JÁ TEM CONTA?',
                 style: AppTypography.labelSmall.copyWith(
                   color: mutedColor,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Text(
-                  'ENTRAR',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: accentColor,
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => context.pop(),
+                  child: Text(
+                    'ENTRAR',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: accentColor,
+                    ),
                   ),
                 ),
               ),
@@ -929,7 +940,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
             animation: _pulseController,
             builder: (context, _) {
               return Text(
-                'v1.0.0 // DATA-SYSTEM',
+                'v1.0.0',
                 style: AppTypography.monoSmall.copyWith(
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,

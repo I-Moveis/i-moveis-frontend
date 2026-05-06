@@ -263,26 +263,16 @@ class _LoginPageState extends ConsumerState<LoginPage>
         scale: _logoScale.value,
         child: Column(
           children: [
-            // System index number
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final glow = _pulseController.value;
-                return Text(
-                  '01',
-                  style: AppTypography.monoHero.copyWith(
-                    color: isDark
-                        ? BrutalistPalette.warmYellow.withValues(alpha: 0.15 + glow * 0.08)
-                        : BrutalistPalette.deepAmber.withValues(alpha: 0.10 + glow * 0.06),
-                  ),
-                );
-              },
+            Image.asset(
+              'assets/images/logo.png',
+              width: 80,
+              height: 80,
             ),
 
             const SizedBox(height: AppSpacing.xs),
 
             RevealText(
-              text: 'i-m├│veis',
+              text: 'i-móveis',
               style: AppTypography.displayBrand.copyWith(
                 color: titleColor,
               ),
@@ -315,7 +305,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // LOGIN',
+                    'LOGIN',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -399,13 +389,16 @@ class _LoginPageState extends ConsumerState<LoginPage>
               child: FadeSlideIn(
                 delay: const Duration(milliseconds: 1600),
                 offsetDistance: 10,
-                child: GestureDetector(
-                  onTap: () => context.push('/forgot-password'),
-                  child: Text(
-                    'ESQUECI MINHA SENHA',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: BrutalistPalette.accentPeach(isDark).withValues(
-                          alpha: isDark ? 0.7 : 0.8),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => context.push('/forgot-password'),
+                    child: Text(
+                      'ESQUECI MINHA SENHA',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: BrutalistPalette.accentPeach(isDark).withValues(
+                            alpha: isDark ? 0.7 : 0.8),
+                      ),
                     ),
                   ),
                 ),
@@ -618,57 +611,59 @@ class _LoginPageState extends ConsumerState<LoginPage>
         final glowColor = BrutalistPalette.accentOrange(isDark)
             .withValues(alpha: isDark ? 0.2 : 0.15);
 
-        return GestureDetector(
-          onTap: _isLoading ? null : _handleLogin,
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-                stops: [
-                  0.0,
-                  (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
-                  1.0,
-                ],
+        return MouseRegion(
+          cursor: _isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: _isLoading ? null : _handleLogin,
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                  stops: [
+                    0.0,
+                    (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                borderRadius: AppRadius.borderSm,
+                boxShadow: AppShadows.buttonGlow(glowColor),
               ),
-              borderRadius: AppRadius.borderSm,
-              boxShadow: AppShadows.buttonGlow(glowColor),
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.borderSm,
-              child: Material(
-                color: Colors.transparent,
-                child: Center(
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: loadingColor,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'ENTRAR',
-                              style: AppTypography.buttonLabel.copyWith(
-                                color: buttonTextColor,
+              child: ClipRRect(
+                borderRadius: AppRadius.borderSm,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: loadingColor,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'ENTRAR',
+                                style: AppTypography.buttonLabel.copyWith(
+                                  color: buttonTextColor,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color:
-                                  buttonTextColor.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: buttonTextColor.withValues(alpha: 0.7),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -797,18 +792,21 @@ class _LoginPageState extends ConsumerState<LoginPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'N├âO TEM CONTA?',
+                'NÃO TEM CONTA?',
                 style: AppTypography.labelSmall.copyWith(
                   color: mutedColor,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () => context.push('/register'),
-                child: Text(
-                  'CRIAR CONTA',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: accentColor,
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => context.push('/register'),
+                  child: Text(
+                    'CRIAR CONTA',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: accentColor,
+                    ),
                   ),
                 ),
               ),
@@ -821,7 +819,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
             animation: _pulseController,
             builder: (context, _) {
               return Text(
-                'v1.0.0 // DATA-SYSTEM',
+                'v1.0.0',
                 style: AppTypography.monoSmallWide.copyWith(
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,

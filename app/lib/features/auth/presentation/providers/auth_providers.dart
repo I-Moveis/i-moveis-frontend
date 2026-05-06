@@ -8,10 +8,8 @@ import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/services/fcm_service_provider.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
-import '../../data/datasources/auth0_auth_remote_datasource.dart';
 import '../../data/datasources/firebase_auth_remote_datasource.dart';
 import '../../data/datasources/mock_auth_remote_datasource.dart';
-import 'package:auth0_flutter/auth0_flutter.dart' as auth0;
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../../domain/usecases/demo_login_usecase.dart';
@@ -28,15 +26,14 @@ final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
   if (kUseMockAuth) {
     return MockAuthRemoteDataSourceImpl();
   }
-  if (kAuth0Configured) {
-    return Auth0AuthRemoteDataSource(
-      auth0.Auth0(kAuth0Domain, kAuth0ClientId),
-    );
+
+  final firebaseAuth = ref.watch(firebaseAuthProvider);
+  if (firebaseAuth == null) {
+    return MockAuthRemoteDataSourceImpl();
   }
 
-
   return FirebaseAuthRemoteDataSource(
-    firebaseAuth: ref.watch(firebaseAuthProvider),
+    firebaseAuth: firebaseAuth,
     dio: ref.watch(dioProvider),
   );
 });

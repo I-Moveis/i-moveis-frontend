@@ -233,7 +233,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // INITIALIZING',
+                    'INICIALIZANDO',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -310,7 +310,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
         animation: _pulseController,
         builder: (context, _) {
           return Text(
-            'v1.0.0 // LOADING SYSTEM',
+            'v1.0.0',
             style: AppTypography.monoSmallWide.copyWith(
               color: mutedColor.withValues(
                 alpha: 0.3 + _pulseController.value * 0.15,

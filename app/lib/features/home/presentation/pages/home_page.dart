@@ -515,7 +515,7 @@ class _HomePageState extends ConsumerState<HomePage>
               if (items.isEmpty) {
                 return _buildEmptyRow(
                   isDark,
-                  'Nenhum im├│vel dispon├¡vel agora.',
+                  'Nenhum imóvel disponível agora.',
                 );
               }
               return ListView.builder(

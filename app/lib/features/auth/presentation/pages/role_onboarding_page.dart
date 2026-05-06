@@ -229,7 +229,7 @@ class _RoleOnboardingPageState extends ConsumerState<RoleOnboardingPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // PERFIL',
+                    'PERFIL',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -348,9 +348,11 @@ class _RoleOnboardingPageState extends ConsumerState<RoleOnboardingPage>
 
         return Opacity(
           opacity: isDisabled ? 0.4 : 1,
-          child: GestureDetector(
-            onTap: () => _selectRole(role),
-            child: AnimatedContainer(
+          child: MouseRegion(
+            cursor: isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => _selectRole(role),
+              child: AnimatedContainer(
               duration: AppDurations.normal,
               padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
@@ -425,6 +427,7 @@ class _RoleOnboardingPageState extends ConsumerState<RoleOnboardingPage>
               ),
             ),
           ),
+        ),
         );
       },
     );

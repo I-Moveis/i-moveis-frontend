@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../listing/presentation/pages/my_properties_page.dart';
 
 /// Favorites tab — cozy empty state for tenants, or My Properties for landlords.
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends ConsumerWidget {
   const FavoritesPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isOwner = state.maybeWhen(
-          authenticated: (user) => user.isOwner,
-          orElse: () => false,
-        );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOwner = ref.watch(authNotifierProvider).maybeWhen(
+      authenticated: (user) => user.isOwner,
+      orElse: () => false,
+    );
 
         if (isOwner) {
           // When used as a tab, we don't want a back button
@@ -61,7 +60,5 @@ class FavoritesPage extends StatelessWidget {
             );
           },
         );
-      },
-    );
   }
 }

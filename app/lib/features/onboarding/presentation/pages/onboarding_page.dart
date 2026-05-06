@@ -1,25 +1,25 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../design_system/design_system.dart';
-import '../cubit/onboarding_cubit.dart';
+import '../providers/onboarding_provider.dart';
 
-/// Onboarding — Brutalist Elegance x Japanese Creative Web
+/// Onboarding ÔÇö Brutalist Elegance x Japanese Creative Web
 ///
 /// 3 immersive slides with WaveBackground sunset, pulsing index
 /// numbers, RevealText titles, section markers, glass skip button,
 /// custom pill indicators, gradient shimmer CTA button.
-class OnboardingPage extends StatefulWidget {
+class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
 
   @override
-  State<OnboardingPage> createState() => _OnboardingPageState();
+  ConsumerState<OnboardingPage> createState() => _OnboardingPageState();
 }
 
-class _OnboardingPageState extends State<OnboardingPage>
+class _OnboardingPageState extends ConsumerState<OnboardingPage>
     with TickerProviderStateMixin {
   final _pageController = PageController();
   int _currentPage = 0;
@@ -38,7 +38,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       titleTop: 'ENCONTRE',
       titleBottom: 'SEU LAR',
       marker: 'DATA-SYSTEM // DISCOVER',
-      description: 'Milhares de imóveis verificados\nesperando por você',
+      description: 'Milhares de im├│veis verificados\nesperando por voc├¬',
       lottieAsset: 'assets/animations/discover.json',
     ),
     _SlideData(
@@ -129,7 +129,7 @@ class _OnboardingPageState extends State<OnboardingPage>
         curve: Curves.easeOutCubic,
       ));
     } else {
-      await context.read<OnboardingCubit>().complete();
+      await ref.read(onboardingProvider.notifier).complete();
       if (mounted) context.go('/login');
     }
   }
@@ -188,9 +188,9 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  SKIP BUTTON — glass style
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  SKIP BUTTON ÔÇö glass style
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildSkipButton(bool isDark) {
     return Opacity(
       opacity: _headerFade.value,
@@ -202,7 +202,7 @@ class _OnboardingPageState extends State<OnboardingPage>
           alignment: Alignment.centerRight,
           child: GestureDetector(
             onTap: () async {
-                await context.read<OnboardingCubit>().complete();
+                await ref.read(onboardingProvider.notifier).complete();
                 if (mounted) context.go('/login');
               },
             child: AnimatedContainer(
@@ -231,9 +231,9 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  SLIDE — index + titles + marker + description
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  SLIDE ÔÇö index + titles + marker + description
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildSlide(_SlideData slide, bool isDark) {
     final accentPeach = BrutalistPalette.accentPeach(isDark);
     final accentAmber = BrutalistPalette.accentAmber(isDark);
@@ -340,9 +340,9 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  BOTTOM SECTION — indicators + button + footer
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  BOTTOM SECTION ÔÇö indicators + button + footer
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildBottomSection(bool isDark) {
     final mutedColor = BrutalistPalette.faint(isDark);
 
@@ -383,9 +383,9 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  PAGE INDICATORS — pill active, dot inactive
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  PAGE INDICATORS ÔÇö pill active, dot inactive
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildIndicators(bool isDark) {
     final activeColor = BrutalistPalette.accentAmber(isDark);
     final inactiveColor = BrutalistPalette.faint(isDark).withValues(alpha: 0.3);
@@ -411,12 +411,12 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  ACTION BUTTON — gradient shimmer
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  ACTION BUTTON ÔÇö gradient shimmer
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildActionButton(bool isDark) {
     final isLastPage = _currentPage == _slides.length - 1;
-    final buttonLabel = isLastPage ? 'COMEÇAR' : 'PRÓXIMO';
+    final buttonLabel = isLastPage ? 'COME├çAR' : 'PR├ôXIMO';
 
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -497,9 +497,9 @@ class _OnboardingPageState extends State<OnboardingPage>
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
 //  SLIDE DATA
-// ═══════════════════════════════════════════════════════════════════
+// ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
 class _SlideData {
   const _SlideData({
     required this.index,

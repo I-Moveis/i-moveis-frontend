@@ -2,28 +2,30 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
-import '../bloc/auth_bloc.dart';
 import '../../domain/entities/demo_role.dart';
 import '../bloc/social_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/auth_state.dart';
 
-/// Login page — Brutalist Elegance x Japanese Creative Web
+/// Login page ÔÇö Brutalist Elegance x Japanese Creative Web
 ///
 /// Ported from the reference design: Wave background (sunset),
 /// Space Mono index, Syne display, warm pastel accents,
 /// glass morphism inputs, gradient shimmer button.
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+class _LoginPageState extends ConsumerState<LoginPage>
+    with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailFocus = FocusNode();
@@ -149,8 +151,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
 
-    context.read<AuthBloc>().add(
-          AuthEvent.loginRequested(email: email, password: password),
+    ref.read(authNotifierProvider.notifier).login(
+          email: email,
+          password: password,
         );
   }
 
@@ -158,92 +161,96 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        state.whenOrNull(
-          authenticated: (user) {
-            setState(() => _loadingSocial = null);
-            final destination = user.isAdmin
-                ? '/admin'
-                : user.isOwner
-                    ? '/my-properties'
-                    : '/home';
-            context.go(destination);
-          },
-          unauthenticated: () {
-            setState(() {
-              _isLoading = false;
-              _loadingSocial = null;
-            });
-          },
-          error: (message) {
-            setState(() => _loadingSocial = null);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erro: $message')),
-            );
-          },
-        );
-      },
-      builder: (context, state) {
-        return Stack(
-          children: [
-            const Positioned.fill(
-              child: RepaintBoundary(
-                child: WaveBackground(
-                  speed: 0.4,
-                  amplitude: 0.8,
-                  waveCount: 7,
-                ),
-              ),
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      next.whenOrNull(
+        authenticated: (user) {
+          setState(() => _loadingSocial = null);
+          final String destination;
+          if (user.needsRoleOnboarding) {
+            destination = '/onboarding/role';
+          } else if (user.isAdmin) {
+            destination = '/admin';
+          } else if (user.isOwner) {
+            destination = '/profile/my-properties';
+          } else {
+            destination = '/home';
+          }
+          context.go(destination);
+        },
+        unauthenticated: () {
+          setState(() {
+            _isLoading = false;
+            _loadingSocial = null;
+          });
+        },
+        error: (message) {
+          setState(() => _loadingSocial = null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro: $message')),
+          );
+        },
+      );
+    });
+
+    final state = ref.watch(authNotifierProvider);
+
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: RepaintBoundary(
+            child: WaveBackground(
+              speed: 0.4,
+              amplitude: 0.8,
+              waveCount: 7,
             ),
-            Scaffold(
-              backgroundColor: Colors.transparent,
-              resizeToAvoidBottomInset: true,
-              body: SafeArea(
-                child: AnimatedBuilder(
-                  animation: _entranceController,
-                  builder: (context, _) {
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.screenHorizontal,
-                              ),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: AppSpacing.xl),
-                                  _buildHeader(isDark),
-                                  const SizedBox(height: AppSpacing.gigantic),
-                                  _buildForm(isDark, state),
-                                  const SizedBox(height: AppSpacing.xxxl),
-                                  _buildFooter(isDark),
-                                  const SizedBox(height: AppSpacing.xxl),
-                                ],
-                              ),
-                            ),
+          ),
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: true,
+          body: SafeArea(
+            child: AnimatedBuilder(
+              animation: _entranceController,
+              builder: (context, _) {
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenHorizontal,
                           ),
-                        );
-                      },
+                          child: Column(
+                            children: [
+                              const SizedBox(height: AppSpacing.xl),
+                              _buildHeader(isDark),
+                              const SizedBox(height: AppSpacing.gigantic),
+                              _buildForm(isDark, state),
+                              const SizedBox(height: AppSpacing.xxxl),
+                              _buildFooter(isDark),
+                              const SizedBox(height: AppSpacing.xxl),
+                            ],
+                          ),
+                        ),
+                      ),
                     );
                   },
-                ),
-              ),
+                );
+              },
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  HEADER — 01, i-móveis, ALUGUEL, data-system marker
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  HEADER ÔÇö 01, i-m├│veis, ALUGUEL, data-system marker
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildHeader(bool isDark) {
     final accentPeach = BrutalistPalette.accentPeach(isDark);
     final accentAmber = BrutalistPalette.accentAmber(isDark);
@@ -274,7 +281,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             const SizedBox(height: AppSpacing.xs),
 
             RevealText(
-              text: 'i-móveis',
+              text: 'i-m├│veis',
               style: AppTypography.displayBrand.copyWith(
                 color: titleColor,
               ),
@@ -327,11 +334,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  FORM — inputs, forgot password, login button, socials
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  FORM ÔÇö inputs, forgot password, login button, socials
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildForm(bool isDark, AuthState state) {
-    // Derivado do state do Bloc — garante que o botão sai de loading
+    // Derivado do state do Bloc ÔÇö garante que o bot├úo sai de loading
     // quando a request falha (state=error) ou sucede (state=authenticated).
     _isLoading = state is Loading;
 
@@ -462,9 +469,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  INPUT FIELD — glass container, theme-adaptive colors
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  INPUT FIELD ÔÇö glass container, theme-adaptive colors
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildInputField({
     required TextEditingController controller,
     required FocusNode focusNode,
@@ -582,9 +589,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  LOGIN BUTTON — gradient shimmer, theme-adaptive
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  LOGIN BUTTON ÔÇö gradient shimmer, theme-adaptive
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildLoginButton(bool isDark) {
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -670,9 +677,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   //  DIVIDER
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildDivider(bool isDark) {
     final lineColor = isDark
         ? AppColors.blackLightest.withValues(alpha: 0.5)
@@ -696,9 +703,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  SOCIAL BUTTONS — glass morphism, theme-adaptive
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  SOCIAL BUTTONS ÔÇö glass morphism, theme-adaptive
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildSocialButton(
     String label,
     IconData icon,
@@ -729,9 +736,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   return;
                 }
                 setState(() => _loadingSocial = provider);
-                context.read<AuthBloc>().add(
-                      AuthEvent.socialLoginRequested(provider: provider),
-                    );
+                ref
+                    .read(authNotifierProvider.notifier)
+                    .socialLogin(provider);
               },
         borderRadius: AppRadius.borderSm,
         child: AnimatedContainer(
@@ -774,9 +781,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  FOOTER — register link, version
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  FOOTER ÔÇö register link, version
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildFooter(bool isDark) {
     final mutedColor = BrutalistPalette.faint(isDark);
     final accentColor = isDark ? BrutalistPalette.warmYellow : BrutalistPalette.deepAmber;
@@ -789,7 +796,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'NÃO TEM CONTA?',
+                'N├âO TEM CONTA?',
                 style: AppTypography.labelSmall.copyWith(
                   color: mutedColor,
                 ),
@@ -827,9 +834,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  DEMO ROLES — dev-only quick login buttons
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  DEMO ROLES ÔÇö dev-only quick login buttons
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildDemoRoleSection(bool isDark) {
     final mutedColor = isDark
         ? AppColors.whiteDim.withValues(alpha: 0.5)
@@ -857,7 +864,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _buildDemoRoleButton(
-                'PROPRIETÁRIO',
+                'PROPRIET├üRIO',
                 Icons.home_work_outlined,
                 isDark,
                 DemoRole.owner,
@@ -895,9 +902,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       child: InkWell(
         onTap: _isLoading || _loadingSocial != null
             ? null
-            : () => context
-                .read<AuthBloc>()
-                .add(AuthEvent.demoLoginRequested(role: role)),
+            : () => ref
+                .read(authNotifierProvider.notifier)
+                .demoLogin(role),
         borderRadius: AppRadius.borderSm,
         child: Container(
           height: 56,

@@ -1,14 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../providers/admin_metrics_notifier.dart';
 
-/// Admin dashboard — lê `GET /admin/metrics` via [adminMetricsNotifierProvider].
+/// Admin dashboard ÔÇö l├¬ `GET /admin/metrics` via [adminMetricsNotifierProvider].
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
 
@@ -27,7 +26,7 @@ class AdminDashboardPage extends ConsumerWidget {
         final errorMessage = metricsAsync.hasError
             ? (metricsAsync.error is Failure
                 ? (metricsAsync.error! as Failure).message
-                : 'Erro ao carregar métricas.')
+                : 'Erro ao carregar m├®tricas.')
             : null;
 
         return CustomScrollView(
@@ -49,9 +48,7 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
                       GestureDetector(
                         onTap: () {
-                          context
-                              .read<AuthBloc>()
-                              .add(const AuthEvent.logoutRequested());
+                          ref.read(authNotifierProvider.notifier).logout();
                           context.go('/login');
                         },
                         child: Container(
@@ -71,7 +68,7 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
                     ]),
                     const SizedBox(height: AppSpacing.xxl),
-                    const AppSectionHeader(title: 'Métricas'),
+                    const AppSectionHeader(title: 'M├®tricas'),
                     const SizedBox(height: AppSpacing.md),
                     if (errorMessage != null)
                       Padding(
@@ -86,13 +83,13 @@ class AdminDashboardPage extends ConsumerWidget {
                       AppMetricCard(
                         icon: Icons.people_outline,
                         value: userCount ?? 0,
-                        label: 'Usuários',
+                        label: 'Usu├írios',
                       ),
                       const SizedBox(width: AppSpacing.md),
                       AppMetricCard(
                         icon: Icons.home_outlined,
                         value: propertyCount ?? 0,
-                        label: 'Imóveis',
+                        label: 'Im├│veis',
                       ),
                     ]),
                     const SizedBox(height: AppSpacing.md),
@@ -110,17 +107,17 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
                     ]),
                     const SizedBox(height: AppSpacing.xxl),
-                    const AppSectionHeader(title: 'Acesso rápido'),
+                    const AppSectionHeader(title: 'Acesso r├ípido'),
                     const SizedBox(height: AppSpacing.md),
                     AppMenuGroup(items: [
                       AppMenuGroupItem(
                         icon: Icons.people_outline,
-                        label: 'Gerenciar usuários',
+                        label: 'Gerenciar usu├írios',
                         onTap: () => context.push('/admin/users'),
                       ),
                       AppMenuGroupItem(
                         icon: Icons.home_outlined,
-                        label: 'Moderar anúncios',
+                        label: 'Moderar an├║ncios',
                         onTap: () => context.push('/admin/listings'),
                       ),
                       AppMenuGroupItem(

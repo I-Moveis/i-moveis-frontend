@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../search/presentation/providers/search_notifier.dart';
 
 /// Main shell with fixed bottom navigation bar.
@@ -16,12 +16,11 @@ class MainShellPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isOwner = state.maybeWhen(
-          authenticated: (user) => user.isOwner,
-          orElse: () => false,
-        );
+    final authState = ref.watch(authNotifierProvider);
+    final isOwner = authState.maybeWhen(
+      authenticated: (user) => user.isOwner,
+      orElse: () => false,
+    );
 
         // Define the tab configuration based on role.
         // We map tab index (i) to branch index (b).
@@ -96,8 +95,6 @@ class MainShellPage extends ConsumerWidget {
             ),
           ),
         );
-      },
-    );
   }
 }
 

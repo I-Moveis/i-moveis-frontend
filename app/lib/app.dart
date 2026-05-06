@@ -1,17 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/router/app_router.dart';
 import 'core/theme/seed_color_provider.dart';
 import 'core/theme/theme_provider.dart';
 import 'design_system/design_system.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/providers/auth_providers.dart';
-import 'features/auth/presentation/providers/auth_status_provider.dart';
-import 'core/providers/current_user_provider.dart';
-import 'features/home/presentation/bloc/category_bloc.dart';
-import 'features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'features/auth/presentation/providers/auth_notifier.dart';
+import 'features/auth/presentation/providers/auth_state.dart';
 
 /// Root widget of the application.
 class MyApp extends ConsumerWidget {
@@ -30,63 +25,36 @@ class MyApp extends ConsumerWidget {
 
     BrutalistPalette.update(palette);
 
-    ref.listen(brutalistPaletteProvider, (previous, next) {
-      BrutalistPalette.update(next);
-    });
+    ref
+      ..listen(brutalistPaletteProvider, (previous, next) {
+        BrutalistPalette.update(next);
+      })
+      ..listen<AuthState>(authNotifierProvider, (previous, next) {
+        // Redireciona pra /login quando o usu├írio desloga. O notifier j├í
+        // atualiza o authStatusProvider internamente, aqui s├│ tratamos o
+        // side-effect de navega├º├úo.
+        next.maybeWhen(
+          unauthenticated: () => goRouter.go('/login'),
+          orElse: () {},
+        );
+      });
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthBloc>(
-          create: (_) => AuthBloc(
-            loginUseCase: ref.read(loginUseCaseProvider),
-            registerUseCase: ref.read(registerUseCaseProvider),
-            logoutUseCase: ref.read(logoutUseCaseProvider),
-            socialLoginUseCase: ref.read(socialLoginUseCaseProvider),
-            getCurrentSessionUseCase:
-                ref.read(getCurrentSessionUseCaseProvider),
-            demoLoginUseCase: ref.read(demoLoginUseCaseProvider),
-          ),
-        ),
-        BlocProvider<CategoryBloc>(create: (_) => CategoryBloc()),
-        BlocProvider<OnboardingCubit>(
-          create: (_) => OnboardingCubit()..load(),
-        ),
-      ],
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          state.when(
-            initial: () {},
-            loading: () {},
-            authenticated: (_) {
-              ref.read(authStatusProvider.notifier).set(AuthStatus.authenticated);
-              ref.invalidate(currentUserIdProvider);
-            },
-            unauthenticated: () {
-              ref.read(authStatusProvider.notifier).set(AuthStatus.unauthenticated);
-              ref.invalidate(currentUserIdProvider);
-              goRouter.go('/login');
-            },
-            error: (_) {},
-          );
-        },
-        child: MaterialApp.router(
-          title: 'i-Móveis',
-          theme: AppTheme.light.copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: seedColor,
-            ),
-          ),
-          darkTheme: AppTheme.dark.copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.dark,
-            ),
-          ),
-          themeMode: themeMode,
-          routerConfig: goRouter,
-          debugShowCheckedModeBanner: false,
+    return MaterialApp.router(
+      title: 'i-M├│veis',
+      theme: AppTheme.light.copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seedColor,
         ),
       ),
+      darkTheme: AppTheme.dark.copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seedColor,
+          brightness: Brightness.dark,
+        ),
+      ),
+      themeMode: themeMode,
+      routerConfig: goRouter,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

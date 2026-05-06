@@ -1,26 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_status_provider.dart';
-import '../../../onboarding/presentation/cubit/onboarding_cubit.dart';
+import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 
-/// Splash screen — Brutalist Elegance x Japanese Creative Web
+/// Splash screen ÔÇö Brutalist Elegance x Japanese Creative Web
 ///
 /// Cinematic entrance: WaveBackground sunset, pulsing index "00",
 /// RevealText brand name, section marker, loading indicator,
 /// then CurtainTransition to onboarding.
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with TickerProviderStateMixin {
   late final AnimationController _entranceController;
   late final AnimationController _pulseController;
@@ -87,7 +86,7 @@ class _SplashPageState extends State<SplashPage>
     // by the time the curtain drops, authStatus is already resolved.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<AuthBloc>().add(const AuthEvent.checkSessionRequested());
+      ref.read(authNotifierProvider.notifier).checkSession();
     });
 
     Future.delayed(const Duration(milliseconds: 200), () {
@@ -164,9 +163,9 @@ class _SplashPageState extends State<SplashPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  LOGO — index 00 + brand name + subtitle + marker
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  LOGO ÔÇö index 00 + brand name + subtitle + marker
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildLogo(bool isDark) {
     final accentPeach = BrutalistPalette.accentPeach(isDark);
     final accentAmber = BrutalistPalette.accentAmber(isDark);
@@ -201,7 +200,7 @@ class _SplashPageState extends State<SplashPage>
             const SizedBox(height: AppSpacing.xs),
 
             RevealText(
-              text: 'i-móveis',
+              text: 'i-m├│veis',
               style: AppTypography.displayBrand.copyWith(
                 color: titleColor,
               ),
@@ -254,9 +253,9 @@ class _SplashPageState extends State<SplashPage>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  LOADING INDICATOR — 3 pulsing dots
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  LOADING INDICATOR ÔÇö 3 pulsing dots
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildLoadingIndicator(bool isDark) {
     final dotColor = BrutalistPalette.accentAmber(isDark);
 
@@ -299,9 +298,9 @@ class _SplashPageState extends State<SplashPage>
     return (x - x * x * x / 6 + x * x * x * x * x / 120).clamp(-1.0, 1.0);
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  FOOTER — version + system status
-  // ═══════════════════════════════════════════════════════════════
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  //  FOOTER ÔÇö version + system status
+  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildFooter(bool isDark) {
     final mutedColor = BrutalistPalette.faint(isDark);
 
@@ -327,9 +326,9 @@ class _SplashPageState extends State<SplashPage>
 /// Picks the first route shown after the splash, based on auth + onboarding.
 ///
 /// Priority:
-/// 1. Authenticated → `/home`
-/// 2. Onboarding pending → `/onboarding`
-/// 3. Onboarding completed (unauth) → `/login`
+/// 1. Authenticated ÔåÆ `/home`
+/// 2. Onboarding pending ÔåÆ `/onboarding`
+/// 3. Onboarding completed (unauth) ÔåÆ `/login`
 /// If [AuthStatus] is still `unknown` when this widget mounts, it waits for a
 /// resolved status via a Riverpod listener.
 class _PostSplashRouter extends ConsumerStatefulWidget {
@@ -353,21 +352,31 @@ class _PostSplashRouterState extends ConsumerState<_PostSplashRouter> {
     final status = ref.read(authStatusProvider);
     if (status == AuthStatus.unknown) return;
 
-    final destination = _resolveDestination(status);
+    final onboarding = ref.read(onboardingProvider);
+    if (onboarding.isLoading) return;
+
+    final destination = _resolveDestination(
+      status,
+      onboarding.value ?? OnboardingStatus.pending,
+    );
     _navigated = true;
     context.go(destination);
   }
 
-  String _resolveDestination(AuthStatus status) {
+  String _resolveDestination(AuthStatus status, OnboardingStatus onboarding) {
     if (status == AuthStatus.authenticated) return '/home';
-    final onboarding = context.read<OnboardingCubit>().state;
-    if (onboarding == OnboardingState.completed) return '/login';
+    if (onboarding == OnboardingStatus.completed) return '/login';
     return '/onboarding';
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AuthStatus>(authStatusProvider, (_, __) => _maybeNavigate());
+    ref
+      ..listen<AuthStatus>(authStatusProvider, (_, __) => _maybeNavigate())
+      ..listen<AsyncValue<OnboardingStatus>>(
+        onboardingProvider,
+        (_, __) => _maybeNavigate(),
+      );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(

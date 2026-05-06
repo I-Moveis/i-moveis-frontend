@@ -1,21 +1,22 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/network/network_exception.dart';
 import '../../../../core/providers/dio_provider.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../../../features/auth/presentation/providers/auth_notifier.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
+import '../../../../features/auth/presentation/providers/auth_state.dart';
 
-/// Edit profile — preenche os campos com os dados do usuário atual e
-/// persiste alterações via `PATCH /users/me` (endpoint do self-service
-/// que só aceita `phoneNumber` + `role`). Nome e email ficam read-only:
-/// nome é mantido pelo Firebase Auth (updateDisplayName) e email é
-/// identificador imutável.
+/// Edit profile ÔÇö preenche os campos com os dados do usu├írio atual e
+/// persiste altera├º├Áes via `PATCH /users/me` (endpoint do self-service
+/// que s├│ aceita `phoneNumber` + `role`). Nome e email ficam read-only:
+/// nome ├® mantido pelo Firebase Auth (updateDisplayName) e email ├®
+/// identificador imut├ível.
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
@@ -34,7 +35,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    final state = context.read<AuthBloc>().state;
+    final state = ref.read(authNotifierProvider);
     final user = state.maybeWhen(
       authenticated: (u) => u,
       orElse: () => null,
@@ -55,7 +56,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   /// Converte input brasileiro (ex: `(11) 99999-9999`) para E.164
-  /// (`+5511999999999`). `null` quando não há dígitos suficientes — o
+  /// (`+5511999999999`). `null` quando n├úo h├í d├¡gitos suficientes ÔÇö o
   /// backend valida via regex `^\+\d{1,15}$`.
   String? _normalizeToE164(String raw) {
     final trimmed = raw.trim();
@@ -75,12 +76,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     if (rawPhone.isNotEmpty && normalized == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Telefone inválido')),
+        const SnackBar(content: Text('Telefone inv├ílido')),
       );
       return;
     }
 
-    // Nenhuma mudança detectada — sai sem bater na API.
+    // Nenhuma mudan├ºa detectada ÔÇö sai sem bater na API.
     if (normalized == _initialPhone ||
         (rawPhone.isEmpty && _initialPhone.isEmpty)) {
       context.pop();
@@ -98,11 +99,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         },
       );
 
-      // Atualiza o cache do /users/me e propaga pro AuthBloc pra UI refletir.
+      // Atualiza o cache do /users/me e propaga pro AuthNotifier pra UI refletir.
       final local = ref.read(authLocalDataSourceProvider);
       await local.syncFromBackend(dio);
       if (!mounted) return;
-      context.read<AuthBloc>().add(const AuthEvent.sessionRefreshRequested());
+      unawaited(ref.read(authNotifierProvider.notifier).refreshSession());
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Perfil atualizado')),
@@ -112,11 +113,31 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (!mounted) return;
       setState(() => _submitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao salvar: ${e.message ?? 'tente novamente'}'),
-        ),
+        SnackBar(content: Text(_friendlyPatchError(e))),
       );
     }
+  }
+
+  /// Mensagem amig├ível para o PATCH /users/me.
+  ///
+  /// Cobre dois caminhos pro conflito de telefone duplicado:
+  /// - 409 Conflict (depois que o backend mapear o `P2002` do Prisma)
+  /// - 500 com "Unique constraint" no body (comportamento atual enquanto o
+  ///   backend n├úo trata o erro do Prisma)
+  String _friendlyPatchError(DioException e) {
+    final inner = e.error;
+    if (inner is NetworkException &&
+        inner.kind == NetworkErrorKind.conflict) {
+      return 'Este telefone j├í est├í cadastrado em outra conta.';
+    }
+
+    final bodyText = e.response?.data?.toString() ?? '';
+    if (bodyText.contains('Unique constraint') &&
+        bodyText.contains('phone')) {
+      return 'Este telefone j├í est├í cadastrado em outra conta.';
+    }
+
+    return 'Erro ao salvar: ${e.message ?? 'tente novamente'}';
   }
 
   @override
@@ -135,12 +156,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         final accentColor =
             isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
-        final avatarUrl = context.select<AuthBloc, String?>(
-          (bloc) => bloc.state.maybeWhen(
-            authenticated: (u) => u.avatarUrl,
-            orElse: () => null,
-          ),
-        );
+        final avatarUrl = ref.watch(authNotifierProvider).maybeWhen(
+              authenticated: (u) => u.avatarUrl,
+              orElse: () => null,
+            );
 
         return Opacity(
           opacity: fade.value,
@@ -231,7 +250,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       ),
                       const SizedBox(height: AppSpacing.xxxl),
                       BrutalistGradientButton(
-                        label: _submitting ? 'SALVANDO…' : 'SALVAR',
+                        label: _submitting ? 'SALVANDOÔÇª' : 'SALVAR',
                         icon: Icons.check_rounded,
                         onTap: _submitting
                             ? null

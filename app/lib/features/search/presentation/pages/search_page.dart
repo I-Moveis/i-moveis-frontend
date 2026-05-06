@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
 import '../../presentation/widgets/search_bar_widget.dart';
 import '../../presentation/widgets/filter_chip_bar.dart';
 import '../../presentation/widgets/property_list_tile.dart';
@@ -75,20 +75,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isOwner = state.maybeWhen(
-          authenticated: (user) => user.isOwner,
-          orElse: () => false,
-        );
-
-        if (isOwner) {
-          return const TenantsPage();
-        }
-
-        return _buildTenantSearch(context);
-      },
+    final isOwner = ref.watch(authNotifierProvider).maybeWhen(
+      authenticated: (user) => user.isOwner,
+      orElse: () => false,
     );
+
+    if (isOwner) {
+      return const TenantsPage();
+    }
+
+    return _buildTenantSearch(context);
   }
 
   Widget _buildTenantSearch(BuildContext context) {

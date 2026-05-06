@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../auth/presentation/providers/auth_status_provider.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 
@@ -364,7 +365,19 @@ class _PostSplashRouterState extends ConsumerState<_PostSplashRouter> {
   }
 
   String _resolveDestination(AuthStatus status, OnboardingStatus onboarding) {
-    if (status == AuthStatus.authenticated) return '/home';
+    if (status == AuthStatus.authenticated) {
+      final authState = ref.read(authNotifierProvider);
+      return authState.maybeWhen(
+        authenticated: (user) {
+          if (user.needsRoleOnboarding) return '/onboarding/role';
+          if (user.isAdmin) return '/admin';
+          // LANDLORD e TENANT caem em /home; o builder da rota decide qual
+          // página mostrar (LandlordDashboardPage vs HomePage) pelo isOwner.
+          return '/home';
+        },
+        orElse: () => '/home',
+      );
+    }
     if (onboarding == OnboardingStatus.completed) return '/login';
     return '/onboarding';
   }

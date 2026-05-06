@@ -60,7 +60,7 @@ class MyPropertiesPage extends ConsumerWidget {
                   children: [
                     GestureDetector(
                       onTap: () =>
-                          context.go('/profile/my-properties/create'),
+                          context.push('/my-properties/create'),
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         decoration: BoxDecoration(

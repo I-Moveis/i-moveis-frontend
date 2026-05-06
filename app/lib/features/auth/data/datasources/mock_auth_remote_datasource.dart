@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../domain/entities/auth_user.dart';
 import '../../presentation/bloc/social_provider.dart';
 import '../models/auth_session_model.dart';
 import '../models/auth_user_model.dart';
@@ -49,8 +50,7 @@ class MockAuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       name: name.isNotEmpty ? name : _mockUser.name,
       email: email.isNotEmpty ? email : _mockUser.email,
       phone: phone.isNotEmpty ? phone : _mockUser.phone,
-      isOwner: role == 'LANDLORD',
-      isAdmin: role == 'ADMIN',
+      role: UserRole.fromBackend(role),
     );
     return AuthSessionModel(
       user: user,

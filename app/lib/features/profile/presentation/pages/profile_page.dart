@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -78,24 +78,76 @@ class ProfilePage extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xxxl),
 
-              // Atividade
-              const AppSectionHeader(title: 'Atividade'),
-              const SizedBox(height: AppSpacing.md),
-              AppMenuGroup(items: [
-                AppMenuGroupItem(icon: Icons.description_outlined, label: 'Minhas propostas', onTap: () {}),
-                AppMenuGroupItem(icon: Icons.calendar_today_outlined, label: 'Minhas visitas', onTap: () => context.go('/profile/my-visits')),
-                AppMenuGroupItem(icon: Icons.article_outlined, label: 'Meus contratos', onTap: () {}),
-              ]),
-
-              // Im├│veis ÔÇö s├│ para propriet├írios (LANDLORD).
+              // --- SEÇÃO DE ATIVIDADE (DINÂMICA) ---
               if (isOwner) ...[
-                const SizedBox(height: AppSpacing.xxl),
-                const AppSectionHeader(title: 'Im├│veis'),
+                const AppSectionHeader(title: 'Gestão de Atividade'),
                 const SizedBox(height: AppSpacing.md),
                 AppMenuGroup(items: [
-                  AppMenuGroupItem(icon: Icons.home_outlined, label: 'Meus im├│veis', onTap: () => context.go('/profile/my-properties')),
-                  AppMenuGroupItem(icon: Icons.add_circle_outline, label: 'Anunciar im├│vel', onTap: () => context.go('/profile/my-properties/create')),
-                  AppMenuGroupItem(icon: Icons.event_note_outlined, label: 'Visitas nos meus im├│veis', onTap: () => context.go('/profile/landlord-visits')),
+                  AppMenuGroupItem(
+                    icon: Icons.description_outlined,
+                    label: 'Propostas Recebidas',
+                    onTap: () {},
+                  ),
+                  AppMenuGroupItem(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Visitas Agendadas',
+                    onTap: () => context.push('/landlord-visits'),
+                  ),
+                  AppMenuGroupItem(
+                    icon: Icons.assignment_turned_in_outlined,
+                    label: 'Contratos Ativos',
+                    onTap: () {},
+                  ),
+                ]),
+                const SizedBox(height: AppSpacing.xxl),
+                const AppSectionHeader(title: 'Meus Imóveis'),
+                const SizedBox(height: AppSpacing.md),
+                AppMenuGroup(items: [
+                  AppMenuGroupItem(
+                    icon: Icons.business_outlined,
+                    label: 'Gerenciar Imóveis',
+                    onTap: () => context.go('/my-properties'),
+                  ),
+                  AppMenuGroupItem(
+                    icon: Icons.add_business_outlined,
+                    label: 'Anunciar Novo Imóvel',
+                    onTap: () => context.push('/my-properties/create'),
+                  ),
+                  AppMenuGroupItem(
+                    icon: Icons.folder_open_outlined,
+                    label: 'Documentação e IPTU',
+                    onTap: () {},
+                  ),
+                ]),
+                const SizedBox(height: AppSpacing.xxl),
+                const AppSectionHeader(title: 'Financeiro'),
+                const SizedBox(height: AppSpacing.md),
+                AppMenuGroup(items: [
+                  AppMenuGroupItem(
+                    icon: Icons.payments_outlined,
+                    label: 'Extrato de Repasses',
+                    onTap: () {},
+                  ),
+                ]),
+              ] else ...[
+                const AppSectionHeader(title: 'Atividade'),
+                const SizedBox(height: AppSpacing.md),
+                AppMenuGroup(items: [
+                  AppMenuGroupItem(
+                    icon: Icons.description_outlined,
+                    label: 'Minhas propostas',
+                    onTap: () {},
+                  ),
+                  AppMenuGroupItem(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Minhas visitas',
+                    onTap: () => context.push('/profile/my-visits'),
+                  ),
+                  AppMenuGroupItem(
+                    icon: Icons.article_outlined,
+                    label: 'Meus contratos',
+                    onTap: () {},
+                  ),
                 ]),
               ],
 

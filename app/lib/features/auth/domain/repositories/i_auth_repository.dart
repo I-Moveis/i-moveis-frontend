@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import '../../domain/entities/demo_role.dart';
 import '../../presentation/bloc/social_provider.dart';
 import '../entities/auth_session.dart';
+import '../entities/auth_user.dart';
 import '../failures/auth_failure.dart';
 
 /// Contract for auth operations. Concrete implementation lives in
@@ -18,7 +19,7 @@ abstract class IAuthRepository {
     required String email,
     required String phone,
     required String password,
-    bool isOwner = false,
+    UserRole role = UserRole.tenant,
   });
 
   Future<Either<AuthFailure, AuthSession>> socialLogin(

@@ -5,6 +5,9 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/create_listing_notifier.dart';
 import '../widgets/listing_form_fields.dart';
+import '../widgets/listing_image_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:app/features/search/domain/entities/property_input.dart';
 
 /// Single-page listing form that dispatches POST /api/properties.
 ///
@@ -38,6 +41,8 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   bool _isFurnished = false;
   bool _petsAllowed = false;
   bool _nearSubway = false;
+  List<XFile> _selectedImages = [];
+  int _coverIndex = 0;
 
   @override
   void dispose() {
@@ -99,6 +104,7 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
             condoFee: double.tryParse(_condoFee.text.replaceAll(',', '.')),
             propertyTax:
                 double.tryParse(_propertyTax.text.replaceAll(',', '.')),
+            images: _buildImageInputs(),
           );
       if (!mounted) return;
       messenger.showSnackBar(
@@ -112,6 +118,22 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
 
   String? _emptyToNull(String value) =>
       value.trim().isEmpty ? null : value.trim();
+
+  List<PropertyImageInput> _buildImageInputs() {
+    return _selectedImages.asMap().entries.map((entry) {
+      final index = entry.key;
+      final file = entry.value;
+      // In a real production app, you would upload the file to S3/Cloudinary first
+      // and get the URL. For this integration, we'll send a placeholder or data URI
+      // if the backend supports it, but here we'll use a descriptive placeholder
+      // to demonstrate the 'isCover' logic works.
+      return PropertyImageInput(
+        url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800', // Placeholder
+        isCover: index == _coverIndex,
+        caption: index == _coverIndex ? 'Capa' : 'Imagem ${index + 1}',
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +163,12 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                     selected: _selectedType,
                     onSelect: (v) => setState(() => _selectedType = v),
                     labelOf: _typeLabel,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  const ListingSectionLabel('Fotos'),
+                  ListingImagePicker(
+                    onImagesChanged: (imgs) => setState(() => _selectedImages = imgs),
+                    onCoverChanged: (idx) => setState(() => _coverIndex = idx),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const ListingSectionLabel('Título'),

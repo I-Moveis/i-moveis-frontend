@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/my_properties_notifier.dart';
 
@@ -12,6 +11,11 @@ class PropertyManagementDossierPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final propertiesAsync = ref.watch(myPropertiesNotifierProvider);
+    // Não derruba a tela se o fetch falhar — cai em lista vazia com aviso
+    // in-line. A página tem conteúdo estático (AppBar, layout) que deve
+    // sempre aparecer.
+    final properties = propertiesAsync.asData?.value ?? const [];
+    final isLoading = propertiesAsync.isLoading && properties.isEmpty;
 
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
@@ -21,25 +25,16 @@ class PropertyManagementDossierPage extends ConsumerWidget {
               title: 'Gestão de Aluguéis',
             ),
             Expanded(
-              child: propertiesAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                error: (e, _) => Center(
-                  child: Text(
-                    e is Failure ? e.message : 'Erro ao carregar dados.',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: BrutalistPalette.title(isDark),
-                    ),
-                  ),
-                ),
-                data: (properties) {
-                  // Filter only properties that have a "tenant" (simulated for now)
-                  // In a real app, this would come from the backend.
+              child: Builder(
+                builder: (_) {
+                  if (isLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  }
                   if (properties.isEmpty) {
                     return _EmptyDossier(isDark: isDark);
                   }
-
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.all(AppSpacing.screenHorizontal),
@@ -47,14 +42,15 @@ class PropertyManagementDossierPage extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final property = properties[index];
                       // Simulating different statuses for variety in the demo
+                      // In a real app, this would come from the backend.
                       final statusIndex = index % 3;
                       final statuses = ['PAID', 'PENDING', 'LATE'];
                       final status = statuses[statusIndex];
 
                       return _ManagementCard(
                         propertyTitle: property.title,
-                        imageUrl: property.imageUrls.isNotEmpty 
-                            ? property.imageUrls.first 
+                        imageUrl: property.imageUrls.isNotEmpty
+                            ? property.imageUrls.first
                             : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400&auto=format&fit=crop',
                         tenantName: 'Inquilino ${index + 1}',
                         rentValue: property.price,

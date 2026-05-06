@@ -34,6 +34,13 @@ class LoggingInterceptor extends Interceptor {
         '✗ ${err.response?.statusCode ?? '---'} '
         '${err.requestOptions.uri} → ${err.type}',
       );
+      // Log do body do erro em 4xx: o backend geralmente coloca aqui a
+      // mensagem específica ("Invalid uuid", "Unknown query param", etc.)
+      // que deixa óbvio o que consertar na request/seed/validação.
+      final body = err.response?.data;
+      if (body != null) {
+        debugPrint('   body: $body');
+      }
     }
     handler.next(err);
   }

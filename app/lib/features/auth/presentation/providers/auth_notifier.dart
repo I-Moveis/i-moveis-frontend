@@ -50,7 +50,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String email,
     required String phone,
     required String password,
-    required bool isOwner,
+    required UserRole role,
   }) async {
     _setState(const AuthState.loading());
     final result = await ref.read(registerUseCaseProvider).execute(
@@ -58,7 +58,7 @@ class AuthNotifier extends Notifier<AuthState> {
           email: email,
           phone: phone,
           password: password,
-          isOwner: isOwner,
+          role: role,
         );
     result.fold(
       (failure) => _setState(AuthState.error(message: failure.message)),
@@ -132,14 +132,14 @@ class AuthNotifier extends Notifier<AuthState> {
           id: 'demo-owner',
           name: 'Propriet├írio Demo',
           email: 'proprietario@demo.com',
-          isOwner: true,
+          role: UserRole.landlord,
         );
       case DemoRole.admin:
         return const AuthUser(
           id: 'demo-admin',
           name: 'Admin Demo',
           email: 'admin@demo.com',
-          isAdmin: true,
+          role: UserRole.admin,
         );
     }
   }

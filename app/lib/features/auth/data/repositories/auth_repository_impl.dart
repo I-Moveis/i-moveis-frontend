@@ -5,6 +5,7 @@ import '../../../../core/constants.dart';
 import '../../../../core/network/network_exception.dart';
 import '../../../../core/services/fcm_service.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/demo_role.dart';
 import '../../domain/failures/auth_failure.dart';
 import '../../domain/repositories/i_auth_repository.dart';
@@ -47,6 +48,22 @@ class AuthRepositoryImpl implements IAuthRepository {
     await fcm.registerTokenWithBackend(_dio);
   }
 
+  /// Depois de `saveSession` + `/users/me`, o cache já tem o `role`
+  /// autoritativo do backend. Esta helper reconstrói a sessão a partir do
+  /// user sincronizado — sem isso o AuthNotifier sempre enxergaria TENANT
+  /// (default do Firebase), mesmo quando o backend diz LANDLORD. Em mock ou
+  /// falha transitória do sync, cai no user do modelo original.
+  Future<AuthSession> _buildSyncedSession(AuthSessionModel original) async {
+    final cached = await _local.readCachedUser();
+    final user = cached ?? original.user;
+    return AuthSession(
+      user: user.toEntity(),
+      accessToken: original.accessToken,
+      refreshToken: original.refreshToken,
+      expiresAt: original.expiresAt,
+    );
+  }
+
   @override
   Future<Either<AuthFailure, AuthSession>> login({
     required String email,
@@ -57,7 +74,8 @@ class AuthRepositoryImpl implements IAuthRepository {
       await _local.saveSession(model);
       await _syncBackendIdentity();
       await _registerFcmToken();
-      return Right(model.toEntity());
+      final session = await _buildSyncedSession(model);
+      return Right(session);
     } on DioException catch (e) {
       return Left(_mapDioException(e));
     } on Object catch (e) {
@@ -71,7 +89,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String email,
     required String phone,
     required String password,
-    bool isOwner = false,
+    UserRole role = UserRole.tenant,
   }) async {
     try {
       final model = await _remote.register(
@@ -79,12 +97,13 @@ class AuthRepositoryImpl implements IAuthRepository {
         email: email,
         phone: phone,
         password: password,
-        role: isOwner ? 'LANDLORD' : 'TENANT',
+        role: role.toBackend(),
       );
       await _local.saveSession(model);
       await _syncBackendIdentity();
       await _registerFcmToken();
-      return Right(model.toEntity());
+      final session = await _buildSyncedSession(model);
+      return Right(session);
     } on DioException catch (e) {
       return Left(_mapDioException(e, isRegister: true));
     } on Object catch (e) {
@@ -101,7 +120,20 @@ class AuthRepositoryImpl implements IAuthRepository {
       await _local.saveSession(model);
       await _syncBackendIdentity();
       await _registerFcmToken();
-      return Right(model.toEntity());
+      final session = await _buildSyncedSession(model);
+      // needsRoleOnboarding não vem de /users/me — preserva o flag do modelo
+      // original (setado pelo Firebase datasource quando isNewUser=true).
+      if (model.user.needsRoleOnboarding) {
+        return Right(
+          AuthSession(
+            user: session.user.copyWith(needsRoleOnboarding: true),
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+            expiresAt: session.expiresAt,
+          ),
+        );
+      }
+      return Right(session);
     } on DioException catch (e) {
       return Left(_mapDioException(e));
     } on Object catch (e) {
@@ -176,13 +208,13 @@ class AuthRepositoryImpl implements IAuthRepository {
           id: 'demo-owner',
           name: 'Proprietário Demo',
           email: 'proprietario@demo.com',
-          isOwner: true,
+          role: UserRole.landlord,
         ),
       DemoRole.admin => const AuthUserModel(
           id: 'demo-admin',
           name: 'Admin Demo',
           email: 'admin@demo.com',
-          isAdmin: true,
+          role: UserRole.admin,
         ),
     };
     return AuthSessionModel(

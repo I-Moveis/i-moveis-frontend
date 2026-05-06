@@ -104,8 +104,9 @@ class _RoleOnboardingPageState extends ConsumerState<RoleOnboardingPage>
         data: {'role': role},
       );
       if (!mounted) return;
-      final destination = role == 'LANDLORD' ? '/profile/my-properties' : '/home';
-      context.go(destination);
+      // Landlord aterrissa em /home (dashboard); /my-properties fica para o
+      // acesso explícito via bottom nav.
+      context.go('/home');
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() => _submittingRole = null);

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../domain/entities/auth_user.dart';
 import '../providers/auth_notifier.dart';
 import '../providers/auth_state.dart';
 
@@ -36,7 +37,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isOwner = false;
+  // O switch "SOU PROPRIETÁRIO" alterna entre TENANT e LANDLORD. O backend é a
+  // fonte de verdade — depois do POST /auth/register + /users/me, o cache é
+  // reescrito com o role autoritativo (ver AuthRepositoryImpl._buildSyncedSession).
+  UserRole _role = UserRole.tenant;
   bool _acceptedTerms = false;
   bool _isLoading = false;
 
@@ -209,7 +213,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
           email: email,
           phone: phone,
           password: password,
-          isOwner: _isOwner,
+          role: _role,
         );
   }
 
@@ -220,7 +224,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       next.whenOrNull(
         authenticated: (user) {
-          context.go('/home');
+          final String destination;
+          if (user.needsRoleOnboarding) {
+            destination = '/onboarding/role';
+          } else if (user.isAdmin) {
+            destination = '/admin';
+          } else {
+            destination = '/home';
+          }
+          context.go(destination);
         },
         error: (message) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -694,7 +706,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
   // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildOwnerToggle(bool isDark) {
     final bgColor = BrutalistPalette.cardBg(isDark);
-    final borderColor = _isOwner
+    final isOwner = _role == UserRole.landlord;
+    final borderColor = isOwner
         ? BrutalistPalette.accentOrange(isDark).withValues(alpha: isDark ? 0.4 : 0.3)
         : BrutalistPalette.cardBorder(isDark);
 
@@ -729,8 +742,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
             ),
           ),
           Switch(
-            value: _isOwner,
-            onChanged: (v) => setState(() => _isOwner = v),
+            value: isOwner,
+            onChanged: (v) => setState(
+              () => _role = v ? UserRole.landlord : UserRole.tenant,
+            ),
             activeThumbColor: BrutalistPalette.accentAmber(isDark),
             activeTrackColor: isDark
                 ? BrutalistPalette.warmBrown.withValues(alpha: 0.4)

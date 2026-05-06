@@ -200,7 +200,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
             const SizedBox(height: AppSpacing.xs),
 
             RevealText(
-              text: 'i-m├│veis',
+              text: 'i-móveis',
               style: AppTypography.displayBrand.copyWith(
                 color: titleColor,
               ),

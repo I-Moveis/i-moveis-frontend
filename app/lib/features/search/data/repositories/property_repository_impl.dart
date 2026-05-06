@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/network/network_exception.dart';
 import 'package:dio/dio.dart';
@@ -67,10 +68,12 @@ class PropertyRepositoryImpl implements PropertyRepository {
     int page, {
     required bool isNetworkError,
   }) async {
+    debugPrint('[PropertyRepositoryImpl] Fallback triggered. isNetworkError: $isNetworkError');
     final cachedProperties =
         await localDataSource.getCachedProperties(filters, page: page);
 
     if (cachedProperties.isNotEmpty) {
+      debugPrint('[PropertyRepositoryImpl] Returning ${cachedProperties.length} cached properties.');
       return SearchResult(
         properties: cachedProperties,
         isOffline: true,

@@ -182,10 +182,10 @@ class TenantsPage extends StatelessWidget {
 }
 
 class _TenantDetailsSheet extends StatelessWidget {
+  const _TenantDetailsSheet({required this.tenant, required this.index, required this.isDark});
   final _TenantData tenant;
   final int index;
   final bool isDark;
-  const _TenantDetailsSheet({required this.tenant, required this.index, required this.isDark});
 
   @override
   Widget build(BuildContext context) {

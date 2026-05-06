@@ -163,7 +163,10 @@ class AdminDashboardPage extends ConsumerWidget {
                       onModerationTap: () {
                         try {
                           ref.read(adminModerationTabProvider.notifier).selectPending();
-                        } catch (_) {}
+                        } on Object {
+                          // Provider pode não existir durante primeira carga;
+                          // navegação deve prosseguir mesmo assim.
+                        }
                         context.push('/admin/listings');
                       },
                       onReportsTap: () => context.push('/admin/reports'),

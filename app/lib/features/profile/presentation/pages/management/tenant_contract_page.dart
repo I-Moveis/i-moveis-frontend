@@ -1,19 +1,20 @@
-import 'package:flutter/material.dart';
 import 'package:app/design_system/design_system.dart';
+import 'package:flutter/material.dart';
 
 class TenantContractPage extends StatelessWidget {
-  final String tenantName;
 
   const TenantContractPage({
-    super.key,
-    required this.tenantName,
+    required this.tenantName, super.key,
   });
+  final String tenantName;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
+    // Mantido para uso futuro quando a página ligar o accent em highlights
+    // da seção de contrato (branding consistente com o resto do perfil).
     // ignore: unused_local_variable
     final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
@@ -43,13 +44,12 @@ class TenantContractPage extends StatelessWidget {
                   BoxShadow(
                     color: titleColor.withValues(alpha: 0.05),
                     offset: const Offset(4, 4),
-                    blurRadius: 0,
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  Icon(Icons.verified_user_rounded, color: AppColors.success, size: 48),
+                  const Icon(Icons.verified_user_rounded, color: AppColors.success, size: 48),
                   const SizedBox(height: AppSpacing.md),
                   Text('CONTRATO DE LOCAÇÃO', style: AppTypography.titleLarge.copyWith(color: titleColor, fontWeight: FontWeight.bold)),
                   Text('REGISTRO #IM-99281-2024', style: AppTypography.bodySmall.copyWith(color: mutedColor)),
@@ -57,7 +57,7 @@ class TenantContractPage extends StatelessWidget {
                   _buildContractSection('Locador', 'Helen Proprietária', titleColor, mutedColor),
                   _buildContractSection('Locatário', tenantName, titleColor, mutedColor),
                   _buildContractSection('Vigência', '12 meses (Abr/2024 - Abr/2025)', titleColor, mutedColor),
-                  _buildContractSection('Valor Mensal', 'R\$ 2.500,00', titleColor, mutedColor),
+                  _buildContractSection('Valor Mensal', r'R$ 2.500,00', titleColor, mutedColor),
                   const SizedBox(height: AppSpacing.xl),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
@@ -68,7 +68,7 @@ class TenantContractPage extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle, color: AppColors.success, size: 14),
+                        const Icon(Icons.check_circle, color: AppColors.success, size: 14),
                         const SizedBox(width: AppSpacing.xs),
                         Text('ASSINADO DIGITALMENTE', style: AppTypography.monoSmallWide.copyWith(color: AppColors.success, fontSize: 10)),
                       ],

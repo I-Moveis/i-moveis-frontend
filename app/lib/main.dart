@@ -7,12 +7,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/constants.dart';
 import 'core/providers/shared_preferences_provider.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/fcm_service_provider.dart';
 import 'features/search/data/providers/data_providers.dart';
 import 'features/search/domain/usecases/search_properties_usecase.dart';
-import 'core/constants.dart';
 import 'firebase_options.dart';
 
 void main() {

@@ -67,7 +67,7 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
     // Basic cleaning and parsing
     final titleText = _title.text.trim();
     final addressText = _address.text.trim();
-    final price = double.tryParse(_price.text.replaceAll(',', '.').replaceAll('R\$', '').trim());
+    final price = double.tryParse(_price.text.replaceAll(',', '.').replaceAll(r'R$', '').trim());
 
     if (titleText.isEmpty || addressText.isEmpty || price == null) {
       messenger.showSnackBar(
@@ -81,8 +81,9 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
 
     // Intelligent address parsing (split by comma if possible)
     final addressParts = addressText.split(',');
-    String? city, state;
-    String finalAddress = addressText;
+    String? city;
+    String? state;
+    var finalAddress = addressText;
 
     if (addressParts.length >= 2) {
       finalAddress = addressParts[0].trim();

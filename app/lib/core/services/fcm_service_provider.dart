@@ -9,7 +9,7 @@ final fcmServiceProvider = Provider<FcmService?>((ref) {
   if (kUseMockAuth) return null;
   try {
     return FcmService(messaging: FirebaseMessaging.instance);
-  } catch (e) {
+  } on Object catch (e) {
     debugPrint('[fcmServiceProvider] Erro ao obter FirebaseMessaging.instance: $e');
     return null;
   }

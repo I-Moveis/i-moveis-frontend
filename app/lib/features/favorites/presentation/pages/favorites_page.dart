@@ -19,7 +19,7 @@ class FavoritesPage extends ConsumerWidget {
 
         if (isOwner) {
           // When used as a tab, we don't want a back button
-          return const MyPropertiesPage(showBack: false);
+          return const MyPropertiesPage();
         }
 
         return BrutalistPageScaffold(

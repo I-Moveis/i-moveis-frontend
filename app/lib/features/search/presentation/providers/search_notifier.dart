@@ -8,7 +8,7 @@ import 'search_filters_provider.dart';
 
 class SearchState {
 
-  SearchState({
+  const SearchState({
     required this.properties,
     this.isOffline = false,
     this.hasReachedMax = false,
@@ -48,13 +48,26 @@ final searchScrollTriggerProvider =
 class SearchNotifier extends AsyncNotifier<SearchState> {
   int _currentPage = 1;
 
+  /// Sequência monotônica que identifica a "geração" da busca vigente.
+  /// Incrementada antes de cada fetch; ao resolver, comparamos o seq local
+  /// com este valor — se divergir, outra request foi disparada e este
+  /// resultado está obsoleto (stale) e deve ser descartado. Evita que uma
+  /// resposta lenta sobrescreva uma resposta recente (race condition).
+  int _requestSeq = 0;
+
   @override
   FutureOr<SearchState> build() async {
     // Watch filter changes to trigger rebuild
     ref.watch(searchFiltersProvider);
 
     _currentPage = 1;
+    final seq = ++_requestSeq;
     final result = await _fetchPage(1);
+    if (seq != _requestSeq) {
+      // Resposta obsoleta; devolve estado neutro e deixa a build mais
+      // recente preencher o state.
+      return const SearchState(properties: []);
+    }
     return SearchState(
       properties: result.properties,
       isOffline: result.isOffline,
@@ -65,9 +78,13 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
   /// Initial search or search reset
   Future<void> search() async {
     _currentPage = 1;
+    final seq = ++_requestSeq;
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final result = await _fetchPage(1);
+      if (seq != _requestSeq) {
+        throw const _StaleResponseException();
+      }
       return SearchState(
         properties: result.properties,
         isOffline: result.isOffline,
@@ -82,10 +99,14 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
 
     final currentState = state.value;
     if (currentState == null) return;
-    
+
     final nextPage = _currentPage + 1;
+    final seq = ++_requestSeq;
 
     final result = await AsyncValue.guard(() => _fetchPage(nextPage));
+
+    // Descarte silencioso se outra request já foi disparada no meio-tempo.
+    if (seq != _requestSeq) return;
 
     result.when(
       data: (searchResult) {
@@ -112,4 +133,11 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
     final filters = ref.read(searchFiltersProvider);
     return useCase.execute(filters, page: page);
   }
+}
+
+/// Exceção interna: marca uma resposta como obsoleta (nova request foi
+/// disparada antes desta resolver). Não é exposta ao usuário — é
+/// capturada pelo `AsyncValue.guard` e convertida em erro silencioso.
+class _StaleResponseException implements Exception {
+  const _StaleResponseException();
 }

@@ -1,18 +1,16 @@
 import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:flutter/material.dart';
+
 import '../tokens/app_colors.dart';
+import '../tokens/app_radius.dart';
 import '../tokens/app_spacing.dart';
 import '../tokens/app_typography.dart';
 import '../tokens/brutalist_palette.dart';
-import '../tokens/app_radius.dart';
 
 /// A brutalist-styled Bar Chart for analytical data.
 class BrutalistBarChart extends StatelessWidget {
   const BrutalistBarChart({
-    super.key,
-    required this.data,
-    required this.labels,
-    required this.isDark,
+    required this.data, required this.labels, required this.isDark, super.key,
     this.height = 240,
     this.title,
     this.valueSuffix = '',
@@ -73,7 +71,6 @@ class BrutalistBarChart extends StatelessWidget {
                 ),
               ),
               titlesData: fl.FlTitlesData(
-                show: true,
                 bottomTitles: fl.AxisTitles(
                   sideTitles: fl.SideTitles(
                     showTitles: true,
@@ -81,7 +78,7 @@ class BrutalistBarChart extends StatelessWidget {
                       final index = value.toInt();
                       if (index < 0 || index >= labels.length) return const SizedBox.shrink();
                       return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
+                        padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           labels[index],
                           style: AppTypography.monoSmall.copyWith(color: mutedColor, fontSize: 10),
@@ -103,11 +100,10 @@ class BrutalistBarChart extends StatelessWidget {
                     reservedSize: 32,
                   ),
                 ),
-                topTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
-                rightTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
+                topTitles: const fl.AxisTitles(),
+                rightTitles: const fl.AxisTitles(),
               ),
               gridData: fl.FlGridData(
-                show: true,
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (value) => fl.FlLine(
                   color: borderColor.withValues(alpha: 0.1),
@@ -126,7 +122,6 @@ class BrutalistBarChart extends StatelessWidget {
                       borderRadius: AppRadius.borderXs,
                       borderSide: BorderSide(
                         color: isDark ? AppColors.white.withValues(alpha: 0.1) : AppColors.black.withValues(alpha: 0.1),
-                        width: 1,
                       ),
                     ),
                   ],
@@ -143,10 +138,7 @@ class BrutalistBarChart extends StatelessWidget {
 /// A brutalist-styled Line Chart for analytical data.
 class BrutalistLineChart extends StatelessWidget {
   const BrutalistLineChart({
-    super.key,
-    required this.points,
-    required this.labels,
-    required this.isDark,
+    required this.points, required this.labels, required this.isDark, super.key,
     this.height = 240,
     this.title,
     this.valueSuffix = '',
@@ -207,7 +199,6 @@ class BrutalistLineChart extends StatelessWidget {
                 ),
               ),
               gridData: fl.FlGridData(
-                show: true,
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (value) => fl.FlLine(
                   color: borderColor.withValues(alpha: 0.1),
@@ -215,7 +206,6 @@ class BrutalistLineChart extends StatelessWidget {
                 ),
               ),
               titlesData: fl.FlTitlesData(
-                show: true,
                 bottomTitles: fl.AxisTitles(
                   sideTitles: fl.SideTitles(
                     showTitles: true,
@@ -223,7 +213,7 @@ class BrutalistLineChart extends StatelessWidget {
                       final index = value.toInt();
                       if (index < 0 || index >= labels.length) return const SizedBox.shrink();
                       return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
+                        padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           labels[index],
                           style: AppTypography.monoSmall.copyWith(color: mutedColor, fontSize: 10),
@@ -237,7 +227,7 @@ class BrutalistLineChart extends StatelessWidget {
                   sideTitles: fl.SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
-                      String text = value.toInt().toString();
+                      var text = value.toInt().toString();
                       if (value >= 1000) text = '${(value / 1000).toStringAsFixed(1)}k';
                       return Text(
                         text,
@@ -247,8 +237,8 @@ class BrutalistLineChart extends StatelessWidget {
                     reservedSize: 32,
                   ),
                 ),
-                topTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
-                rightTitles: const fl.AxisTitles(sideTitles: fl.SideTitles(showTitles: false)),
+                topTitles: const fl.AxisTitles(),
+                rightTitles: const fl.AxisTitles(),
               ),
               borderData: fl.FlBorderData(show: false),
               lineBarsData: [
@@ -259,7 +249,6 @@ class BrutalistLineChart extends StatelessWidget {
                   barWidth: 3,
                   isStrokeCapRound: true,
                   dotData: fl.FlDotData(
-                    show: true,
                     getDotPainter: (spot, percent, barData, index) => fl.FlDotCirclePainter(
                       radius: 3,
                       color: accentColor,
@@ -274,7 +263,7 @@ class BrutalistLineChart extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         accentColor.withValues(alpha: 0.2),
-                        accentColor.withValues(alpha: 0.0),
+                        accentColor.withValues(alpha: 0),
                       ],
                     ),
                   ),

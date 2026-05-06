@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
-import '../../presentation/widgets/search_bar_widget.dart';
+import '../../../profile/presentation/pages/tenants_page.dart';
+import '../../presentation/providers/search_filters_provider.dart';
+import '../../presentation/providers/search_notifier.dart';
 import '../../presentation/widgets/filter_chip_bar.dart';
 import '../../presentation/widgets/property_list_tile.dart';
-import '../../../profile/presentation/pages/tenants_page.dart';
-import '../../presentation/providers/search_notifier.dart';
-import '../../presentation/providers/search_filters_provider.dart';
+import '../../presentation/widgets/search_bar_widget.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
 /// Switches to TenantsPage if the user is an owner.

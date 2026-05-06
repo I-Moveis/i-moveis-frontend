@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 
 /// Base URL for the i-Móveis REST API. Sobrescrito por `--dart-define=API_BASE_URL=...`
 /// em builds de staging/prod.
@@ -22,7 +22,6 @@ const Duration kApiReceiveTimeout = Duration(seconds: 30);
 /// running backend (admin login, listings, users — all mocked).
 const bool kUseMockData = bool.fromEnvironment(
   'USE_MOCK_DATA',
-  defaultValue: false,
 );
 
 /// When true, auth layer uses mock (fake token/user) instead of Firebase Auth.
@@ -31,5 +30,4 @@ const bool kUseMockData = bool.fromEnvironment(
 /// sem projeto configurado.
 const bool kUseMockAuth = bool.fromEnvironment(
   'USE_MOCK_AUTH',
-  defaultValue: false,
 );

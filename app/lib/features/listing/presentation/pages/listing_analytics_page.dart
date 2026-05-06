@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../../design_system/design_system.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../design_system/design_system.dart';
 import '../providers/my_properties_notifier.dart';
 // Property is used via type inference in the data block
 
 class ListingAnalyticsPage extends ConsumerStatefulWidget {
+  const ListingAnalyticsPage({required this.propertyId, super.key});
   final String propertyId;
-  const ListingAnalyticsPage({super.key, required this.propertyId});
 
   @override
   ConsumerState<ListingAnalyticsPage> createState() => _ListingAnalyticsPageState();
@@ -262,9 +263,9 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
 
   Widget _buildRentHistory(bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
     final rents = [
-      {'year': '2024', 'value': 'R\$ 2.500', 'increase': '+8.5% (IGP-M)'},
-      {'year': '2023', 'value': 'R\$ 2.300', 'increase': '+9.2% (IGP-M)'},
-      {'year': '2022', 'value': 'R\$ 2.100', 'increase': 'Valor Inicial'},
+      {'year': '2024', 'value': r'R$ 2.500', 'increase': '+8.5% (IGP-M)'},
+      {'year': '2023', 'value': r'R$ 2.300', 'increase': '+9.2% (IGP-M)'},
+      {'year': '2022', 'value': r'R$ 2.100', 'increase': 'Valor Inicial'},
     ];
 
     return Container(
@@ -350,10 +351,10 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
 }
 
 class _Lightbox extends StatefulWidget {
-  final List<String> images;
-  final int initialIndex;
 
   const _Lightbox({required this.images, required this.initialIndex});
+  final List<String> images;
+  final int initialIndex;
 
   @override
   State<_Lightbox> createState() => _LightboxState();
@@ -382,7 +383,7 @@ class _LightboxState extends State<_Lightbox> {
             onPageChanged: (index) => setState(() => _currentIndex = index),
             itemBuilder: (context, index) => InteractiveViewer(
               minScale: 0.5,
-              maxScale: 4.0,
+              maxScale: 4,
               child: Center(
                 child: Image.network(
                   widget.images[index],

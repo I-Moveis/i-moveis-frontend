@@ -615,7 +615,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
                     child: Image.network(
                       p.imageUrls[_currentImage],
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, __, ___) => ColoredBox(
                         color:
                             BrutalistPalette.imagePlaceholderBg(isDark),
                         child: Icon(Icons.broken_image_outlined,
@@ -841,7 +841,7 @@ class _PendingPropertyCardState extends State<_PendingPropertyCard> {
               child: Image.network(
                 p.imageUrls.first,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, __, ___) => ColoredBox(
                   color: BrutalistPalette.imagePlaceholderBg(isDark),
                   child: Icon(Icons.home_outlined, color: mutedColor),
                 ),
@@ -1091,7 +1091,7 @@ class _RejectSheetState extends State<_RejectSheet> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Row(children: [
-              Icon(Icons.info_outline, size: 12, color: AppColors.warning),
+              const Icon(Icons.info_outline, size: 12, color: AppColors.warning),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(

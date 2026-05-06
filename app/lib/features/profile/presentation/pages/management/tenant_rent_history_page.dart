@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:app/design_system/design_system.dart';
+import 'package:flutter/material.dart';
 
 class TenantRentHistoryPage extends StatelessWidget {
-  final String tenantName;
 
   const TenantRentHistoryPage({
-    super.key,
-    required this.tenantName,
+    required this.tenantName, super.key,
   });
+  final String tenantName;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +45,7 @@ class TenantRentHistoryPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Saldo em Aberto', style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-                      Text('R\$ 0,00', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+                      Text(r'R$ 0,00', style: AppTypography.headlineMedium.copyWith(color: titleColor)),
                     ],
                   ),
                   Icon(Icons.account_balance_wallet_outlined, color: accentColor, size: 32),
@@ -56,7 +55,7 @@ class TenantRentHistoryPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
             Text('Pagamentos Recebidos', style: AppTypography.titleMedium.copyWith(color: titleColor, fontWeight: FontWeight.bold)),
             const SizedBox(height: AppSpacing.md),
-            for (var item in [
+            for (final item in [
               {'label': 'Abril', 'price': '2.500', 'isPaid': true, 'date': '05/04'},
               {'label': 'Março', 'price': '2.500', 'isPaid': true, 'date': '04/03'},
               {'label': 'Fevereiro', 'price': '2.500', 'isPaid': true, 'date': '05/02'},

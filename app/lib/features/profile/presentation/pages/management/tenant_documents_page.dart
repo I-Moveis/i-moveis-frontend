@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:app/design_system/design_system.dart';
+import 'package:flutter/material.dart';
 
 class TenantDocumentsPage extends StatelessWidget {
-  final String tenantName;
 
   const TenantDocumentsPage({
-    super.key,
-    required this.tenantName,
+    required this.tenantName, super.key,
   });
+  final String tenantName;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +58,7 @@ class TenantDocumentsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            for (var doc in documents) ...[
+            for (final doc in documents) ...[
               _buildDocCard(context, doc, isDark, titleColor, mutedColor, accentColor),
               const SizedBox(height: AppSpacing.md),
             ],

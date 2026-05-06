@@ -1,7 +1,8 @@
 import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../design_system/design_system.dart';
 import '../../../listing/presentation/providers/my_properties_notifier.dart';
 import '../../../search/domain/entities/property.dart';
@@ -45,8 +46,8 @@ class LandlordDashboardPage extends ConsumerWidget {
 }
 
 class _HeaderSection extends StatelessWidget {
-  final bool isDark;
   const _HeaderSection({required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +55,7 @@ class _HeaderSection extends StatelessWidget {
     final subtitleColor = isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
 
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           Expanded(
@@ -93,16 +94,16 @@ class _HeaderSection extends StatelessWidget {
 }
 
 class _StatsSection extends StatelessWidget {
-  final bool isDark;
   const _StatsSection({required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          const Row(
+          Row(
             children: [
               AppMetricCard(
                 icon: Icons.visibility_outlined,
@@ -117,8 +118,8 @@ class _StatsSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Row(
+          SizedBox(height: 12),
+          Row(
             children: [
               AppMetricCard(
                 icon: Icons.description_outlined,
@@ -140,8 +141,8 @@ class _StatsSection extends StatelessWidget {
 }
 
 class _ChartsSection extends StatelessWidget {
-  final bool isDark;
   const _ChartsSection({required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +155,7 @@ class _ChartsSection extends StatelessWidget {
         const AppSectionHeader(title: 'Análise de Performance'),
         const SizedBox(height: 24),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
               Row(
@@ -203,8 +204,8 @@ class _ChartsSection extends StatelessWidget {
 }
 
 class _QuickActionsSection extends StatelessWidget {
-  final bool isDark;
   const _QuickActionsSection({required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +216,7 @@ class _QuickActionsSection extends StatelessWidget {
         const AppSectionHeader(title: 'Ações Rápidas'),
         const SizedBox(height: 16),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -253,18 +254,17 @@ class _QuickActionsSection extends StatelessWidget {
 }
 
 class _ActionItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isDark;
 
   const _ActionItem({
-    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
     required this.isDark,
   });
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +312,7 @@ class _RentedPropertiesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.xxl),
-        AppSectionHeader(
+        const AppSectionHeader(
           title: 'Imóveis Locados',
         ),
         const SizedBox(height: AppSpacing.md),
@@ -415,18 +415,17 @@ class _SeeMoreTile extends StatelessWidget {
 }
 
 class _PropertyTile extends StatelessWidget {
-  final String title;
-  final String tenant;
-  final String price;
-  final bool isDark;
 
   const _PropertyTile({
-    super.key,
     required this.title,
     required this.tenant,
     required this.price,
     required this.isDark,
   });
+  final String title;
+  final String tenant;
+  final String price;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
@@ -453,8 +452,8 @@ class _PropertyTile extends StatelessWidget {
 }
 
 class _RecentTenantsSection extends StatelessWidget {
+  const _RecentTenantsSection({required this.isDark});
   final bool isDark;
-  const _RecentTenantsSection({super.key, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -465,7 +464,7 @@ class _RecentTenantsSection extends StatelessWidget {
         const AppSectionHeader(title: 'Inquilinos Recentes'),
         const SizedBox(height: 16),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
               _TenantItem(name: 'Carlos Mendes', property: 'Cobertura Vila Madalena', status: 'Aluguel em dia', isDark: isDark),
@@ -480,18 +479,17 @@ class _RecentTenantsSection extends StatelessWidget {
 }
 
 class _TenantItem extends StatelessWidget {
-  final String name;
-  final String property;
-  final String status;
-  final bool isDark;
 
   const _TenantItem({
-    super.key,
     required this.name,
     required this.property,
     required this.status,
     required this.isDark,
   });
+  final String name;
+  final String property;
+  final String status;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {

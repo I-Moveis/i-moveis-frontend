@@ -141,6 +141,10 @@ extension on _ReportFilter {
 class _ReportFilterNotifier extends Notifier<_ReportFilter> {
   @override
   _ReportFilter build() => _ReportFilter.all;
+
+  // Usado como método pelos call sites (`ref.read(...).select(f)`);
+  // converter em setter quebraria a API consumida nos widgets.
+  // ignore: use_setters_to_change_properties
   void select(_ReportFilter f) => state = f;
 }
 
@@ -158,7 +162,6 @@ class AdminReportsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
-        final titleColor = BrutalistPalette.title(isDark);
         final mutedColor = BrutalistPalette.muted(isDark);
         final accentColor =
             isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
@@ -306,9 +309,10 @@ class AdminReportsPage extends ConsumerWidget {
     final label = action == 'RESOLVED' ? 'resolvida' : 'arquivada';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        // Mensagem única de debug/demo; partir em várias linhas prejudica
+        // legibilidade do snackbar no dispositivo.
         // ignore: lines_longer_than_80_chars
         content: Text('Denúncia #${report.id} marcada como $label (demo). Conectar a PATCH /api/reports/${report.id} quando backend estiver pronto.'),
-        duration: const Duration(seconds: 4),
       ),
     );
   }

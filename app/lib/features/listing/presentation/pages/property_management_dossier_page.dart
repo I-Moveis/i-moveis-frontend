@@ -19,7 +19,6 @@ class PropertyManagementDossierPage extends ConsumerWidget {
           children: [
             const BrutalistAppBar(
               title: 'Gestão de Aluguéis',
-              showBack: true,
             ),
             Expanded(
               child: propertiesAsync.when(
@@ -108,18 +107,15 @@ class _ManagementCard extends StatelessWidget {
         statusColor = AppColors.success;
         statusLabel = 'PAGO';
         statusIcon = Icons.check_circle_outline_rounded;
-        break;
       case 'LATE':
         statusColor = AppColors.error;
         statusLabel = 'ATRASADO';
         statusIcon = Icons.error_outline_rounded;
-        break;
       case 'PENDING':
       default:
         statusColor = BrutalistPalette.accentOrange(isDark);
         statusLabel = 'AGUARDANDO';
         statusIcon = Icons.access_time_rounded;
-        break;
     }
 
     return Container(
@@ -179,7 +175,7 @@ class _ManagementCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: statusColor,
                         borderRadius: AppRadius.borderSm,
-                        border: Border.all(color: Colors.black, width: 1.5),
+                        border: Border.all(width: 1.5),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -247,7 +243,6 @@ class _ManagementCard extends StatelessWidget {
                       child: AppButton(
                         label: 'CHAT',
                         onPressed: onChat,
-                        variant: AppButtonVariant.primary,
                         icon: Icons.chat_bubble_outline_rounded,
                       ),
                     ),

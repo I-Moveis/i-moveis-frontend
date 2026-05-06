@@ -45,6 +45,10 @@ extension _RoleFilterLabel on _RoleFilter {
 class _RoleFilterNotifier extends Notifier<_RoleFilter> {
   @override
   _RoleFilter build() => _RoleFilter.all;
+
+  // Usado como método pelos call sites (`ref.read(...).select(f)`);
+  // converter em setter quebraria a API consumida nos widgets.
+  // ignore: use_setters_to_change_properties
   void select(_RoleFilter f) => state = f;
 }
 
@@ -389,7 +393,7 @@ class _UserTile extends StatelessWidget {
           if (user.createdAt != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Padding(
-              padding: const EdgeInsets.only(left: 52.0),
+              padding: const EdgeInsets.only(left: 52),
               child: Text(
                 'Desde ${_formatDate(user.createdAt!)}',
                 style: AppTypography.bodySmall
@@ -529,7 +533,7 @@ class _NotesSheetState extends State<_NotesSheet> {
 
             // "local" warning
             Row(children: [
-              Icon(Icons.info_outline, size: 12, color: AppColors.warning),
+              const Icon(Icons.info_outline, size: 12, color: AppColors.warning),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(

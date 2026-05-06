@@ -21,8 +21,12 @@ import '../../features/listing/presentation/pages/create_listing_page.dart';
 import '../../features/listing/presentation/pages/edit_listing_page.dart';
 import '../../features/listing/presentation/pages/listing_analytics_page.dart';
 import '../../features/listing/presentation/pages/my_properties_page.dart';
+import '../../features/listing/presentation/pages/property_management_dossier_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_documents_page.dart';
+import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/settings_page.dart';
 import '../../features/property/presentation/pages/photo_gallery_page.dart';
@@ -39,10 +43,6 @@ import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
 import '../../features/visits/presentation/pages/visit_detail_page.dart';
-import '../../features/profile/presentation/pages/management/tenant_documents_page.dart';
-import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
-import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
-import '../../features/listing/presentation/pages/property_management_dossier_page.dart';
 
 // Navigator keys for each shell branch.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -248,7 +248,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/my-properties',
-                builder: (_, _) => const MyPropertiesPage(showBack: false),
+                builder: (_, _) => const MyPropertiesPage(),
                 routes: [
                   GoRoute(
                     path: 'create',

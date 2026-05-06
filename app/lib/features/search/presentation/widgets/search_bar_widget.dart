@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
@@ -5,8 +7,18 @@ import '../providers/search_filters_provider.dart';
 import 'search_filter_modal.dart';
 
 /// Collapsed search bar "Pill" that allows typing and triggers filters with suggestions.
-class SearchBarWidget extends ConsumerWidget {
+///
+/// O `onChanged` do input é debounced em 400ms antes de atualizar o
+/// `searchFiltersProvider` — evita uma requisição por tecla digitada.
+class SearchBarWidget extends ConsumerStatefulWidget {
   const SearchBarWidget({super.key});
+
+  @override
+  ConsumerState<SearchBarWidget> createState() => _SearchBarWidgetState();
+}
+
+class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
+  static const Duration _kDebounce = Duration(milliseconds: 400);
 
   static const List<String> _mockSuggestions = [
     'São Paulo, SP',
@@ -20,6 +32,33 @@ class SearchBarWidget extends ConsumerWidget {
     'Fortaleza, CE',
   ];
 
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _applyLocation(String value) {
+    ref
+        .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+        .updateLocation(value);
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(_kDebounce, () {
+      if (!mounted) return;
+      _applyLocation(value);
+    });
+  }
+
+  void _onSelected(String selection) {
+    _debounce?.cancel();
+    _applyLocation(selection);
+  }
+
   void _openFilters(BuildContext context) {
     showAppBottomSheet<void>(
       context: context,
@@ -28,7 +67,7 @@ class SearchBarWidget extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final filters = ref.watch<SearchFilters>(searchFiltersProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -41,17 +80,13 @@ class SearchBarWidget extends ConsumerWidget {
           return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
         });
       },
-      onSelected: (String selection) {
-        ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updateLocation(selection);
-      },
+      onSelected: _onSelected,
       initialValue: TextEditingValue(text: filters.location),
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
         return AppSearchBar(
           controller: controller,
           focusNode: focusNode,
-          onChanged: (value) => ref
-              .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
-              .updateLocation(value),
+          onChanged: _onChanged,
           onFilterTap: () => _openFilters(context),
           hint: 'Cidade, bairro ou endereço...',
         );
@@ -78,7 +113,7 @@ class SearchBarWidget extends ConsumerWidget {
                   final option = options.elementAt(index);
                   return ListTile(
                     title: Text(
-                      option, 
+                      option,
                       style: AppTypography.bodyMedium.copyWith(color: BrutalistPalette.title(isDark)),
                     ),
                     onTap: () => onSelected(option),

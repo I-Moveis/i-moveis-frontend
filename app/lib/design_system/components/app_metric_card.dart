@@ -88,8 +88,9 @@ class _CountUpTextState extends State<_CountUpText>
       ).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
       );
-      _controller.reset();
-      _controller.forward();
+      _controller
+        ..reset()
+        ..forward();
     }
   }
 

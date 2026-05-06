@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/network/network_exception.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/property.dart';
 import '../../domain/entities/property_input.dart';

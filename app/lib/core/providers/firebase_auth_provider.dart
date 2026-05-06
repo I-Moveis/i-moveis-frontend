@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final firebaseAuthProvider = Provider<FirebaseAuth?>((_) {
   try {
     return FirebaseAuth.instance;
-  } catch (e) {
+  } on Object catch (e) {
     debugPrint('[firebaseAuthProvider] Erro ao obter FirebaseAuth.instance: $e');
     return null;
   }

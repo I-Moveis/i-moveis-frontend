@@ -3,8 +3,9 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../core/network/network_exception.dart';
-import '../../domain/entities/demo_role.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/entities/demo_role.dart';
 import '../../domain/failures/auth_failure.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../../presentation/bloc/social_provider.dart';
@@ -12,7 +13,6 @@ import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/auth_session_model.dart';
 import '../models/auth_user_model.dart';
-import '../../../../core/services/fcm_service.dart';
 
 class AuthRepositoryImpl implements IAuthRepository {
   AuthRepositoryImpl({

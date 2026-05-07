@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../search/domain/entities/property.dart';
 import '../providers/home_properties_providers.dart';
 import '../widgets/category_bar.dart';
@@ -284,6 +285,9 @@ class _HomePageState extends ConsumerState<HomePage>
     final badge = property.badges.isNotEmpty ? property.badges.first : null;
     final firstImage =
         property.imageUrls.isNotEmpty ? property.imageUrls.first : null;
+    // Coração refletindo o provider real (não o campo legado
+    // `property.isFavorite`, que nunca é atualizado pelos providers).
+    final isFavorite = ref.watch(favoritedIdsProvider).contains(property.id);
 
     return GestureDetector(
       onTap: () => context.push('/property/${property.id}'),
@@ -347,11 +351,11 @@ class _HomePageState extends ConsumerState<HomePage>
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        property.isFavorite
+                        isFavorite
                             ? Icons.favorite_rounded
                             : Icons.favorite_outline_rounded,
                         size: 16,
-                        color: property.isFavorite ? accentColor : mutedColor,
+                        color: isFavorite ? accentColor : mutedColor,
                       ),
                     ),
                   ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -51,6 +53,16 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
 
   late final TextEditingController _stateController;
 
+  /// Debounce para o campo UF — evita disparar busca por tecla digitada.
+  Timer? _stateDebounce;
+  static const Duration _kStateDebounce = Duration(milliseconds: 400);
+
+  /// Valores locais dos sliders enquanto o usuário arrasta. Só são
+  /// propagados para o provider no `onChangeEnd` — caso contrário cada
+  /// frame do arrasto dispararia uma nova request no backend.
+  RangeValues? _localPriceRange;
+  RangeValues? _localAreaRange;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +73,7 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
 
   @override
   void dispose() {
+    _stateDebounce?.cancel();
     _stateController.dispose();
     _transactionScrollController.dispose();
     _propertyTypeScrollController.dispose();
@@ -70,6 +83,14 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     _specialScrollController.dispose();
     _orderByScrollController.dispose();
     super.dispose();
+  }
+
+  void _onStateChanged(String value) {
+    _stateDebounce?.cancel();
+    _stateDebounce = Timer(_kStateDebounce, () {
+      if (!mounted) return;
+      ref.read(searchFiltersProvider.notifier).updateState(value);
+    });
   }
 
   Future<void> _toggleNearbySearch(
@@ -228,66 +249,21 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                 ),
 
                 // --- Price Range ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSectionLabel('Preço', titleColor),
-                    Text(
-                      'R\$ ${filters.priceRange.start.toInt()} - R\$ ${filters.priceRange.end.toInt()}',
-                      style: AppTypography.labelLarge.copyWith(color: accentColor),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                RangeSlider(
-                  values: filters.priceRange,
-                  max: 50000,
-                  divisions: 50,
-                  activeColor: accentColor,
-                  inactiveColor: isDark ? AppColors.blackLightest : AppColors.lightBorder,
-                  onChanged: (values) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePriceRange(values),
+                _buildPriceSection(
+                  filters: filters,
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  isDark: isDark,
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
                 // --- Area ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSectionLabel('Área (m²)', titleColor),
-                    Text(
-                      filters.areaRange == null
-                          ? 'Qualquer'
-                          : '${filters.areaRange!.start.toInt()} - ${filters.areaRange!.end.toInt()} m²',
-                      style: AppTypography.labelLarge
-                          .copyWith(color: accentColor),
-                    ),
-                  ],
+                _buildAreaSection(
+                  filters: filters,
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  isDark: isDark,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                RangeSlider(
-                  values: filters.areaRange ?? const RangeValues(0, 500),
-                  max: 1000,
-                  divisions: 50,
-                  activeColor: accentColor,
-                  inactiveColor: isDark
-                      ? AppColors.blackLightest
-                      : AppColors.lightBorder,
-                  onChanged: (values) => ref
-                      .read<SearchFiltersNotifier>(
-                          searchFiltersProvider.notifier)
-                      .updateAreaRange(values),
-                ),
-                if (filters.areaRange != null)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => ref
-                          .read<SearchFiltersNotifier>(
-                              searchFiltersProvider.notifier)
-                          .updateAreaRange(null),
-                      child: const Text('Limpar área'),
-                    ),
-                  ),
                 const SizedBox(height: AppSpacing.xl),
 
                 // --- State (UF) ---
@@ -297,10 +273,7 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                   hint: 'Ex: SP, RJ, MG',
                   prefixIcon: Icons.map_outlined,
                   controller: _stateController,
-                  onChanged: (v) => ref
-                      .read<SearchFiltersNotifier>(
-                          searchFiltersProvider.notifier)
-                      .updateState(v),
+                  onChanged: _onStateChanged,
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -438,6 +411,102 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPriceSection({
+    required SearchFilters filters,
+    required Color titleColor,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    final displayRange = _localPriceRange ?? filters.priceRange;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionLabel('Preço', titleColor),
+            Text(
+              'R\$ ${displayRange.start.toInt()} - R\$ ${displayRange.end.toInt()}',
+              style: AppTypography.labelLarge.copyWith(color: accentColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        RangeSlider(
+          values: displayRange,
+          max: 50000,
+          divisions: 50,
+          activeColor: accentColor,
+          inactiveColor:
+              isDark ? AppColors.blackLightest : AppColors.lightBorder,
+          onChanged: (values) => setState(() => _localPriceRange = values),
+          onChangeEnd: (values) {
+            setState(() => _localPriceRange = values);
+            ref
+                .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+                .updatePriceRange(values);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAreaSection({
+    required SearchFilters filters,
+    required Color titleColor,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    final providerRange = filters.areaRange ?? const RangeValues(0, 500);
+    final displayRange = _localAreaRange ?? providerRange;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionLabel('Área (m²)', titleColor),
+            Text(
+              filters.areaRange == null && _localAreaRange == null
+                  ? 'Qualquer'
+                  : '${displayRange.start.toInt()} - ${displayRange.end.toInt()} m²',
+              style: AppTypography.labelLarge.copyWith(color: accentColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        RangeSlider(
+          values: displayRange,
+          max: 1000,
+          divisions: 50,
+          activeColor: accentColor,
+          inactiveColor:
+              isDark ? AppColors.blackLightest : AppColors.lightBorder,
+          onChanged: (values) => setState(() => _localAreaRange = values),
+          onChangeEnd: (values) {
+            setState(() => _localAreaRange = values);
+            ref
+                .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+                .updateAreaRange(values);
+          },
+        ),
+        if (filters.areaRange != null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                setState(() => _localAreaRange = null);
+                ref
+                    .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+                    .updateAreaRange(null);
+              },
+              child: const Text('Limpar área'),
+            ),
+          ),
+      ],
     );
   }
 

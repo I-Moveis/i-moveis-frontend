@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
@@ -147,7 +148,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final property = state.properties[index];
-                            return PropertyListTile(property: property);
+                            return PropertyListTile(
+                              property: property,
+                              onTap: () =>
+                                  context.push('/property/${property.id}'),
+                            );
                           },
                           childCount: state.properties.length,
                         ),

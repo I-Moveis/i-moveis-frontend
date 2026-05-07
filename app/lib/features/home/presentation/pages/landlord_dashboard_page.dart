@@ -13,32 +13,34 @@ class LandlordDashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final propertiesAsync = ref.watch(myPropertiesNotifierProvider);
+    // A lista de imóveis só alimenta a seção "Imóveis Locados". Se o endpoint
+    // estiver fora (timeout/500/filtro landlordId não implementado), a
+    // dashboard continua renderizando — a seção cai num estado vazio. Nunca
+    // derrubar a tela inteira por causa de um fetch secundário.
+    final properties = propertiesAsync.asData?.value ?? const <Property>[];
 
     return BrutalistPageScaffold(
       waveSpeed: 0.15,
       waveAmplitude: 0.3,
       waveCount: 3,
       builder: (context, isDark, entrance, pulse) {
-        return propertiesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Erro ao carregar dados: $e')),
-          data: (properties) => CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _HeaderSection(isDark: isDark)),
-              SliverToBoxAdapter(child: _StatsSection(isDark: isDark)),
-              SliverToBoxAdapter(child: _QuickActionsSection(isDark: isDark)),
-              SliverToBoxAdapter(
-                child: _RentedPropertiesSection(
-                  isDark: isDark,
-                  properties: properties,
-                ),
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _HeaderSection(isDark: isDark)),
+            SliverToBoxAdapter(child: _StatsSection(isDark: isDark)),
+            SliverToBoxAdapter(child: _QuickActionsSection(isDark: isDark)),
+            SliverToBoxAdapter(
+              child: _RentedPropertiesSection(
+                isDark: isDark,
+                properties: properties,
+                isLoading: propertiesAsync.isLoading,
               ),
-              SliverToBoxAdapter(child: _RecentTenantsSection(isDark: isDark)),
-              SliverToBoxAdapter(child: _ChartsSection(isDark: isDark)),
-              const SliverToBoxAdapter(child: SizedBox(height: 80)),
-            ],
-          ),
+            ),
+            SliverToBoxAdapter(child: _RecentTenantsSection(isDark: isDark)),
+            SliverToBoxAdapter(child: _ChartsSection(isDark: isDark)),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
         );
       },
     );
@@ -236,7 +238,7 @@ class _QuickActionsSection extends StatelessWidget {
               _ActionItem(
                 icon: Icons.event_note_rounded,
                 label: 'Visitas',
-                onTap: () => context.push('/profile/landlord-visits'),
+                onTap: () => context.push('/landlord-visits'),
                 isDark: isDark,
               ),
               _ActionItem(
@@ -301,10 +303,12 @@ class _RentedPropertiesSection extends StatelessWidget {
   const _RentedPropertiesSection({
     required this.isDark,
     required this.properties,
+    this.isLoading = false,
   });
 
   final bool isDark;
   final List<Property> properties;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +320,21 @@ class _RentedPropertiesSection extends StatelessWidget {
           title: 'Imóveis Locados',
         ),
         const SizedBox(height: AppSpacing.md),
-        if (properties.isEmpty)
+        if (isLoading && properties.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.screenHorizontal,
+              vertical: AppSpacing.md,
+            ),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else if (properties.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
             child: Text(

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../entities/auth_session.dart';
+import '../entities/auth_user.dart';
 import '../failures/auth_failure.dart';
 import '../repositories/i_auth_repository.dart';
 
@@ -14,14 +15,14 @@ class RegisterUseCase {
     required String email,
     required String phone,
     required String password,
-    bool isOwner = false,
+    UserRole role = UserRole.tenant,
   }) {
     return _repository.register(
       name: name,
       email: email,
       phone: phone,
       password: password,
-      isOwner: isOwner,
+      role: role,
     );
   }
 }

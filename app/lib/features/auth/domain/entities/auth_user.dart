@@ -1,5 +1,39 @@
 import 'package:flutter/foundation.dart';
 
+/// Espelha o campo `role` do backend (`TENANT` | `LANDLORD` | `ADMIN`).
+/// Fonte única de verdade — os getters [AuthUser.isOwner] e [AuthUser.isAdmin]
+/// derivam daqui.
+enum UserRole {
+  tenant,
+  landlord,
+  admin;
+
+  /// Converte o valor do backend (`'TENANT' | 'LANDLORD' | 'ADMIN'`) no enum.
+  /// Valor ausente ou desconhecido cai em [UserRole.tenant] (default do backend).
+  static UserRole fromBackend(String? raw) {
+    switch (raw) {
+      case 'LANDLORD':
+        return UserRole.landlord;
+      case 'ADMIN':
+        return UserRole.admin;
+      case 'TENANT':
+      default:
+        return UserRole.tenant;
+    }
+  }
+
+  String toBackend() {
+    switch (this) {
+      case UserRole.landlord:
+        return 'LANDLORD';
+      case UserRole.admin:
+        return 'ADMIN';
+      case UserRole.tenant:
+        return 'TENANT';
+    }
+  }
+}
+
 @immutable
 class AuthUser {
   const AuthUser({
@@ -8,8 +42,7 @@ class AuthUser {
     required this.email,
     this.phone,
     this.avatarUrl,
-    this.isOwner = false,
-    this.isAdmin = false,
+    this.role = UserRole.tenant,
     this.needsRoleOnboarding = false,
   });
 
@@ -18,8 +51,7 @@ class AuthUser {
   final String email;
   final String? phone;
   final String? avatarUrl;
-  final bool isOwner;
-  final bool isAdmin;
+  final UserRole role;
 
   /// `true` na primeira sessão de um usuário criado via login social (Google)
   /// — o JIT do backend criou o registro com role default (TENANT) mas o
@@ -27,14 +59,16 @@ class AuthUser {
   /// UI pra mostrar a tela intersticial de role.
   final bool needsRoleOnboarding;
 
+  bool get isOwner => role == UserRole.landlord;
+  bool get isAdmin => role == UserRole.admin;
+
   AuthUser copyWith({
     String? id,
     String? name,
     String? email,
     String? phone,
     String? avatarUrl,
-    bool? isOwner,
-    bool? isAdmin,
+    UserRole? role,
     bool? needsRoleOnboarding,
   }) {
     return AuthUser(
@@ -43,8 +77,7 @@ class AuthUser {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      isOwner: isOwner ?? this.isOwner,
-      isAdmin: isAdmin ?? this.isAdmin,
+      role: role ?? this.role,
       needsRoleOnboarding: needsRoleOnboarding ?? this.needsRoleOnboarding,
     );
   }
@@ -59,8 +92,7 @@ class AuthUser {
           email == other.email &&
           phone == other.phone &&
           avatarUrl == other.avatarUrl &&
-          isOwner == other.isOwner &&
-          isAdmin == other.isAdmin &&
+          role == other.role &&
           needsRoleOnboarding == other.needsRoleOnboarding;
 
   @override
@@ -70,8 +102,7 @@ class AuthUser {
         email,
         phone,
         avatarUrl,
-        isOwner,
-        isAdmin,
+        role,
         needsRoleOnboarding,
       );
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,11 +13,14 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/role_onboarding_page.dart';
+import '../../features/auth/presentation/providers/auth_notifier.dart';
+import '../../features/auth/presentation/providers/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_status_provider.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/pages/conversations_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/home/presentation/pages/landlord_dashboard_page.dart';
 import '../../features/listing/presentation/pages/create_listing_page.dart';
 import '../../features/listing/presentation/pages/edit_listing_page.dart';
 import '../../features/listing/presentation/pages/listing_analytics_page.dart';
@@ -29,6 +33,7 @@ import '../../features/profile/presentation/pages/management/tenant_documents_pa
 import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/settings_page.dart';
+import '../../features/profile/presentation/pages/tenants_page.dart';
 import '../../features/property/presentation/pages/photo_gallery_page.dart';
 import '../../features/property/presentation/pages/property_detail_page.dart';
 import '../../features/proposal/presentation/pages/contract_page.dart';
@@ -125,7 +130,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (_, _) => const HomePage(),
+                builder: (_, _) => const _HomeBranch(),
               ),
             ],
           ),
@@ -136,16 +141,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/search',
-                builder: (_, state) {
+                builder: (context, state) {
+                  final params = state.uri.queryParameters;
+                  final initialFilters = params.isEmpty
+                      ? null
+                      : SearchFilters.fromQueryParams(params);
                   // Deep link do bot WhatsApp chega com query params
                   // (state, city, maxPrice). Sem params, usa filtros
                   // persistidos do usuário.
-                  final params = state.uri.queryParameters;
-                  return SearchPage(
-                    initialFilters: params.isEmpty
-                        ? null
-                        : SearchFilters.fromQueryParams(params),
-                  );
+                  return _SearchBranch(initialFilters: initialFilters);
                 },
                 routes: [
                   GoRoute(
@@ -251,6 +255,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (_, _) => const MyPropertiesPage(),
                 routes: [
                   GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
                     path: 'create',
                     builder: (_, _) => const CreateListingPage(),
                   ),
@@ -279,6 +284,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/management-dossier',
         builder: (_, _) => const PropertyManagementDossierPage(),
+      ),
+
+      // Alias no root para a página de visitas do landlord. A rota aninhada
+      // `/profile/landlord-visits` (dentro da branch 4) continua funcionando
+      // a partir do menu do perfil, mas não é acessível via `context.push`
+      // a partir de outras branches do shell (ex.: a dashboard no branch 0)
+      // no go_router 17 — por isso expomos uma rota top-level equivalente
+      // que roda em cima do shell (mesmo padrão do /management-dossier).
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/landlord-visits',
+        builder: (_, _) => const LandlordVisitsPage(),
       ),
 
       // ── Chat detail (full screen, outside shell) ──────────────
@@ -368,3 +385,41 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Escolhe qual página renderizar em `/home` com base no papel do usuário.
+/// `LandlordDashboardPage` para LANDLORD; `HomePage` para TENANT e estados
+/// transitórios. Extraído pra fora do builder da GoRoute para reagir
+/// corretamente quando o role muda (ex: logo após `_syncBackendIdentity`).
+class _HomeBranch extends ConsumerWidget {
+  const _HomeBranch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider);
+    final isOwner = authState.maybeWhen(
+      authenticated: (user) => user.isOwner,
+      orElse: () => false,
+    );
+    if (kDebugMode) {
+      debugPrint('[router] /home → isOwner=$isOwner');
+    }
+    return isOwner ? const LandlordDashboardPage() : const HomePage();
+  }
+}
+
+/// Escolhe entre `SearchPage` (TENANT) e `TenantsPage` (LANDLORD).
+class _SearchBranch extends ConsumerWidget {
+  const _SearchBranch({this.initialFilters});
+
+  final SearchFilters? initialFilters;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOwner = ref.watch(authNotifierProvider).maybeWhen(
+          authenticated: (user) => user.isOwner,
+          orElse: () => false,
+        );
+    if (isOwner) return const TenantsPage();
+    return SearchPage(initialFilters: initialFilters);
+  }
+}

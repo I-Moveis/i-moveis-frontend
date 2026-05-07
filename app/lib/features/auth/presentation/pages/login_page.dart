@@ -170,9 +170,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
             destination = '/onboarding/role';
           } else if (user.isAdmin) {
             destination = '/admin';
-          } else if (user.isOwner) {
-            destination = '/profile/my-properties';
           } else {
+            // Tanto TENANT quanto LANDLORD aterrissam em /home — o builder
+            // do /home escolhe HomePage (tenant) ou LandlordDashboardPage
+            // (landlord) com base em user.isOwner.
             destination = '/home';
           }
           context.go(destination);

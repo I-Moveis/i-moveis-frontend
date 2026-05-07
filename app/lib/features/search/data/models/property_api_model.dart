@@ -88,6 +88,9 @@ Map<String, dynamic> propertyToCreateJson(PropertyInput input) {
   if (input.propertyTax != null) {
     body['propertyTax'] = input.propertyTax!.toStringAsFixed(2);
   }
+  if (input.images != null) {
+    body['images'] = input.images!.map((i) => i.toJson()).toList();
+  }
 
   return body;
 }
@@ -123,6 +126,9 @@ Map<String, dynamic> propertyToPatchJson(PropertyInput input) {
   }
   if (input.propertyTax != null) {
     body['propertyTax'] = input.propertyTax!.toStringAsFixed(2);
+  }
+  if (input.images != null) {
+    body['images'] = input.images!.map((i) => i.toJson()).toList();
   }
 
   return body;

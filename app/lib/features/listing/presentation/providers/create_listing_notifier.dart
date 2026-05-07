@@ -55,6 +55,7 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
     bool? nearSubway,
     double? condoFee,
     double? propertyTax,
+    List<PropertyImageInput>? images,
   }) async {
     final userId = await ref.read(currentUserIdProvider.future);
     if (userId == null || userId.isEmpty) {
@@ -83,6 +84,7 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
         nearSubway: nearSubway,
         condoFee: condoFee,
         propertyTax: propertyTax,
+        images: images,
       ));
       this.state = this.state.copyWith(
             submitting: false,

@@ -34,6 +34,7 @@ class PropertyInput {
     this.status,
     this.condoFee,
     this.propertyTax,
+    this.images,
   });
 
   final String? landlordId;
@@ -62,4 +63,24 @@ class PropertyInput {
   final String? status;
   final double? condoFee;
   final double? propertyTax;
+  final List<PropertyImageInput>? images;
+}
+
+@immutable
+class PropertyImageInput {
+  const PropertyImageInput({
+    required this.url,
+    this.isCover = false,
+    this.caption,
+  });
+
+  final String url;
+  final bool isCover;
+  final String? caption;
+
+  Map<String, dynamic> toJson() => {
+        'url': url,
+        'isCover': isCover,
+        if (caption != null) 'caption': caption,
+      };
 }

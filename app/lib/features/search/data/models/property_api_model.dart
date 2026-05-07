@@ -266,6 +266,23 @@ class _ImageEntry {
   final bool isCover;
 }
 
+/// O backend em modo local pode devolver URLs de imagem com host
+/// `10.0.2.2` (alias do emulador Android) ou `127.0.0.1`. Em dispositivo
+/// físico conectado via `adb reverse`, só `localhost` resolve. Reescreve
+/// o host pra `localhost` sem mexer em protocolo, porta ou path.
+String _normalizeLocalHost(String url) {
+  if (url.isEmpty) return url;
+  try {
+    final uri = Uri.parse(url);
+    if (uri.host == '10.0.2.2' || uri.host == '127.0.0.1') {
+      return uri.replace(host: 'localhost').toString();
+    }
+  } on FormatException {
+    // URL malformada — devolve como veio; a UI já lida com carga falha.
+  }
+  return url;
+}
+
 /// Lê o shape do inquilino atual do imóvel. Aceita dois formatos:
 /// `{"id": "...", "name": "..."}` e uma variante achatada onde o backend
 /// devolve `tenantId` + `tenantName` direto no objeto Property — ambos

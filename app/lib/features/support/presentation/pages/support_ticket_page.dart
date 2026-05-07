@@ -153,7 +153,6 @@ class _SupportTicketPageState extends ConsumerState<SupportTicketPage> {
           _BrutalistTextField(
             controller: _title,
             hint: 'Ex: Não consigo editar as fotos do imóvel',
-            maxLines: 1,
           ),
           const SizedBox(height: AppSpacing.lg),
 

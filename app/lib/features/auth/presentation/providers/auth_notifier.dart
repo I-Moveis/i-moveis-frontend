@@ -18,7 +18,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   void _setState(AuthState next) {
     // Atualiza authStatusProvider ANTES de notificar listeners do notifier. O
-    // GoRouter redirect l├¬ authStatusProvider s├¡ncronamente, e o listener em
+    // GoRouter redirect lê authStatusProvider síncronamente, e o listener em
     // register_page/login_page chama context.go('/home') ao virar authenticated.
     // Se o status ainda estiver unauthenticated nesse momento, o redirect
     // empurra pra /login em vez de deixar ir pra /home.
@@ -95,9 +95,9 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  /// Re-l├¬ a sess├úo do storage (ap├│s um PATCH `/users/me` ter regravado o
-  /// perfil). S├│ troca o state se ainda houver sess├úo ativa ÔÇö se o usu├írio
-  /// n├úo estiver autenticado, mant├®m o state atual.
+  /// Re-lê a sessão do storage (após um PATCH `/users/me` ter regravado o
+  /// perfil). Só troca o state se ainda houver sessão ativa — se o usuário
+  /// não estiver autenticado, mantém o state atual.
   Future<void> refreshSession() async {
     final result = await ref.read(getCurrentSessionUseCaseProvider).execute();
     result.fold(
@@ -130,7 +130,7 @@ class AuthNotifier extends Notifier<AuthState> {
       case DemoRole.owner:
         return const AuthUser(
           id: 'demo-owner',
-          name: 'Propriet├írio Demo',
+          name: 'Proprietário Demo',
           email: 'proprietario@demo.com',
           role: UserRole.landlord,
         );

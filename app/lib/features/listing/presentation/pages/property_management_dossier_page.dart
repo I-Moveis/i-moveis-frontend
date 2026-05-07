@@ -439,7 +439,7 @@ class _CoverPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: BrutalistPalette.subtleBg(isDark),
       child: Center(
         child: Icon(

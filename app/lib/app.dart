@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/router/app_router.dart';
@@ -30,9 +30,9 @@ class MyApp extends ConsumerWidget {
         BrutalistPalette.update(next);
       })
       ..listen<AuthState>(authNotifierProvider, (previous, next) {
-        // Redireciona pra /login quando o usu├írio desloga. O notifier j├í
-        // atualiza o authStatusProvider internamente, aqui s├│ tratamos o
-        // side-effect de navega├º├úo.
+        // Redireciona pra /login quando o usuário desloga. O notifier já
+        // atualiza o authStatusProvider internamente, aqui só tratamos o
+        // side-effect de navegação.
         next.maybeWhen(
           unauthenticated: () => goRouter.go('/login'),
           orElse: () {},

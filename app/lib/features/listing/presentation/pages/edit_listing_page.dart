@@ -568,7 +568,7 @@ class _ExistingPhotosGallery extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.error,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 1),
+                      border: Border.all(),
                     ),
                     child: const Icon(Icons.close,
                         size: 14, color: Colors.white),

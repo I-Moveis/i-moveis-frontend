@@ -6,7 +6,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
 
-/// Profile tab ÔÇö cozy profile with grouped menu sections.
+/// Profile tab — cozy profile with grouped menu sections.
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 

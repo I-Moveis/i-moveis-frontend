@@ -17,12 +17,6 @@ class LandlordMonthlyMetrics {
     required this.monthlyRevenue,
   });
 
-  /// Labels dos meses no formato `YYYY-MM` (ex: "2026-05").
-  final List<String> months;
-  final List<int> rentals;
-  final List<int> newTenants;
-  final List<double> monthlyRevenue;
-
   /// Conjunto vazio com [monthCount] meses zerados — usado como
   /// fallback quando o endpoint ainda não existe ou falhou. Gera os
   /// últimos [monthCount] meses incluindo o atual.
@@ -44,23 +38,29 @@ class LandlordMonthlyMetrics {
   }
 
   factory LandlordMonthlyMetrics.fromJson(Map<String, dynamic> json) {
-    List<T> _read<T>(String key, T Function(Object?) convert) {
+    List<T> readList<T>(String key, T Function(Object?) convert) {
       final raw = json[key];
       if (raw is! List) return const [];
       return raw.map(convert).toList();
     }
 
     return LandlordMonthlyMetrics(
-      months: _read(
+      months: readList(
           'months', (e) => e?.toString() ?? ''),
-      rentals: _read(
+      rentals: readList(
           'rentals', (e) => (e is num) ? e.toInt() : 0),
-      newTenants: _read(
+      newTenants: readList(
           'newTenants', (e) => (e is num) ? e.toInt() : 0),
-      monthlyRevenue: _read(
+      monthlyRevenue: readList(
           'monthlyRevenue', (e) => (e is num) ? e.toDouble() : 0.0),
     );
   }
+
+  /// Labels dos meses no formato `YYYY-MM` (ex: "2026-05").
+  final List<String> months;
+  final List<int> rentals;
+  final List<int> newTenants;
+  final List<double> monthlyRevenue;
 
   /// Labels curtas (`Jan`, `Fev`, ..., `Dez`) na ordem de [months] —
   /// pra usar como rótulo nos eixos X dos gráficos.

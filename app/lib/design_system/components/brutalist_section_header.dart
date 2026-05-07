@@ -46,7 +46,6 @@ class BrutalistPageHeader extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Image.asset(
             'assets/images/logo.png',

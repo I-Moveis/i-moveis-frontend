@@ -1,16 +1,9 @@
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
-
-/// Base URL for the i-Móveis REST API. Sobrescrito por `--dart-define=API_BASE_URL=...`
-/// em builds de staging/prod.
+/// Base URL for the i-Móveis REST API. Pode ser sobrescrita em build local
+/// via `--dart-define=API_BASE_URL=http://localhost:3000/api`.
 String get kApiBaseUrl {
   const envUrl = String.fromEnvironment('API_BASE_URL');
   if (envUrl.isNotEmpty) return envUrl;
-
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    // 10.0.2.2 is how the Android emulator sees the host machine's localhost
-    return 'http://10.0.2.2:3000/api';
-  }
-  return 'http://localhost:3000/api';
+  return 'https://lab.alphaedtech.org.br/server01/api';
 }
 
 /// Network timeouts for the Dio client.

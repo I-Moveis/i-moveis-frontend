@@ -253,7 +253,7 @@ class _ChartsSection extends ConsumerWidget {
     // e mantém a tela estável. O provider já devolve esse mesmo
     // fallback quando o backend não responde, então o pior caso é
     // simplesmente "6 meses com zero".
-    final LandlordMonthlyMetrics metrics = async.asData?.value ??
+    final metrics = async.asData?.value ??
         LandlordMonthlyMetrics.emptyLast();
     final labels = metrics.shortMonthLabels;
     return Column(

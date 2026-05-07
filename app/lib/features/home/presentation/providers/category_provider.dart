@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CategoryItem {
@@ -8,7 +8,7 @@ class CategoryItem {
 }
 
 const kHomeCategories = <CategoryItem>[
-  CategoryItem(icon: Icons.apartment_rounded, label: 'Ap├¬'),
+  CategoryItem(icon: Icons.apartment_rounded, label: 'Apê'),
   CategoryItem(icon: Icons.house_rounded, label: 'Casa'),
   CategoryItem(icon: Icons.single_bed_rounded, label: 'Kitnet'),
   CategoryItem(icon: Icons.business_rounded, label: 'Studio'),

@@ -8,7 +8,7 @@ import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../auth/presentation/providers/auth_status_provider.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 
-/// Splash screen ÔÇö Brutalist Elegance x Japanese Creative Web
+/// Splash screen — Brutalist Elegance x Japanese Creative Web
 ///
 /// Cinematic entrance: WaveBackground sunset, pulsing index "00",
 /// RevealText brand name, section marker, loading indicator,
@@ -164,9 +164,9 @@ class _SplashPageState extends ConsumerState<SplashPage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  LOGO ÔÇö index 00 + brand name + subtitle + marker
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  LOGO — index 00 + brand name + subtitle + marker
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildLogo(bool isDark) {
     final accentPeach = BrutalistPalette.accentPeach(isDark);
     final accentAmber = BrutalistPalette.accentAmber(isDark);
@@ -254,9 +254,9 @@ class _SplashPageState extends ConsumerState<SplashPage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  LOADING INDICATOR ÔÇö 3 pulsing dots
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  LOADING INDICATOR — 3 pulsing dots
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildLoadingIndicator(bool isDark) {
     final dotColor = BrutalistPalette.accentAmber(isDark);
 
@@ -299,9 +299,9 @@ class _SplashPageState extends ConsumerState<SplashPage>
     return (x - x * x * x / 6 + x * x * x * x * x / 120).clamp(-1.0, 1.0);
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  FOOTER ÔÇö version + system status
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  FOOTER — version + system status
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildFooter(bool isDark) {
     final mutedColor = BrutalistPalette.faint(isDark);
 
@@ -327,9 +327,9 @@ class _SplashPageState extends ConsumerState<SplashPage>
 /// Picks the first route shown after the splash, based on auth + onboarding.
 ///
 /// Priority:
-/// 1. Authenticated ÔåÆ `/home`
-/// 2. Onboarding pending ÔåÆ `/onboarding`
-/// 3. Onboarding completed (unauth) ÔåÆ `/login`
+/// 1. Authenticated → `/home`
+/// 2. Onboarding pending → `/onboarding`
+/// 3. Onboarding completed (unauth) → `/login`
 /// If [AuthStatus] is still `unknown` when this widget mounts, it waits for a
 /// resolved status via a Riverpod listener.
 class _PostSplashRouter extends ConsumerStatefulWidget {

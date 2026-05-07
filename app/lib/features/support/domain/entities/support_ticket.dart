@@ -60,6 +60,18 @@ class SupportTicket {
     this.userRole,
   });
 
+  factory SupportTicket.fromJson(Map<String, dynamic> json) => SupportTicket(
+        id: (json['id'] as String?) ?? (json['code'] as String? ?? ''),
+        code: (json['code'] as String?) ?? (json['id'] as String? ?? ''),
+        title: (json['title'] as String?) ?? '',
+        description: (json['description'] as String?) ?? '',
+        createdAt: DateTime.tryParse((json['createdAt'] as String?) ?? '')
+                ?.toLocal() ??
+            DateTime.now(),
+        status: SupportTicketStatus.fromApi(json['status'] as String?),
+        userRole: json['userRole'] as String?,
+      );
+
   /// Id estável — quando vem do backend, UUID. Quando local, o próprio
   /// `code` (formato `SUP-AAMMDD-XXXX`).
   final String id;
@@ -76,18 +88,6 @@ class SupportTicket {
   /// Do lado do landlord/tenant a tela não precisa disso; guardamos pra
   /// quando a mesma entity for consumida pelo painel admin.
   final String? userRole;
-
-  factory SupportTicket.fromJson(Map<String, dynamic> json) => SupportTicket(
-        id: (json['id'] as String?) ?? (json['code'] as String? ?? ''),
-        code: (json['code'] as String?) ?? (json['id'] as String? ?? ''),
-        title: (json['title'] as String?) ?? '',
-        description: (json['description'] as String?) ?? '',
-        createdAt: DateTime.tryParse((json['createdAt'] as String?) ?? '')
-                ?.toLocal() ??
-            DateTime.now(),
-        status: SupportTicketStatus.fromApi(json['status'] as String?),
-        userRole: json['userRole'] as String?,
-      );
 
   Map<String, dynamic> toJson() => {
         'id': id,

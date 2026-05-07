@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,11 +8,11 @@ import '../../../search/domain/entities/property.dart';
 import '../providers/home_properties_providers.dart';
 import '../widgets/category_bar.dart';
 
-/// Home page ÔÇö Cozy & warm, Airbnb-inspired with sunset wave backdrop.
+/// Home page — Cozy & warm, Airbnb-inspired with sunset wave backdrop.
 ///
 /// Friendly greeting, rounded cards, soft pastels, generous spacing.
-/// Puxa im├│veis reais do backend via tr├¬s `FutureProvider`s (destaques /
-/// perto / mais procurados), cada um com uma ordena├º├úo diferente.
+/// Puxa imóveis reais do backend via três `FutureProvider`s (destaques /
+/// perto / mais procurados), cada um com uma ordenação diferente.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -135,9 +135,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  HEADER ÔÇö friendly greeting, warm and human
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  HEADER — friendly greeting, warm and human
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildHeader(bool isDark) {
     final mutedColor =
         isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
@@ -157,9 +157,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  SEARCH BAR ÔÇö rounded, inviting, tap-to-search
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  SEARCH BAR — rounded, inviting, tap-to-search
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildSearchBar(bool isDark) {
     final bgColor = BrutalistPalette.surfaceBg(isDark);
     final accentColor = BrutalistPalette.accentOrange(isDark);
@@ -193,7 +193,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    'Onde voc├¬ quer morar?',
+                    'Onde você quer morar?',
                     style: AppTypography.bodyLarge.copyWith(color: hintColor),
                   ),
                 ),
@@ -208,9 +208,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  CATEGORIES ÔÇö rounded pill chips (visual only for now)
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  CATEGORIES — rounded pill chips (visual only for now)
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildCategories(bool isDark) {
     return Opacity(
       opacity: _searchFade.value,
@@ -221,9 +221,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  FEATURED ÔÇö horizontal cards with image placeholder + badge
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  FEATURED — horizontal cards with image placeholder + badge
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildFeaturedSection(bool isDark) {
     final asyncValue = ref.watch(featuredHomePropertiesProvider);
 
@@ -285,6 +285,9 @@ class _HomePageState extends ConsumerState<HomePage>
     final badge = property.badges.isNotEmpty ? property.badges.first : null;
     final firstImage =
         property.imageUrls.isNotEmpty ? property.imageUrls.first : null;
+    // Coração refletindo o provider real (não o campo legado
+    // `property.isFavorite`, que nunca é atualizado pelos providers).
+    final isFavorite = ref.watch(favoritedIdsProvider).contains(property.id);
 
     return GestureDetector(
       onTap: () => context.push('/property/${property.id}'),
@@ -348,11 +351,11 @@ class _HomePageState extends ConsumerState<HomePage>
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        property.isFavorite
+                        isFavorite
                             ? Icons.favorite_rounded
                             : Icons.favorite_outline_rounded,
                         size: 16,
-                        color: property.isFavorite ? accentColor : mutedColor,
+                        color: isFavorite ? accentColor : mutedColor,
                       ),
                     ),
                   ),
@@ -385,7 +388,7 @@ class _HomePageState extends ConsumerState<HomePage>
                         child: Text(
                           property.address.isNotEmpty
                               ? property.address
-                              : 'ÔÇö',
+                              : '—',
                           style: AppTypography.bodySmall.copyWith(
                             color: mutedColor,
                           ),
@@ -400,7 +403,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     children: [
                       Flexible(
                         child: Text(
-                          '${property.price}/m├¬s',
+                          '${property.price}/mês',
                           style: AppTypography.titleMediumAccent.copyWith(
                             color: accentColor,
                           ),
@@ -411,7 +414,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       const SizedBox(width: AppSpacing.sm),
                       AppStatRow(
                         icon: Icons.straighten_rounded,
-                        value: '${property.area.toInt()}m┬▓',
+                        value: '${property.area.toInt()}m²',
                         color: mutedColor,
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -431,9 +434,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  NEARBY ÔÇö compact horizontal cards
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  NEARBY — compact horizontal cards
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildNearbySection(bool isDark) {
     final asyncValue = ref.watch(nearbyHomePropertiesProvider);
 
@@ -441,7 +444,7 @@ class _HomePageState extends ConsumerState<HomePage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionHeader(
-          title: 'Perto de voc├¬',
+          title: 'Perto de você',
           action: 'Ver mapa',
           onAction: () => context.go('/search/map'),
         ),
@@ -515,7 +518,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  property.address.isNotEmpty ? property.address : 'ÔÇö',
+                  property.address.isNotEmpty ? property.address : '—',
                   style: AppTypography.bodySmall.copyWith(color: mutedColor),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -527,7 +530,7 @@ class _HomePageState extends ConsumerState<HomePage>
               children: [
                 Flexible(
                   child: Text(
-                    '${property.price}/m├¬s',
+                    '${property.price}/mês',
                     style: AppTypography.titleSmallAccent.copyWith(
                       color: accentColor,
                     ),
@@ -537,7 +540,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
                 AppStatRow(
                   icon: Icons.straighten_rounded,
-                  value: '${property.area.toInt()}m┬▓',
+                  value: '${property.area.toInt()}m²',
                   color: mutedColor,
                 ),
               ],
@@ -548,9 +551,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-  //  TRENDING ÔÇö vertical list with rank number
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
+  //  TRENDING — vertical list with rank number
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildTrendingSection(bool isDark) {
     final asyncValue = ref.watch(trendingHomePropertiesProvider);
 
@@ -656,14 +659,14 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    property.address.isNotEmpty ? property.address : 'ÔÇö',
+                    property.address.isNotEmpty ? property.address : '—',
                     style: AppTypography.bodySmall.copyWith(color: mutedColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${property.price}/m├¬s',
+                    '${property.price}/mês',
                     style: AppTypography.titleSmallAccent.copyWith(
                       color: accentColor,
                     ),
@@ -682,9 +685,9 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
   //  PLACEHOLDERS / STATES
-  // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  // ═══════════════════════════════════════════════════════════════
   Widget _buildImagePlaceholder(bool isDark, Color? bg) {
     final color = bg ?? BrutalistPalette.imagePlaceholderBg(isDark);
     return ColoredBox(

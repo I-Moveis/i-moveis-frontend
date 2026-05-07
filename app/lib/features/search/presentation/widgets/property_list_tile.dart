@@ -26,7 +26,7 @@ class PropertyListTile extends ConsumerWidget {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     
-    final isFavorite = ref.watch(favoritesProvider).contains(property.id);
+    final isFavorite = ref.watch(favoritedIdsProvider).contains(property.id);
 
     return GestureDetector(
       onTap: onTap,

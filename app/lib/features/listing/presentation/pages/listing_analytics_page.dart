@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../search/domain/entities/property_input.dart';
+import '../providers/edit_listing_notifier.dart';
 import '../providers/my_properties_notifier.dart';
 // Property is used via type inference in the data block
 
@@ -13,8 +16,50 @@ class ListingAnalyticsPage extends ConsumerStatefulWidget {
   ConsumerState<ListingAnalyticsPage> createState() => _ListingAnalyticsPageState();
 }
 
+/// Status de pagamento mensal do aluguel — duplicado aqui do dossier
+/// porque a dependência inversa (analytics → dossier) não faz sentido.
+/// Quando o backend expor `rental_payments`, centralizar num módulo de
+/// domínio e as duas telas passam a ler dali.
+enum _AnalyticsPaymentStatus {
+  awaiting,
+  paid,
+  late;
+
+  String get label {
+    switch (this) {
+      case _AnalyticsPaymentStatus.paid:
+        return 'PAGO';
+      case _AnalyticsPaymentStatus.late:
+        return 'ATRASADO';
+      case _AnalyticsPaymentStatus.awaiting:
+        return 'AGUARDANDO';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case _AnalyticsPaymentStatus.paid:
+        return Icons.check_circle_outline_rounded;
+      case _AnalyticsPaymentStatus.late:
+        return Icons.error_outline_rounded;
+      case _AnalyticsPaymentStatus.awaiting:
+        return Icons.access_time_rounded;
+    }
+  }
+}
+
 class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
   String _selectedFilter = '30 dias';
+  _AnalyticsPaymentStatus _paymentStatus = _AnalyticsPaymentStatus.awaiting;
+
+  /// Status local otimista do imóvel. Inicializa do `property.status` na
+  /// primeira render com dado e passa a ser a fonte de verdade visual.
+  /// Quando o landlord troca a pill, o PUT é disparado; se falhar, o
+  /// state reverte pro valor anterior e mostra snackbar.
+  String? _propertyStatus;
+
+  /// Flag pra evitar toggle duplo enquanto o PUT estiver em voo.
+  bool _savingStatus = false;
 
   // Mock data that changes based on filter
   Map<String, int> _getMetrics() {
@@ -23,6 +68,32 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
       '30 dias' => {'views': 142, 'favs': 23, 'props': 5, 'visits': 8},
       _ => {'views': 890, 'favs': 112, 'props': 28, 'visits': 45},
     };
+  }
+
+  Future<void> _changePropertyStatus(String next) async {
+    if (_savingStatus) return;
+    final previous = _propertyStatus;
+    setState(() {
+      _propertyStatus = next;
+      _savingStatus = true;
+    });
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(editListingNotifierProvider.notifier).submit(
+            widget.propertyId,
+            PropertyInput(status: next),
+          );
+      // Quando o próprio backend, ao mudar para RENTED, começar a gerenciar
+      // pagamentos, é aqui que a gente refetcharia o payment status. Hoje
+      // não há endpoint — o seletor fica manual.
+    } on Failure catch (f) {
+      setState(() => _propertyStatus = previous);
+      messenger.showSnackBar(SnackBar(
+        content: Text('Não foi possível atualizar: ${f.message}'),
+      ));
+    } finally {
+      if (mounted) setState(() => _savingStatus = false);
+    }
   }
 
   void _showImageLightbox(BuildContext context, List<String> images, int initialIndex) {
@@ -54,6 +125,14 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
                 orElse: () => properties.first,
               );
 
+              // Hidrata o status local na primeira leitura de dado.
+              // Mudanças subsequentes (landlord trocou a pill) ficam presas
+              // no state; o refetch por invalidate do myProperties vai
+              // sincronizar naturalmente no próximo ciclo.
+              _propertyStatus ??= property.status ?? 'AVAILABLE';
+              final currentStatus = _propertyStatus!;
+              final isRented = currentStatus == 'RENTED';
+
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
@@ -64,7 +143,39 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
                       delegate: SliverChildListDelegate([
                         _buildSummaryMetrics(accentColor, metrics),
                         const SizedBox(height: AppSpacing.xxl),
-                        
+
+                        // Seletor do status do imóvel — trocar aqui dispara
+                        // PUT /properties/:id. Quando o backend auto-ligar
+                        // RentalProcess → Property.status (ver
+                        // BACKEND_LANDLORD_GAPS.md), este seletor deixa de
+                        // ser a única forma de trocar, mas continua válido.
+                        const AppSectionHeader(title: 'Status do imóvel'),
+                        const SizedBox(height: AppSpacing.md),
+                        _PropertyStatusSelector(
+                          current: currentStatus,
+                          onChanged: _changePropertyStatus,
+                          disabled: _savingStatus,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: AppSpacing.xxl),
+
+                        // Seletor inline do status de pagamento mensal.
+                        // Só faz sentido para imóveis alugados — enquanto
+                        // não tem contrato ativo, mostra como desabilitado
+                        // pra não sugerir que existe cobrança em curso.
+                        if (isRented) ...[
+                          const AppSectionHeader(
+                              title: 'Status do aluguel (mês atual)'),
+                          const SizedBox(height: AppSpacing.md),
+                          _AnalyticsPaymentSelector(
+                            current: _paymentStatus,
+                            onChanged: (next) =>
+                                setState(() => _paymentStatus = next),
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.xxl),
+                        ],
+
                         Text('Imagens Registradas', style: AppTypography.titleMedium.copyWith(color: titleColor, fontWeight: FontWeight.bold)),
                         const SizedBox(height: AppSpacing.md),
                         _buildImageGallery(context, property.imageUrls),
@@ -442,6 +553,211 @@ class _LightboxState extends State<_Lightbox> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Seletor do status do imóvel (AVAILABLE/IN_NEGOTIATION/RENTED). Cada
+/// clique dispara `onChanged` — o pai cuida de chamar o notifier e
+/// reverter o visual se o PUT falhar.
+class _PropertyStatusSelector extends StatelessWidget {
+  const _PropertyStatusSelector({
+    required this.current,
+    required this.onChanged,
+    required this.disabled,
+    required this.isDark,
+  });
+
+  final String current;
+  final ValueChanged<String> onChanged;
+  final bool disabled;
+  final bool isDark;
+
+  static const _options = [
+    ('AVAILABLE', 'DISPONÍVEL', Icons.event_available_outlined),
+    ('IN_NEGOTIATION', 'EM NEGOCIAÇÃO', Icons.handshake_outlined),
+    ('RENTED', 'ALUGADO', Icons.home_work_outlined),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: _options
+          .map((opt) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _PropertyStatusPill(
+                    apiValue: opt.$1,
+                    label: opt.$2,
+                    icon: opt.$3,
+                    selected: opt.$1 == current,
+                    onTap: disabled ? null : () => onChanged(opt.$1),
+                    isDark: isDark,
+                  ),
+                ),
+              ))
+          .toList(),
+    );
+  }
+}
+
+class _PropertyStatusPill extends StatelessWidget {
+  const _PropertyStatusPill({
+    required this.apiValue,
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  final String apiValue;
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback? onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    switch (apiValue) {
+      case 'RENTED':
+        bg = AppColors.success;
+      case 'IN_NEGOTIATION':
+        bg = BrutalistPalette.accentAmber(isDark);
+      case 'AVAILABLE':
+      default:
+        bg = BrutalistPalette.accentOrange(isDark);
+    }
+    final opacity = onTap == null ? 0.4 : 1.0;
+    return Opacity(
+      opacity: opacity,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppDurations.fast,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: selected ? bg : bg.withValues(alpha: 0.08),
+            borderRadius: AppRadius.borderSm,
+            border: Border.all(
+              color: selected ? bg : bg.withValues(alpha: 0.25),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: selected ? Colors.black : bg),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: AppTypography.labelSmall.copyWith(
+                  color: selected ? Colors.black : bg,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 9,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Seletor inline do status de pagamento para a análise do imóvel. Copiado
+/// do dossier pra manter visual idêntico; unificar num módulo de domínio
+/// quando o backend expuser `rental_payments`.
+class _AnalyticsPaymentSelector extends StatelessWidget {
+  const _AnalyticsPaymentSelector({
+    required this.current,
+    required this.onChanged,
+    required this.isDark,
+  });
+
+  final _AnalyticsPaymentStatus current;
+  final ValueChanged<_AnalyticsPaymentStatus> onChanged;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: _AnalyticsPaymentStatus.values
+          .map((s) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _AnalyticsPaymentPill(
+                    status: s,
+                    selected: s == current,
+                    onTap: () => onChanged(s),
+                    isDark: isDark,
+                  ),
+                ),
+              ))
+          .toList(),
+    );
+  }
+}
+
+class _AnalyticsPaymentPill extends StatelessWidget {
+  const _AnalyticsPaymentPill({
+    required this.status,
+    required this.selected,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  final _AnalyticsPaymentStatus status;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    switch (status) {
+      case _AnalyticsPaymentStatus.paid:
+        bg = AppColors.success;
+      case _AnalyticsPaymentStatus.late:
+        bg = AppColors.error;
+      case _AnalyticsPaymentStatus.awaiting:
+        bg = BrutalistPalette.accentOrange(isDark);
+    }
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppDurations.fast,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: selected ? bg : bg.withValues(alpha: 0.08),
+          borderRadius: AppRadius.borderSm,
+          border: Border.all(
+            color: selected ? bg : bg.withValues(alpha: 0.25),
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              status.icon,
+              size: 14,
+              color: selected ? Colors.black : bg,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              status.label,
+              style: AppTypography.labelSmall.copyWith(
+                color: selected ? Colors.black : bg,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

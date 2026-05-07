@@ -1,5 +1,6 @@
 import '../../domain/entities/available_slot.dart';
 import '../../domain/entities/visit.dart';
+import '../../domain/entities/visit_source.dart';
 import '../../domain/entities/visit_status.dart';
 
 /// Parses the JSON returned by `/api/visits*` endpoints into a domain [Visit].
@@ -14,6 +15,9 @@ Visit visitFromApiJson(Map<String, dynamic> json) {
     durationMinutes: (json['durationMinutes'] as num?)?.toInt() ?? 45,
     status: VisitStatus.fromApi((json['status'] as String?) ?? 'SCHEDULED'),
     notes: json['notes'] as String?,
+    // Campo opcional: quando o backend começar a devolver, o enum fromApi
+    // cuida do parse. Ausente no JSON cai em VisitSource.manual.
+    source: VisitSource.fromApi(json['source'] as String?),
     createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
     updatedAt:
         DateTime.parse((json['updatedAt'] ?? json['createdAt']) as String)

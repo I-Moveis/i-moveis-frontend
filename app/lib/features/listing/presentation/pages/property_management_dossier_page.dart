@@ -3,7 +3,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../search/domain/entities/property.dart';
 import '../providers/my_properties_notifier.dart';
+
+/// Status de pagamento mensal do aluguel. Hoje é puramente local — o backend
+/// não tem recurso de `rental_payments` ainda (ver BACKEND_LANDLORD_GAPS.md).
+/// Quando tiver, cada card deixa de manter estado local e passa a ler do
+/// endpoint. A UI já está plumbed pra isso.
+enum _PaymentStatus {
+  awaiting,
+  paid,
+  late;
+
+  String get label {
+    switch (this) {
+      case _PaymentStatus.paid:
+        return 'PAGO';
+      case _PaymentStatus.late:
+        return 'ATRASADO';
+      case _PaymentStatus.awaiting:
+        return 'AGUARDANDO';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case _PaymentStatus.paid:
+        return Icons.check_circle_outline_rounded;
+      case _PaymentStatus.late:
+        return Icons.error_outline_rounded;
+      case _PaymentStatus.awaiting:
+        return Icons.access_time_rounded;
+    }
+  }
+}
 
 class PropertyManagementDossierPage extends ConsumerWidget {
   const PropertyManagementDossierPage({super.key});
@@ -14,16 +47,14 @@ class PropertyManagementDossierPage extends ConsumerWidget {
     // Não derruba a tela se o fetch falhar — cai em lista vazia com aviso
     // in-line. A página tem conteúdo estático (AppBar, layout) que deve
     // sempre aparecer.
-    final properties = propertiesAsync.asData?.value ?? const [];
+    final properties = propertiesAsync.asData?.value ?? const <Property>[];
     final isLoading = propertiesAsync.isLoading && properties.isEmpty;
 
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
         return Column(
           children: [
-            const BrutalistAppBar(
-              title: 'Gestão de Aluguéis',
-            ),
+            const BrutalistAppBar(title: 'Gestão de Aluguéis'),
             Expanded(
               child: Builder(
                 builder: (_) {
@@ -37,27 +68,17 @@ class PropertyManagementDossierPage extends ConsumerWidget {
                   }
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(AppSpacing.screenHorizontal),
+                    padding:
+                        const EdgeInsets.all(AppSpacing.screenHorizontal),
                     itemCount: properties.length,
                     itemBuilder: (context, index) {
                       final property = properties[index];
-                      // Simulating different statuses for variety in the demo
-                      // In a real app, this would come from the backend.
-                      final statusIndex = index % 3;
-                      final statuses = ['PAID', 'PENDING', 'LATE'];
-                      final status = statuses[statusIndex];
-
                       return _ManagementCard(
-                        propertyTitle: property.title,
-                        imageUrl: property.imageUrls.isNotEmpty
-                            ? property.imageUrls.first
-                            : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400&auto=format&fit=crop',
-                        tenantName: 'Inquilino ${index + 1}',
-                        rentValue: property.price,
-                        paymentStatus: status,
+                        property: property,
                         isDark: isDark,
-                        onChat: () => context.go('/chat'),
-                        onDetails: () => context.push('/my-properties/${property.id}/analytics'),
+                        onDetails: () => context.push(
+                          '/my-properties/${property.id}/analytics',
+                        ),
                       );
                     },
                   );
@@ -71,55 +92,45 @@ class PropertyManagementDossierPage extends ConsumerWidget {
   }
 }
 
-class _ManagementCard extends StatelessWidget {
+/// Cartão do dossier. Stateful porque o seletor de status de pagamento é
+/// estado local enquanto o backend não expõe `rental_payments`.
+class _ManagementCard extends StatefulWidget {
   const _ManagementCard({
-    required this.propertyTitle,
-    required this.imageUrl,
-    required this.tenantName,
-    required this.rentValue,
-    required this.paymentStatus,
+    required this.property,
     required this.isDark,
-    required this.onChat,
     required this.onDetails,
   });
 
-  final String propertyTitle;
-  final String imageUrl;
-  final String tenantName;
-  final String rentValue;
-  final String paymentStatus;
+  final Property property;
   final bool isDark;
-  final VoidCallback onChat;
   final VoidCallback onDetails;
 
   @override
-  Widget build(BuildContext context) {
-    Color statusColor;
-    String statusLabel;
-    IconData statusIcon;
+  State<_ManagementCard> createState() => _ManagementCardState();
+}
 
-    switch (paymentStatus) {
-      case 'PAID':
-        statusColor = AppColors.success;
-        statusLabel = 'PAGO';
-        statusIcon = Icons.check_circle_outline_rounded;
-      case 'LATE':
-        statusColor = AppColors.error;
-        statusLabel = 'ATRASADO';
-        statusIcon = Icons.error_outline_rounded;
-      case 'PENDING':
-      default:
-        statusColor = BrutalistPalette.accentOrange(isDark);
-        statusLabel = 'AGUARDANDO';
-        statusIcon = Icons.access_time_rounded;
-    }
+class _ManagementCardState extends State<_ManagementCard> {
+  _PaymentStatus _payment = _PaymentStatus.awaiting;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final property = widget.property;
+    final status = property.status ?? 'AVAILABLE';
+    final tenant = property.currentTenant;
+    final isRented = status == 'RENTED';
+
+    final cardBg = BrutalistPalette.surfaceBg(isDark);
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
+    final titleColor = BrutalistPalette.title(isDark);
+    final mutedColor = BrutalistPalette.muted(isDark);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       decoration: BoxDecoration(
-        color: BrutalistPalette.surfaceBg(isDark),
+        color: cardBg,
         borderRadius: AppRadius.borderLg,
-        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
             color: isDark ? Colors.black45 : Colors.black12,
@@ -130,71 +141,19 @@ class _ManagementCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Property Header with Image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: SizedBox(
-              height: 120,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(imageUrl, fit: BoxFit.cover),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.6),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    right: 12,
-                    child: Text(
-                      propertyTitle,
-                      style: AppTypography.titleSmallBold.copyWith(color: Colors.white),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: AppRadius.borderSm,
-                        border: Border.all(width: 1.5),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(statusIcon, size: 14, color: Colors.black),
-                          const SizedBox(width: 4),
-                          Text(
-                            statusLabel,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          _CoverHeader(
+            title: property.title,
+            coverUrl: property.coverImageUrl,
+            fallbackUrl: property.imageUrls.isNotEmpty
+                ? property.imageUrls.first
+                : null,
+            statusBadge: _StatusBadge(
+              status: status,
+              paymentStatus: isRented ? _payment : null,
+              isDark: isDark,
             ),
+            isDark: isDark,
           ),
-          
-          // Management Details
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -203,42 +162,83 @@ class _ManagementCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       backgroundColor: BrutalistPalette.subtleBg(isDark),
-                      child: Icon(Icons.person_rounded, color: BrutalistPalette.muted(isDark)),
+                      child: Icon(
+                        tenant != null
+                            ? Icons.person_rounded
+                            : Icons.person_outline_rounded,
+                        color: mutedColor,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Inquilino', style: AppTypography.bodySmall.copyWith(color: BrutalistPalette.muted(isDark))),
-                          Text(tenantName, style: AppTypography.titleMedium.copyWith(color: BrutalistPalette.title(isDark), fontWeight: FontWeight.bold)),
+                          Text(
+                            tenant != null
+                                ? 'Inquilino'
+                                : _tenantPlaceholder(status),
+                            style: AppTypography.bodySmall
+                                .copyWith(color: mutedColor),
+                          ),
+                          Text(
+                            tenant?.name ?? _statusCopy(status),
+                            style: AppTypography.titleMedium.copyWith(
+                              color: titleColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Aluguel', style: AppTypography.bodySmall.copyWith(color: BrutalistPalette.muted(isDark))),
-                        Text(rentValue, style: AppTypography.titleMediumAccent.copyWith(color: BrutalistPalette.accentPeach(isDark))),
+                        Text('Aluguel',
+                            style: AppTypography.bodySmall
+                                .copyWith(color: mutedColor)),
+                        Text(
+                          property.price,
+                          style: AppTypography.titleMediumAccent.copyWith(
+                            color: BrutalistPalette.accentPeach(isDark),
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
+                if (isRented) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _PaymentStatusSelector(
+                    current: _payment,
+                    onChanged: (next) => setState(() => _payment = next),
+                    isDark: isDark,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.xl),
                 Row(
                   children: [
                     Expanded(
                       child: AppButton(
                         label: 'DETALHES',
-                        onPressed: onDetails,
+                        onPressed: widget.onDetails,
                         variant: AppButtonVariant.outline,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: AppButton(
-                        label: 'CHAT',
-                        onPressed: onChat,
+                        label: tenant != null ? 'CHAT' : 'SEM INQUILINO',
+                        // Sem tenant vinculado: desabilita o CTA, evita que
+                        // o landlord caia na lista genérica de conversas
+                        // achando que vai falar com "o inquilino do imóvel".
+                        onPressed: tenant != null
+                            ? () => _openChatWithTenant(
+                                  context,
+                                  tenant,
+                                  property,
+                                )
+                            : null,
                         icon: Icons.chat_bubble_outline_rounded,
                       ),
                     ),
@@ -248,6 +248,300 @@ class _ManagementCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Abre chat 1:1 com o inquilino ligado ao imóvel. Convenção: o
+  /// `/chat/:conversationId` aceita tanto id de conversa quanto composite
+  /// `property-<pid>-tenant-<tid>` — quando o backend expor o shape real
+  /// de conversation, trocar aqui pela resolução da conversa existente.
+  void _openChatWithTenant(
+    BuildContext context,
+    PropertyTenant tenant,
+    Property property,
+  ) {
+    final conversationId = 'property-${property.id}-tenant-${tenant.id}';
+    context.push('/chat/$conversationId');
+  }
+
+  /// Rótulo da seção "Inquilino" quando não existe tenant vinculado.
+  String _tenantPlaceholder(String status) {
+    if (status == 'IN_NEGOTIATION') return 'Em negociação';
+    return 'Situação';
+  }
+
+  /// Copy principal para imóveis sem inquilino vinculado. `AVAILABLE` e
+  /// demais caem em "Aguardando locação" — mesmo que o status venha
+  /// desconhecido do backend, não quebra.
+  String _statusCopy(String status) {
+    switch (status) {
+      case 'IN_NEGOTIATION':
+        return 'Em negociação com interessado';
+      case 'RENTED':
+        return 'Alugado (sem inquilino no cadastro)';
+      case 'AVAILABLE':
+      default:
+        return 'Aguardando locação';
+    }
+  }
+}
+
+class _CoverHeader extends StatelessWidget {
+  const _CoverHeader({
+    required this.title,
+    required this.coverUrl,
+    required this.fallbackUrl,
+    required this.statusBadge,
+    required this.isDark,
+  });
+
+  final String title;
+  final String? coverUrl;
+  final String? fallbackUrl;
+  final Widget statusBadge;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolved = coverUrl ?? fallbackUrl;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      child: SizedBox(
+        height: 120,
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (resolved != null && resolved.isNotEmpty)
+              Image.network(
+                resolved,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _CoverPlaceholder(isDark: isDark),
+              )
+            else
+              _CoverPlaceholder(isDark: isDark),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.6),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: Text(
+                title,
+                style: AppTypography.titleSmallBold
+                    .copyWith(color: Colors.white),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Positioned(bottom: 12, right: 12, child: statusBadge),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoverPlaceholder extends StatelessWidget {
+  const _CoverPlaceholder({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: BrutalistPalette.subtleBg(isDark),
+      child: Center(
+        child: Icon(
+          Icons.home_outlined,
+          size: 48,
+          color: BrutalistPalette.muted(isDark).withValues(alpha: 0.5),
+        ),
+      ),
+    );
+  }
+}
+
+/// Badge read-only: mostra situação do aluguel quando o imóvel está
+/// RENTED (espelha o `_PaymentStatus`), ou situação do imóvel
+/// (disponível/em negociação) caso contrário.
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({
+    required this.status,
+    required this.paymentStatus,
+    required this.isDark,
+  });
+
+  final String status;
+  final _PaymentStatus? paymentStatus;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    Color bg;
+    IconData icon;
+    String label;
+    if (paymentStatus != null) {
+      switch (paymentStatus!) {
+        case _PaymentStatus.paid:
+          bg = AppColors.success;
+          icon = Icons.check_circle_outline_rounded;
+          label = 'PAGO';
+        case _PaymentStatus.late:
+          bg = AppColors.error;
+          icon = Icons.error_outline_rounded;
+          label = 'ATRASADO';
+        case _PaymentStatus.awaiting:
+          bg = BrutalistPalette.accentOrange(isDark);
+          icon = Icons.access_time_rounded;
+          label = 'AGUARDANDO';
+      }
+    } else if (status == 'IN_NEGOTIATION') {
+      bg = BrutalistPalette.accentAmber(isDark);
+      icon = Icons.handshake_outlined;
+      label = 'NEGOCIANDO';
+    } else {
+      bg = BrutalistPalette.muted(isDark);
+      icon = Icons.event_available_outlined;
+      label = 'DISPONÍVEL';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: AppRadius.borderSm,
+        border: Border.all(width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.black),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: Colors.black,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Seletor inline do status de pagamento. Três pílulas tocáveis, visual
+/// igual ao badge, sem submenu — 3 opções cabem na largura do card.
+class _PaymentStatusSelector extends StatelessWidget {
+  const _PaymentStatusSelector({
+    required this.current,
+    required this.onChanged,
+    required this.isDark,
+  });
+
+  final _PaymentStatus current;
+  final ValueChanged<_PaymentStatus> onChanged;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final mutedColor = BrutalistPalette.muted(isDark);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Status do aluguel (mês atual)',
+          style: AppTypography.bodySmall.copyWith(color: mutedColor),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Row(
+          children: _PaymentStatus.values
+              .map((s) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: _PaymentPill(
+                        status: s,
+                        selected: s == current,
+                        onTap: () => onChanged(s),
+                        isDark: isDark,
+                      ),
+                    ),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _PaymentPill extends StatelessWidget {
+  const _PaymentPill({
+    required this.status,
+    required this.selected,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  final _PaymentStatus status;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    switch (status) {
+      case _PaymentStatus.paid:
+        bg = AppColors.success;
+      case _PaymentStatus.late:
+        bg = AppColors.error;
+      case _PaymentStatus.awaiting:
+        bg = BrutalistPalette.accentOrange(isDark);
+    }
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppDurations.fast,
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? bg : bg.withValues(alpha: 0.08),
+          borderRadius: AppRadius.borderSm,
+          border: Border.all(
+            color: selected ? bg : bg.withValues(alpha: 0.25),
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              status.icon,
+              size: 14,
+              color: selected ? Colors.black : bg,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              status.label,
+              style: AppTypography.labelSmall.copyWith(
+                color: selected ? Colors.black : bg,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -263,11 +557,16 @@ class _EmptyDossier extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment_late_outlined, size: 64, color: BrutalistPalette.muted(isDark)),
+          Icon(
+            Icons.assignment_late_outlined,
+            size: 64,
+            color: BrutalistPalette.muted(isDark),
+          ),
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Nenhum imóvel em gestão ativa.',
-            style: AppTypography.titleMedium.copyWith(color: BrutalistPalette.muted(isDark)),
+            style: AppTypography.titleMedium
+                .copyWith(color: BrutalistPalette.muted(isDark)),
           ),
         ],
       ),

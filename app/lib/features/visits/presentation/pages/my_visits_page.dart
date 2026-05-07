@@ -6,8 +6,12 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/visit.dart';
 import '../providers/my_visits_notifier.dart';
+import '../widgets/visit_calendar_view.dart';
 
-/// Lists the current user's scheduled visits as a tenant.
+/// Smart agenda do inquilino: grid mensal de calendário com dots nos dias
+/// que têm visita e lista filtrada pelo dia selecionado abaixo. Delega
+/// loading/error/empty pra estados locais e o `VisitCalendarView` pra UI
+/// do calendário + dia.
 class MyVisitsPage extends ConsumerWidget {
   const MyVisitsPage({super.key});
 
@@ -30,33 +34,34 @@ class MyVisitsPage extends ConsumerWidget {
                     ref.read(myVisitsNotifierProvider.notifier).refresh(),
                 isDark: isDark,
               ),
-              data: (visits) {
-                if (visits.isEmpty) {
-                  return _EmptyView(isDark: isDark);
-                }
-                return RefreshIndicator(
-                  onRefresh: () => ref
-                      .read(myVisitsNotifierProvider.notifier)
-                      .refresh(),
-                  child: ListView.separated(
-                    physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics()),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenHorizontal,
-                      vertical: AppSpacing.lg,
-                    ),
-                    itemCount: visits.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (_, i) => _VisitTile(
-                      visit: visits[i],
+              // Sempre mostra o calendário. Lista vazia → grid segue
+              // visível (sem dots); a _DayList interna mostra "Nenhuma
+              // visita para este dia" em cada seleção. Um banner slim em
+              // cima comunica que ainda não tem visita marcada.
+              data: (visits) => Column(
+                children: [
+                  if (visits.isEmpty)
+                    _EmptyBanner(
                       isDark: isDark,
-                      onTap: () =>
-                          context.push('/profile/my-visits/${visits[i].id}'),
+                      icon: Icons.event_available_outlined,
+                      message: 'Você ainda não agendou nenhuma visita.',
+                    ),
+                  Expanded(
+                    child: VisitCalendarView(
+                      visits: visits,
+                      onRefresh: () => ref
+                          .read(myVisitsNotifierProvider.notifier)
+                          .refresh(),
+                      tileBuilder: (ctx, visit) => _VisitTile(
+                        visit: visit,
+                        isDark: isDark,
+                        onTap: () =>
+                            context.push('/profile/my-visits/${visit.id}'),
+                      ),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
         ]);
@@ -100,7 +105,7 @@ class _VisitTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _formatDate(visit.scheduledAt),
+                    _formatTime(visit.scheduledAt),
                     style: AppTypography.titleSmallBold
                         .copyWith(color: titleColor),
                   ),
@@ -120,43 +125,57 @@ class _VisitTile extends StatelessWidget {
     );
   }
 
-  static String _formatDate(DateTime dt) {
-    const months = [
-      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-      'jul', 'ago', 'set', 'out', 'nov', 'dez',
-    ];
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = months[dt.month - 1];
+  // No tile, o dia já está no header da _DayList — mostra só o horário.
+  static String _formatTime(DateTime dt) {
     final hh = dt.hour.toString().padLeft(2, '0');
     final mm = dt.minute.toString().padLeft(2, '0');
-    return '$day $month · $hh:$mm';
+    return '$hh:$mm';
   }
 }
 
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.isDark});
+/// Banner slim acima do calendário quando não há nenhuma visita ainda.
+/// Não ocupa a tela toda — o calendário continua visível embaixo.
+class _EmptyBanner extends StatelessWidget {
+  const _EmptyBanner({
+    required this.isDark,
+    required this.icon,
+    required this.message,
+  });
   final bool isDark;
+  final IconData icon;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     final mutedColor = BrutalistPalette.muted(isDark);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.event_available_outlined,
-                size: 48, color: mutedColor),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Você ainda não agendou nenhuma visita.',
-              textAlign: TextAlign.center,
-              style:
-                  AppTypography.bodyMedium.copyWith(color: mutedColor),
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.screenHorizontal,
+        AppSpacing.sm,
+        AppSpacing.screenHorizontal,
+        0,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.borderMd,
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: mutedColor, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodySmall.copyWith(color: mutedColor),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

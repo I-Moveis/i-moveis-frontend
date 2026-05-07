@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -22,6 +23,12 @@ void main() {
 
       // Initialize Hive
       await Hive.initFlutter();
+
+      // Carrega os dados de formatação de data para pt_BR antes de qualquer
+      // widget que use `intl.DateFormat` com locale (ex: TableCalendar da
+      // smart agenda). Sem isso, o locale fallback é o do sistema e o widget
+      // pode crashar em ambientes de teste ou Web sem locale nativo pt_BR.
+      await initializeDateFormatting('pt_BR', null);
 
       FlutterError.onError = (FlutterErrorDetails details) {
         FlutterError.presentError(details);

@@ -1,0 +1,36 @@
+/// Origem de uma [Visit]: agendada manualmente pelo usuário (app/web) ou
+/// automaticamente por um agente de IA (ex: bot do WhatsApp que processa
+/// mensagem do inquilino e cria a visita sem intervenção humana).
+///
+/// O frontend hoje assume sempre `manual` — o backend ainda não devolve
+/// esse campo. Quando devolver, basta o `visitFromApiJson` parsear o valor
+/// que a UI já acende a distinção visual.
+///
+/// Ver `docs/BACKEND_VISIT_SOURCE.md` para o contrato sugerido.
+enum VisitSource {
+  manual,
+  ai;
+
+  /// Converte o valor do backend (`'MANUAL' | 'AI'`) no enum. Qualquer valor
+  /// desconhecido ou ausente cai em [VisitSource.manual] — default seguro,
+  /// já que é o caso mais comum e evita que bugs de parsing inflacionem a
+  /// contagem de visitas da IA.
+  static VisitSource fromApi(String? raw) {
+    switch (raw) {
+      case 'AI':
+        return VisitSource.ai;
+      case 'MANUAL':
+      default:
+        return VisitSource.manual;
+    }
+  }
+
+  String toApi() {
+    switch (this) {
+      case VisitSource.ai:
+        return 'AI';
+      case VisitSource.manual:
+        return 'MANUAL';
+    }
+  }
+}

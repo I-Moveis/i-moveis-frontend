@@ -44,6 +44,7 @@ import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/search/presentation/providers/search_filters_provider.dart';
 import '../../features/shell/presentation/pages/main_shell_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/support/presentation/pages/support_ticket_page.dart';
 import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
@@ -171,7 +172,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'contract',
                     builder: (_, state) => TenantContractPage(
-                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                      tenantName:
+                          state.uri.queryParameters['name'] ?? 'Inquilino',
+                      propertyId: state.uri.queryParameters['propertyId'],
+                      tenantId: state.uri.queryParameters['tenantId'],
                     ),
                   ),
                 ],
@@ -296,6 +300,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/landlord-visits',
         builder: (_, _) => const LandlordVisitsPage(),
+      ),
+
+      // Tela de suporte acessada pelo menu "Suporte" no perfil. No root
+      // navigator (mesmo padrão do /management-dossier) pra abrir full-
+      // screen em cima do shell, com botão de voltar nativo.
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/support',
+        builder: (_, _) => const SupportTicketPage(),
       ),
 
       // ── Chat detail (full screen, outside shell) ──────────────

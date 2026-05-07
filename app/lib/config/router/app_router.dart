@@ -45,7 +45,9 @@ import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/search/presentation/providers/search_filters_provider.dart';
 import '../../features/shell/presentation/pages/main_shell_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/support/presentation/pages/support_ticket_detail_page.dart';
 import '../../features/support/presentation/pages/support_ticket_page.dart';
+import '../../features/support/presentation/pages/support_tickets_list_page.dart';
 import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
@@ -303,13 +305,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const LandlordVisitsPage(),
       ),
 
-      // Tela de suporte acessada pelo menu "Suporte" no perfil. No root
-      // navigator (mesmo padrão do /management-dossier) pra abrir full-
-      // screen em cima do shell, com botão de voltar nativo.
+      // Fluxo de suporte — lista + novo + detalhe, todos no root
+      // navigator (mesmo padrão do /management-dossier) pra abrir
+      // full-screen em cima do shell, com botão de voltar nativo.
+      //
+      // /support           → lista de chamados do usuário
+      // /support/new       → formulário pra abrir um novo
+      // /support/:code     → acompanhamento de um chamado específico
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/support',
+        builder: (_, _) => const SupportTicketsListPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/support/new',
         builder: (_, _) => const SupportTicketPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/support/:code',
+        builder: (_, state) => SupportTicketDetailPage(
+          code: state.pathParameters['code'] ?? '',
+        ),
       ),
 
       // ── Chat detail (full screen, outside shell) ──────────────

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../rentals/data/current_payment_repository.dart';
+import '../../../rentals/domain/entities/rent_payment.dart';
 import '../../../search/domain/entities/property_input.dart';
 import '../providers/edit_listing_notifier.dart';
 import '../providers/my_properties_notifier.dart';
@@ -46,11 +48,32 @@ enum _AnalyticsPaymentStatus {
         return Icons.access_time_rounded;
     }
   }
+
+  static _AnalyticsPaymentStatus fromRentStatus(RentPaymentStatus s) {
+    switch (s) {
+      case RentPaymentStatus.paid:
+        return _AnalyticsPaymentStatus.paid;
+      case RentPaymentStatus.late:
+        return _AnalyticsPaymentStatus.late;
+      case RentPaymentStatus.awaiting:
+        return _AnalyticsPaymentStatus.awaiting;
+    }
+  }
+
+  RentPaymentStatus toRentStatus() {
+    switch (this) {
+      case _AnalyticsPaymentStatus.paid:
+        return RentPaymentStatus.paid;
+      case _AnalyticsPaymentStatus.late:
+        return RentPaymentStatus.late;
+      case _AnalyticsPaymentStatus.awaiting:
+        return RentPaymentStatus.awaiting;
+    }
+  }
 }
 
 class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
   String _selectedFilter = '30 dias';
-  _AnalyticsPaymentStatus _paymentStatus = _AnalyticsPaymentStatus.awaiting;
 
   /// Status local otimista do imóvel. Inicializa do `property.status` na
   /// primeira render com dado e passa a ser a fonte de verdade visual.
@@ -61,6 +84,11 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
   /// Flag pra evitar toggle duplo enquanto o PUT estiver em voo.
   bool _savingStatus = false;
 
+  /// Valor otimista do pagamento enquanto o PUT está em voo. Após
+  /// completar, o provider é invalidado e volta a ditar o valor.
+  _AnalyticsPaymentStatus? _paymentInflight;
+  bool _savingPayment = false;
+
   // Mock data that changes based on filter
   Map<String, int> _getMetrics() {
     return switch (_selectedFilter) {
@@ -68,6 +96,38 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
       '30 dias' => {'views': 142, 'favs': 23, 'props': 5, 'visits': 8},
       _ => {'views': 890, 'favs': 112, 'props': 28, 'visits': 45},
     };
+  }
+
+  /// Dispara PUT /properties/:id/payments/current. Mesmo padrão
+  /// otimista do `_changePropertyStatus`.
+  Future<void> _changePayment(_AnalyticsPaymentStatus next) async {
+    if (_savingPayment) return;
+    setState(() {
+      _paymentInflight = next;
+      _savingPayment = true;
+    });
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(currentPaymentRepositoryProvider).update(
+            propertyId: widget.propertyId,
+            status: next.toRentStatus(),
+          );
+      ref.invalidate(currentPaymentProvider(widget.propertyId));
+      if (!mounted) return;
+      setState(() {
+        _paymentInflight = null;
+        _savingPayment = false;
+      });
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _paymentInflight = null;
+        _savingPayment = false;
+      });
+      messenger.showSnackBar(
+        SnackBar(content: Text('Não foi possível atualizar o pagamento: $e')),
+      );
+    }
   }
 
   Future<void> _changePropertyStatus(String next) async {
@@ -164,14 +224,30 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
                         // não tem contrato ativo, mostra como desabilitado
                         // pra não sugerir que existe cobrança em curso.
                         if (isRented) ...[
+                          // Lê snapshot real do backend. Fallback AWAITING
+                          // enquanto carrega ou falha.
                           const AppSectionHeader(
                               title: 'Status do aluguel (mês atual)'),
                           const SizedBox(height: AppSpacing.md),
-                          _AnalyticsPaymentSelector(
-                            current: _paymentStatus,
-                            onChanged: (next) =>
-                                setState(() => _paymentStatus = next),
-                            isDark: isDark,
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final remote = ref
+                                  .watch(currentPaymentProvider(widget.propertyId))
+                                  .asData
+                                  ?.value;
+                              final backendStatus = remote != null
+                                  ? _AnalyticsPaymentStatus.fromRentStatus(
+                                      remote.status,
+                                    )
+                                  : _AnalyticsPaymentStatus.awaiting;
+                              final display = _paymentInflight ?? backendStatus;
+                              return _AnalyticsPaymentSelector(
+                                current: display,
+                                onChanged:
+                                    _savingPayment ? (_) {} : _changePayment,
+                                isDark: isDark,
+                              );
+                            },
                           ),
                           const SizedBox(height: AppSpacing.xxl),
                         ],
@@ -558,7 +634,7 @@ class _LightboxState extends State<_Lightbox> {
   }
 }
 
-/// Seletor do status do imóvel (AVAILABLE/IN_NEGOTIATION/RENTED). Cada
+/// Seletor do status do imóvel (AVAILABLE/NEGOTIATING/RENTED). Cada
 /// clique dispara `onChanged` — o pai cuida de chamar o notifier e
 /// reverter o visual se o PUT falhar.
 class _PropertyStatusSelector extends StatelessWidget {
@@ -576,7 +652,7 @@ class _PropertyStatusSelector extends StatelessWidget {
 
   static const _options = [
     ('AVAILABLE', 'DISPONÍVEL', Icons.event_available_outlined),
-    ('IN_NEGOTIATION', 'EM NEGOCIAÇÃO', Icons.handshake_outlined),
+    ('NEGOTIATING', 'EM NEGOCIAÇÃO', Icons.handshake_outlined),
     ('RENTED', 'ALUGADO', Icons.home_work_outlined),
   ];
 
@@ -625,7 +701,7 @@ class _PropertyStatusPill extends StatelessWidget {
     switch (apiValue) {
       case 'RENTED':
         bg = AppColors.success;
-      case 'IN_NEGOTIATION':
+      case 'NEGOTIATING':
         bg = BrutalistPalette.accentAmber(isDark);
       case 'AVAILABLE':
       default:

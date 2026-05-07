@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../rentals/data/current_payment_repository.dart';
+import '../../../rentals/domain/entities/rent_payment.dart';
 import '../../../search/domain/entities/property.dart';
 import '../providers/my_properties_notifier.dart';
 
@@ -34,6 +36,31 @@ enum _PaymentStatus {
         return Icons.error_outline_rounded;
       case _PaymentStatus.awaiting:
         return Icons.access_time_rounded;
+    }
+  }
+
+  /// Converte do enum do domínio (que é o shape do backend) para o
+  /// enum interno do dossier — os dois têm os mesmos 3 valores mas
+  /// vivem em arquivos distintos por independência histórica.
+  static _PaymentStatus fromRentStatus(RentPaymentStatus s) {
+    switch (s) {
+      case RentPaymentStatus.paid:
+        return _PaymentStatus.paid;
+      case RentPaymentStatus.late:
+        return _PaymentStatus.late;
+      case RentPaymentStatus.awaiting:
+        return _PaymentStatus.awaiting;
+    }
+  }
+
+  RentPaymentStatus toRentStatus() {
+    switch (this) {
+      case _PaymentStatus.paid:
+        return RentPaymentStatus.paid;
+      case _PaymentStatus.late:
+        return RentPaymentStatus.late;
+      case _PaymentStatus.awaiting:
+        return RentPaymentStatus.awaiting;
     }
   }
 }
@@ -92,9 +119,11 @@ class PropertyManagementDossierPage extends ConsumerWidget {
   }
 }
 
-/// Cartão do dossier. Stateful porque o seletor de status de pagamento é
-/// estado local enquanto o backend não expõe `rental_payments`.
-class _ManagementCard extends StatefulWidget {
+/// Cartão do dossier. Stateful porque o seletor de status de pagamento
+/// precisa lidar com PUT assíncrono e reverter em erro. Estado do
+/// servidor vem de `currentPaymentProvider` (US-009/010); mutações vão
+/// via `currentPaymentRepository.update` e invalidam o provider.
+class _ManagementCard extends ConsumerStatefulWidget {
   const _ManagementCard({
     required this.property,
     required this.isDark,
@@ -106,11 +135,15 @@ class _ManagementCard extends StatefulWidget {
   final VoidCallback onDetails;
 
   @override
-  State<_ManagementCard> createState() => _ManagementCardState();
+  ConsumerState<_ManagementCard> createState() => _ManagementCardState();
 }
 
-class _ManagementCardState extends State<_ManagementCard> {
-  _PaymentStatus _payment = _PaymentStatus.awaiting;
+class _ManagementCardState extends ConsumerState<_ManagementCard> {
+  /// Valor otimista em trânsito — usado enquanto o PUT está voando, ou
+  /// como fallback se o GET ainda estiver carregando. Após o PUT
+  /// completar, o provider é invalidado e volta a ditar o valor real.
+  _PaymentStatus? _inflight;
+  bool _saving = false;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +152,17 @@ class _ManagementCardState extends State<_ManagementCard> {
     final status = property.status ?? 'AVAILABLE';
     final tenant = property.currentTenant;
     final isRented = status == 'RENTED';
+
+    // Lê snapshot do backend apenas quando o imóvel está alugado — não
+    // faz sentido buscar pagamento se não há contrato ativo. Enquanto
+    // carrega (ou fallback null), usa AWAITING como default.
+    final remote = isRented
+        ? ref.watch(currentPaymentProvider(property.id)).asData?.value
+        : null;
+    final paymentFromBackend = remote != null
+        ? _PaymentStatus.fromRentStatus(remote.status)
+        : _PaymentStatus.awaiting;
+    final payment = _inflight ?? paymentFromBackend;
 
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
@@ -149,7 +193,7 @@ class _ManagementCardState extends State<_ManagementCard> {
                 : null,
             statusBadge: _StatusBadge(
               status: status,
-              paymentStatus: isRented ? _payment : null,
+              paymentStatus: isRented ? payment : null,
               isDark: isDark,
             ),
             isDark: isDark,
@@ -210,8 +254,8 @@ class _ManagementCardState extends State<_ManagementCard> {
                 if (isRented) ...[
                   const SizedBox(height: AppSpacing.lg),
                   _PaymentStatusSelector(
-                    current: _payment,
-                    onChanged: (next) => setState(() => _payment = next),
+                    current: payment,
+                    onChanged: _saving ? (_) {} : _updatePayment,
                     isDark: isDark,
                   ),
                 ],
@@ -252,6 +296,42 @@ class _ManagementCardState extends State<_ManagementCard> {
     );
   }
 
+  /// Dispara o PUT do status de pagamento. UI otimista: seta
+  /// `_inflight` pra mostrar o valor novo imediatamente; se o PUT
+  /// falhar, reverte e mostra snackbar. Em sucesso, invalida o
+  /// provider pra o próximo read pegar os novos `updatedAt`/`updatedBy`.
+  Future<void> _updatePayment(_PaymentStatus next) async {
+    if (_saving) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _inflight = next;
+      _saving = true;
+    });
+    try {
+      await ref.read(currentPaymentRepositoryProvider).update(
+            propertyId: widget.property.id,
+            status: next.toRentStatus(),
+          );
+      // Força próximo watch do provider a refetchar da API em vez de
+      // servir o cache antigo.
+      ref.invalidate(currentPaymentProvider(widget.property.id));
+      if (!mounted) return;
+      setState(() {
+        _inflight = null;
+        _saving = false;
+      });
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _inflight = null;
+        _saving = false;
+      });
+      messenger.showSnackBar(
+        SnackBar(content: Text('Não foi possível atualizar o pagamento: $e')),
+      );
+    }
+  }
+
   /// Abre chat 1:1 com o inquilino ligado ao imóvel. Convenção: o
   /// `/chat/:conversationId` aceita tanto id de conversa quanto composite
   /// `property-<pid>-tenant-<tid>` — quando o backend expor o shape real
@@ -267,7 +347,7 @@ class _ManagementCardState extends State<_ManagementCard> {
 
   /// Rótulo da seção "Inquilino" quando não existe tenant vinculado.
   String _tenantPlaceholder(String status) {
-    if (status == 'IN_NEGOTIATION') return 'Em negociação';
+    if (status == 'NEGOTIATING') return 'Em negociação';
     return 'Situação';
   }
 
@@ -276,7 +356,7 @@ class _ManagementCardState extends State<_ManagementCard> {
   /// desconhecido do backend, não quebra.
   String _statusCopy(String status) {
     switch (status) {
-      case 'IN_NEGOTIATION':
+      case 'NEGOTIATING':
         return 'Em negociação com interessado';
       case 'RENTED':
         return 'Alugado (sem inquilino no cadastro)';
@@ -406,7 +486,7 @@ class _StatusBadge extends StatelessWidget {
           icon = Icons.access_time_rounded;
           label = 'AGUARDANDO';
       }
-    } else if (status == 'IN_NEGOTIATION') {
+    } else if (status == 'NEGOTIATING') {
       bg = BrutalistPalette.accentAmber(isDark);
       icon = Icons.handshake_outlined;
       label = 'NEGOCIANDO';

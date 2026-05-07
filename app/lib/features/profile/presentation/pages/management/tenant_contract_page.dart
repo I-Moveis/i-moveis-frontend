@@ -2,8 +2,11 @@ import 'package:app/design_system/design_system.dart';
 import 'package:app/features/auth/presentation/providers/auth_notifier.dart';
 import 'package:app/features/auth/presentation/providers/auth_state.dart';
 import 'package:app/features/listing/presentation/providers/my_properties_notifier.dart';
+import 'package:app/features/rentals/data/contract_repository.dart';
+import 'package:app/features/rentals/domain/entities/contract.dart';
 import 'package:app/features/search/domain/entities/property.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -69,23 +72,40 @@ class _TenantContractPageState extends ConsumerState<TenantContractPage> {
         );
   }
 
+  /// Resolve o Contract ativo — o endpoint
+  /// `GET /api/contracts?propertyId=&tenantId=` é consumido via provider.
+  /// Retorna null enquanto carrega ou quando não há contrato ativo.
+  Contract? _resolveContract() {
+    if (widget.propertyId == null || widget.tenantId == null) return null;
+    final snapshot = ref.watch(activeContractProvider(ContractQuery(
+      propertyId: widget.propertyId!,
+      tenantId: widget.tenantId!,
+    )));
+    return snapshot.asData?.value;
+  }
+
   Future<void> _downloadContract() async {
     final messenger = ScaffoldMessenger.of(context);
-    // TODO(backend-gap): quando o backend expuser
-    // GET /api/contracts/:id/pdf, trocar o 'url' abaixo pelo endpoint
-    // real e gerar a URL autenticada. Ver BACKEND_LANDLORD_GAPS.md §5.
-    const url = '';
-    if (url.isEmpty) {
+    final contract = _resolveContract();
+    if (contract == null) {
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Download indisponível: o contrato PDF será habilitado quando o backend expuser /api/contracts.'),
-        ),
+        const SnackBar(content: Text(
+            'Contrato ainda não disponível — tente novamente em instantes.')),
       );
       return;
     }
-    final uri = Uri.parse(url);
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // O backend pode devolver uma URL absoluta (CDN) em `pdfUrl`; se
+    // vier null/relativa, apontamos pro endpoint GET que streama os
+    // bytes (US-015). O launcher abre no navegador — em mobile o
+    // SO decide Chrome/Safari/visualizador.
+    final target = (contract.pdfUrl != null &&
+            contract.pdfUrl!.startsWith(RegExp(r'^https?://', caseSensitive: false)))
+        ? contract.pdfUrl!
+        : ref
+            .read(contractRepositoryProvider)
+            .pdfDownloadUrl(contract.id);
+    final ok = await launchUrl(Uri.parse(target),
+        mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Não foi possível abrir o PDF.')),
@@ -109,29 +129,40 @@ class _TenantContractPageState extends ConsumerState<TenantContractPage> {
       }
 
       final picked = result.files.first;
-      // TODO(backend-gap): PUT /api/contracts/:id/signed-document
-      // multipart com campo `signedPdf`. Enquanto o endpoint não existir,
-      // guardamos só o nome do arquivo pra feedback visual — o bytes
-      // ficam em `picked.bytes` quando for hora de subir.
+      final contract = _resolveContract();
+      if (contract == null) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Contrato ainda não disponível — tente novamente em instantes.')));
+        setState(() => _uploadingSigned = false);
+        return;
+      }
+
+      await ref.read(contractRepositoryProvider).uploadSignedPdf(
+            contractId: contract.id,
+            file: picked,
+          );
+      // Refresh do snapshot pra a UI ver `signedAt` atualizado na
+      // próxima render.
+      ref.invalidate(activeContractProvider(ContractQuery(
+        propertyId: widget.propertyId!,
+        tenantId: widget.tenantId!,
+      )));
+
+      if (!mounted) return;
       setState(() {
         _uploadedFileName = picked.name;
         _uploadingSigned = false;
       });
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Arquivo "${picked.name}" selecionado. O envio será ativado quando o backend expuser /api/contracts/:id/signed-document.',
-          ),
-        ),
-      );
-    } on Object {
-      if (mounted) {
-        setState(() => _uploadingSigned = false);
-        messenger.showSnackBar(
-          const SnackBar(
-              content: Text('Não foi possível selecionar o arquivo.')),
-        );
-      }
+      messenger.showSnackBar(SnackBar(
+        content: Text('Contrato assinado enviado: ${picked.name}.'),
+      ));
+    } on Object catch (e) {
+      if (kDebugMode) debugPrint('[contracts] upload falha: $e');
+      if (!mounted) return;
+      setState(() => _uploadingSigned = false);
+      messenger.showSnackBar(const SnackBar(
+          content: Text('Não foi possível enviar o contrato assinado.')));
     }
   }
 

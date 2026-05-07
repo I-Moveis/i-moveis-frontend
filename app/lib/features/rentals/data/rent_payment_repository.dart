@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/dio_provider.dart';
 import '../domain/entities/rent_payment.dart';
 
-/// Carrega o histórico de pagamentos de aluguel de um imóvel para um
-/// inquilino específico. Hoje o endpoint `GET /api/properties/:id/payments`
-/// não existe no backend (ver `BACKEND_HANDOFF.md §3`) — em qualquer
-/// erro o repo devolve lista vazia pra que a UI mostre estado vazio
-/// amigável em vez de crashar.
+/// Carrega o histórico MULTI-MÊS de pagamentos de aluguel de um imóvel
+/// para um inquilino específico. **Endpoint ainda não entregue.** O
+/// backend entregou só `/payments/current` (US-009/US-010 — single
+/// month); a versão multi-mês está marcada como pendente em
+/// `BACKEND_HANDOFF.md §3`. Enquanto isso, qualquer erro (inclusive 404
+/// esperado) devolve lista vazia e a UI faz fallback para o mês
+/// corrente via `currentPaymentProvider` (ver
+/// `tenant_rent_history_page.dart`).
 class RentPaymentRepository {
   RentPaymentRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;

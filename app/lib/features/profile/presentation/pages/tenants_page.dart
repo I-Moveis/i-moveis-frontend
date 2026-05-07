@@ -374,7 +374,7 @@ class _TenantEntry {
     switch (status) {
       case 'RENTED':
         return 'Documentação OK';
-      case 'IN_NEGOTIATION':
+      case 'NEGOTIATING':
         return 'Aguardando Assinatura';
       case 'AVAILABLE':
       default:

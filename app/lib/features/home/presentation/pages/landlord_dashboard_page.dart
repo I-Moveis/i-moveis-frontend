@@ -619,7 +619,7 @@ class _RecentTenantsSection extends ConsumerWidget {
     switch (propertyStatus) {
       case 'RENTED':
         return 'Aluguel ativo';
-      case 'IN_NEGOTIATION':
+      case 'NEGOTIATING':
         return 'Em negociação';
       case 'AVAILABLE':
       default:

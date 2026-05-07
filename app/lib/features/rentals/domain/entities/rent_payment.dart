@@ -22,6 +22,20 @@ enum RentPaymentStatus {
     }
   }
 
+  /// Valor que o backend espera no body do PUT
+  /// `/api/properties/:id/payments/current` (US-010). Enum `RentalPaymentStatus`
+  /// no Prisma: `AWAITING | PAID | LATE`.
+  String toApi() {
+    switch (this) {
+      case RentPaymentStatus.paid:
+        return 'PAID';
+      case RentPaymentStatus.late:
+        return 'LATE';
+      case RentPaymentStatus.awaiting:
+        return 'AWAITING';
+    }
+  }
+
   String get label {
     switch (this) {
       case RentPaymentStatus.paid:

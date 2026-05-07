@@ -102,7 +102,7 @@ void main() {
 
       await sut.update(
         'prop-created-1',
-        const PropertyInput(title: 'Novo título', status: 'IN_NEGOTIATION'),
+        const PropertyInput(title: 'Novo título', status: 'NEGOTIATING'),
       );
 
       final captured = verify(() => dio.put<Map<String, dynamic>>(
@@ -110,7 +110,7 @@ void main() {
             data: captureAny(named: 'data'),
           )).captured.single as Map<String, dynamic>;
 
-      expect(captured, {'title': 'Novo título', 'status': 'IN_NEGOTIATION'});
+      expect(captured, {'title': 'Novo título', 'status': 'NEGOTIATING'});
     });
 
     test('price goes as stringified number', () async {

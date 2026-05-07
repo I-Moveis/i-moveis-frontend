@@ -439,7 +439,7 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
                       ListingChoiceRow<String>(
                         options: const [
                           'AVAILABLE',
-                          'IN_NEGOTIATION',
+                          'NEGOTIATING',
                           'RENTED'
                         ],
                         selected: _status,
@@ -487,7 +487,7 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
     switch (s) {
       case 'AVAILABLE':
         return 'Disponível';
-      case 'IN_NEGOTIATION':
+      case 'NEGOTIATING':
         return 'Em negociação';
       case 'RENTED':
         return 'Alugado';

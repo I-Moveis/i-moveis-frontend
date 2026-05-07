@@ -108,69 +108,83 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
 
                     // Layout: coluna esquerda (3 cards) | coluna direita (2 cards)
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: Column(children: [
-                              AppMetricCard(
-                                icon: Icons.people_outline,
-                                value: userCount,
-                                label: 'Usuários',
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AppMetricCard(
-                                icon: Icons.home_outlined,
-                                value: propertyCount,
-                                label: 'Imóveis',
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              AppMetricCard(
-                                icon: Icons.donut_large_outlined,
-                                value: occupancyRate,
-                                label: 'Ocupação %',
-                              ),
-                            ]),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(children: [
-                              _NewUsersMetricCard(
-                                count: newUsersCount,
-                                accentColor: accentColor,
-                                cardBg: cardBg,
-                                borderColor: borderColor,
-                                titleColor: titleColor,
-                                mutedColor: mutedColor,
-                                onTap: () => context.push('/admin/new-users'),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              _TappableMetricCard(
-                                icon: Icons.pending_outlined,
-                                value: pendingCount,
-                                label: 'Pendentes',
-                                accentColor: accentColor,
-                                cardBg: cardBg,
-                                borderColor: borderColor,
-                                titleColor: titleColor,
-                                mutedColor: mutedColor,
-                                onTap: () {
-                                  try {
-                                    ref
-                                        .read(adminModerationTabProvider
-                                            .notifier)
-                                        .selectPending();
-                                  } on Object {
-                                    // provider pode não existir na primeira carga
-                                  }
-                                  context.push('/admin/listings');
-                                },
-                              ),
-                            ]),
-                          ),
-                        ],
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(children: [
+                            _TappableMetricCard(
+                              icon: Icons.people_outline,
+                              value: userCount,
+                              label: 'Usuários',
+                              accentColor: accentColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              onTap: () => context.push('/admin/users'),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _TappableMetricCard(
+                              icon: Icons.home_outlined,
+                              value: propertyCount,
+                              label: 'Imóveis',
+                              accentColor: accentColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _TappableMetricCard(
+                              icon: Icons.donut_large_outlined,
+                              value: occupancyRate,
+                              label: 'Ocupação %',
+                              accentColor: accentColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                            ),
+                          ]),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(children: [
+                            _NewUsersMetricCard(
+                              count: newUsersCount,
+                              accentColor: accentColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              onTap: () => context.push('/admin/new-users'),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _TappableMetricCard(
+                              icon: Icons.pending_outlined,
+                              value: pendingCount,
+                              label: 'Pendentes',
+                              accentColor: accentColor,
+                              cardBg: cardBg,
+                              borderColor: borderColor,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              onTap: () {
+                                try {
+                                  ref
+                                      .read(adminModerationTabProvider
+                                          .notifier)
+                                      .selectPending();
+                                } on Object {
+                                  // provider pode não existir na primeira carga
+                                }
+                                context.push('/admin/listings');
+                              },
+                            ),
+                          ]),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -283,7 +297,7 @@ class _TappableMetricCard extends StatelessWidget {
     required this.borderColor,
     required this.titleColor,
     required this.mutedColor,
-    required this.onTap,
+    this.onTap,
   });
 
   final IconData icon;
@@ -294,7 +308,7 @@ class _TappableMetricCard extends StatelessWidget {
   final Color borderColor;
   final Color titleColor;
   final Color mutedColor;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

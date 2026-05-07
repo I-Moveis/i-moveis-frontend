@@ -20,6 +20,26 @@ class ConversationSummary {
     this.linkedTenantId,
   });
 
+  factory ConversationSummary.fromJson(Map<String, dynamic> json) {
+    return ConversationSummary(
+      id: (json['id'] ?? '').toString(),
+      counterpartName:
+          (json['counterpartName'] ?? json['name'] ?? 'Conversa').toString(),
+      lastMessage:
+          (json['lastMessage'] ?? json['preview'] ?? '').toString(),
+      lastMessageAt: DateTime.tryParse(
+            (json['lastMessageAt'] ?? json['updatedAt'] ?? '').toString(),
+          )?.toLocal() ??
+          DateTime.now(),
+      unread: json['unread'] == true || json['unreadCount'] is num &&
+          (json['unreadCount'] as num) > 0,
+      counterpartAvatarUrl:
+          (json['counterpartAvatarUrl'] ?? json['avatarUrl']) as String?,
+      linkedPropertyId: json['linkedPropertyId'] as String?,
+      linkedTenantId: json['linkedTenantId'] as String?,
+    );
+  }
+
   /// ID usado em `context.push('/chat/:id')`. Quando vier do backend,
   /// é o UUID da conversa.
   final String id;
@@ -53,26 +73,6 @@ class ConversationSummary {
   /// Usado pra cruzar com a lista "Meus Inquilinos" e mostrar preview
   /// da última mensagem no card.
   final String? linkedTenantId;
-
-  factory ConversationSummary.fromJson(Map<String, dynamic> json) {
-    return ConversationSummary(
-      id: (json['id'] ?? '').toString(),
-      counterpartName:
-          (json['counterpartName'] ?? json['name'] ?? 'Conversa').toString(),
-      lastMessage:
-          (json['lastMessage'] ?? json['preview'] ?? '').toString(),
-      lastMessageAt: DateTime.tryParse(
-            (json['lastMessageAt'] ?? json['updatedAt'] ?? '').toString(),
-          )?.toLocal() ??
-          DateTime.now(),
-      unread: json['unread'] == true || json['unreadCount'] is num &&
-          (json['unreadCount'] as num) > 0,
-      counterpartAvatarUrl:
-          (json['counterpartAvatarUrl'] ?? json['avatarUrl']) as String?,
-      linkedPropertyId: json['linkedPropertyId'] as String?,
-      linkedTenantId: json['linkedTenantId'] as String?,
-    );
-  }
 
   /// Primeiras letras do nome pro avatar circular quando não há foto.
   /// Ex: "João Silva" → "JS"; "Maria" → "MA".

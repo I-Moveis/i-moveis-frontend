@@ -1,4 +1,4 @@
-/// Origem de uma [Visit]: agendada manualmente pelo usuário (app/web) ou
+/// Origem de uma visita: agendada manualmente pelo usuário (app/web) ou
 /// automaticamente por um agente de IA (ex: bot do WhatsApp que processa
 /// mensagem do inquilino e cria a visita sem intervenção humana).
 ///

@@ -28,7 +28,7 @@ void main() {
       // widget que use `intl.DateFormat` com locale (ex: TableCalendar da
       // smart agenda). Sem isso, o locale fallback é o do sistema e o widget
       // pode crashar em ambientes de teste ou Web sem locale nativo pt_BR.
-      await initializeDateFormatting('pt_BR', null);
+      await initializeDateFormatting('pt_BR');
 
       FlutterError.onError = (FlutterErrorDetails details) {
         FlutterError.presentError(details);

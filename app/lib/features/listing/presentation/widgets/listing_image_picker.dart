@@ -34,7 +34,7 @@ class _ListingImagePickerState extends State<ListingImagePicker> {
         });
         widget.onImagesChanged(_images);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error picking images: $e');
     }
   }
@@ -76,7 +76,7 @@ class _ListingImagePickerState extends State<ListingImagePicker> {
               decoration: BoxDecoration(
                 color: cardBg,
                 borderRadius: AppRadius.borderLg,
-                border: Border.all(color: borderColor, style: BorderStyle.solid),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -147,7 +147,7 @@ class _ListingImagePickerState extends State<ListingImagePicker> {
                               decoration: BoxDecoration(
                                 color: accentColor,
                                 borderRadius: AppRadius.borderSm,
-                                border: Border.all(color: Colors.black, width: 1),
+                                border: Border.all(),
                               ),
                               child: Text(
                                 'CAPA',
@@ -169,7 +169,7 @@ class _ListingImagePickerState extends State<ListingImagePicker> {
                             decoration: BoxDecoration(
                               color: AppColors.error,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.black, width: 1),
+                              border: Border.all(),
                             ),
                             child: const Icon(Icons.close, size: 14, color: Colors.white),
                           ),

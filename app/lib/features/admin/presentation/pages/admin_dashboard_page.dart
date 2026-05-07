@@ -182,17 +182,9 @@ class AdminDashboardPage extends ConsumerWidget {
                       borderColor: borderColor,
                       titleColor: titleColor,
                       mutedColor: mutedColor,
-                      onModerationTap: () {
-                        try {
-                          ref.read(adminModerationTabProvider.notifier).selectPending();
-                        } on Object {
-                          // Provider pode não existir durante primeira carga;
-                          // navegação deve prosseguir mesmo assim.
-                        }
-                        context.push('/admin/listings');
-                      },
                       onReportsTap: () => context.push('/admin/reports'),
-                      onContractsTap: () => context.push('/admin/contracts'),
+                      onContractsTap: () =>
+                          context.push('/admin/contracts?filter=avencer'),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -338,7 +330,6 @@ class _AlertsSection extends StatelessWidget {
     required this.borderColor,
     required this.titleColor,
     required this.mutedColor,
-    required this.onModerationTap,
     required this.onReportsTap,
     required this.onContractsTap,
   });
@@ -349,19 +340,12 @@ class _AlertsSection extends StatelessWidget {
   final Color borderColor;
   final Color titleColor;
   final Color mutedColor;
-  final VoidCallback onModerationTap;
   final VoidCallback onReportsTap;
   final VoidCallback onContractsTap;
 
   @override
   Widget build(BuildContext context) {
     final alerts = [
-      _Alert(
-        icon: Icons.home_outlined,
-        message: '4 anúncios aguardando moderação',
-        color: AppColors.warning,
-        onTap: onModerationTap,
-      ),
       _Alert(
         icon: Icons.person_off_outlined,
         message: '1 usuário com relatos de comportamento inadequado',

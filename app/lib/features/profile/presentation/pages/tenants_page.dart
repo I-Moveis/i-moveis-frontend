@@ -1,51 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../design_system/design_system.dart';
 
-class TenantsPage extends StatelessWidget {
+import '../../../../design_system/design_system.dart';
+import '../../../chat/domain/entities/conversation_summary.dart';
+import '../../../chat/presentation/providers/conversations_notifier.dart';
+import '../../../listing/presentation/providers/my_properties_notifier.dart';
+import '../../../search/domain/entities/property.dart';
+
+/// Tela "Meus Inquilinos" — mostra um card por inquilino que mora em
+/// algum imóvel do landlord logado. Derivada de:
+/// - `myPropertiesNotifierProvider.where(currentTenant != null)` — um
+///   item por property com inquilino vinculado
+/// - `conversationsProvider` — preview da última mensagem, quando há
+///   conversa linkada àquele tenant
+///
+/// **Dependências de backend** (ver `BACKEND_HANDOFF.md`):
+/// - `property.currentTenant` (§2) — sem isso, lista fica vazia
+/// - `conversation.linkedTenantId` (§12) — sem isso, preview fica "—"
+/// - `tenant.documentStatus` e `contract.endDate` — ainda não existem;
+///   por ora status é derivado de `property.status` e vencimento fica
+///   em "—" (ver §13 proposto)
+class TenantsPage extends ConsumerWidget {
   const TenantsPage({super.key});
 
-  static const _tenants = [
-    _TenantData(
-      name: 'João Silva',
-      initials: 'JS',
-      property: 'Apartamento Jardins',
-      status: 'Documentação OK',
-      lastMessage: 'Enviado comprovante de PIX.',
-      contractEnd: '12/2026',
-      isVerified: true,
-    ),
-    _TenantData(
-      name: 'Maria Oliveira',
-      initials: 'MO',
-      property: 'Studio Pinheiros',
-      status: 'Aguardando Assinatura',
-      lastMessage: 'Pode conferir o contrato?',
-      contractEnd: '08/2025',
-      isVerified: true,
-    ),
-    _TenantData(
-      name: 'Pedro Santos',
-      initials: 'PS',
-      property: 'Loft Vila Madalena',
-      status: 'Pendente Documentos',
-      lastMessage: 'Vou enviar o RG amanhã.',
-      contractEnd: '05/2027',
-      isVerified: false,
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
-    final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+    final accentColor =
+        isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+
+    final properties = ref
+            .watch(myPropertiesNotifierProvider)
+            .asData
+            ?.value ??
+        const <Property>[];
+    final conversations =
+        ref.watch(conversationsProvider).asData?.value ?? const [];
+
+    // Cruza imóveis (com inquilino) + conversas (linkadas ao tenant) pra
+    // montar os dados de cada card num único passe. Ordem: mais recente
+    // por property.id (sem `rentalStartedAt` dá pra melhorar depois).
+    final entries = <_TenantEntry>[
+      for (final p in properties)
+        if (p.currentTenant != null)
+          _TenantEntry.from(property: p, conversations: conversations),
+    ];
 
     return BrutalistPageScaffold(
       builder: (context, _, entrance, pulse) {
         final fade = Tween<double>(begin: 0, end: 1).animate(
-          CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
+          CurvedAnimation(
+            parent: entrance,
+            curve: const Interval(0.1, 0.5, curve: Curves.easeOut),
+          ),
         );
 
         return Opacity(
@@ -61,25 +71,31 @@ class TenantsPage extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        itemCount: _tenants.length,
-                        itemBuilder: (context, index) => Column(
-                          children: [
-                            _buildTenantCard(context, _tenants[index], index, isDark, titleColor, mutedColor, accentColor),
-                            const SizedBox(height: AppSpacing.md),
-                          ],
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenHorizontal),
+                  child: entries.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.xxxl),
+                          child: _EmptyTenants(
+                              isDark: isDark,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < entries.length; i++) ...[
+                                _buildTenantCard(context, entries[i], i,
+                                    isDark, titleColor, mutedColor,
+                                    accentColor),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+                              const SizedBox(height: AppSpacing.massive),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.massive),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -89,87 +105,24 @@ class TenantsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTenantCard(BuildContext context, _TenantData tenant, int index, bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
-    final cardBg = BrutalistPalette.surfaceBg(isDark);
-    final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final statusColor = tenant.status == 'Documentação OK' 
-        ? AppColors.success 
-        : tenant.status == 'Aguardando Assinatura'
-            ? AppColors.warning
-            : AppColors.error;
-
-    return GestureDetector(
-      onTap: () => _showTenantDetails(context, tenant, index, isDark),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(color: borderColor),
-          boxShadow: BrutalistPalette.subtleShadow(isDark),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accentColor.withValues(alpha: 0.1),
-                  ),
-                  child: Center(child: Text(tenant.initials, style: AppTypography.titleMediumBold.copyWith(color: accentColor))),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(tenant.name, style: AppTypography.titleLargeBold.copyWith(color: titleColor)),
-                          if (tenant.isVerified) ...[
-                            const SizedBox(width: 4),
-                            Icon(Icons.verified_rounded, size: 14, color: accentColor),
-                          ],
-                        ],
-                      ),
-                      Text(tenant.property, style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: AppRadius.borderFull,
-                  ),
-                  child: Text(tenant.status, style: AppTypography.propertyTag.copyWith(color: statusColor, fontSize: 10)),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Divider(height: 1),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Icon(Icons.chat_bubble_outline_rounded, size: 14, color: mutedColor),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    tenant.lastMessage,
-                    style: AppTypography.bodySmall.copyWith(color: mutedColor, fontStyle: FontStyle.italic),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text('Contrato: ${tenant.contractEnd}', style: AppTypography.bodySmall.copyWith(color: mutedColor, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ],
-        ),
-      ),
+  Widget _buildTenantCard(
+    BuildContext context,
+    _TenantEntry entry,
+    int index,
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+    Color accentColor,
+  ) {
+    final data = entry.toLegacyData();
+    return _TenantCard(
+      tenant: data,
+      index: index,
+      isDark: isDark,
+      titleColor: titleColor,
+      mutedColor: mutedColor,
+      accentColor: accentColor,
+      onTap: () => _showTenantDetails(context, data, index, isDark),
     );
   }
 
@@ -328,6 +281,278 @@ class _TenantDetailsSheet extends StatelessWidget {
         Text(label, style: AppTypography.bodyMedium.copyWith(color: BrutalistPalette.muted(isDark))),
         Text(value, style: AppTypography.titleSmallBold.copyWith(color: BrutalistPalette.title(isDark))),
       ],
+    );
+  }
+}
+
+/// Dados já enriquecidos pra um card de inquilino — mistura Property,
+/// PropertyTenant e ConversationSummary numa estrutura que a UI
+/// consome direto. Calculado uma vez no build, passado pro card.
+class _TenantEntry {
+  const _TenantEntry({
+    required this.tenantId,
+    required this.tenantName,
+    required this.propertyTitle,
+    required this.status,
+    required this.lastMessage,
+    required this.contractEnd,
+  });
+
+  final String tenantId;
+  final String tenantName;
+  final String propertyTitle;
+
+  /// Status textual preservado ("Documentação OK" / "Aguardando
+  /// Assinatura" / "Pendente Documentos"). Derivado de `property.status`
+  /// por ora — quando o backend expuser `tenant.documentStatus`, trocar
+  /// aqui. Ver BACKEND_HANDOFF.md §13.
+  final String status;
+
+  /// Preview da última mensagem trocada com esse inquilino. Vem de uma
+  /// `ConversationSummary` com `linkedTenantId` igual ao tenant id.
+  /// Fallback quando não há conversa: string vazia (a UI oculta o
+  /// preview).
+  final String lastMessage;
+
+  /// Mês/ano do fim do contrato (ex: "12/2026"). Backend ainda não
+  /// expõe esse campo — por ora fica em "—". Ver BACKEND_HANDOFF.md §13.
+  final String contractEnd;
+
+  /// Constrói a partir de uma [Property] que tem `currentTenant != null`
+  /// + a lista global de conversas pra buscar preview linkado.
+  factory _TenantEntry.from({
+    required Property property,
+    required List<ConversationSummary> conversations,
+  }) {
+    final tenant = property.currentTenant!;
+    // Procura a conversa mais recente linkada a esse tenant. A lista já
+    // vem ordenada DESC por `lastMessageAt` do provider, então
+    // firstWhereOrNull basta.
+    ConversationSummary? match;
+    for (final c in conversations) {
+      if (c.linkedTenantId == tenant.id) {
+        match = c;
+        break;
+      }
+    }
+    return _TenantEntry(
+      tenantId: tenant.id,
+      tenantName: tenant.name,
+      propertyTitle: property.title,
+      status: _statusFromProperty(property.status),
+      lastMessage: match?.lastMessage ?? '',
+      contractEnd: '—',
+    );
+  }
+
+  /// Mapeia `property.status` nas 3 labels herdadas da UI original.
+  /// Heurística provisória — ver BACKEND_HANDOFF.md §13 pra proposta
+  /// de `tenant.documentStatus` dedicado.
+  static String _statusFromProperty(String? status) {
+    switch (status) {
+      case 'RENTED':
+        return 'Documentação OK';
+      case 'IN_NEGOTIATION':
+        return 'Aguardando Assinatura';
+      case 'AVAILABLE':
+      default:
+        // Caso borderline: tenant vinculado mas property não-RENTED.
+        // Tratamos como inquilino incompleto pra o landlord notar.
+        return 'Pendente Documentos';
+    }
+  }
+
+  /// Geração defensiva das iniciais do avatar (ex: "João Silva" → "JS").
+  String get initials {
+    final parts = tenantName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) {
+      final w = parts.first;
+      return w.length == 1 ? w.toUpperCase() : w.substring(0, 2).toUpperCase();
+    }
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  /// Converte pro shape legado [_TenantData] que o `_TenantDetailsSheet`
+  /// ainda consome. O sheet será reescrito em etapa separada — esta
+  /// ponte permite entregar a tela de lista sem tocar no sheet agora.
+  _TenantData toLegacyData() {
+    return _TenantData(
+      name: tenantName,
+      initials: initials,
+      property: propertyTitle,
+      status: status,
+      lastMessage: lastMessage.isEmpty ? 'Sem mensagens ainda.' : lastMessage,
+      contractEnd: contractEnd,
+      isVerified: false,
+    );
+  }
+}
+
+class _TenantCard extends StatelessWidget {
+  const _TenantCard({
+    required this.tenant,
+    required this.index,
+    required this.isDark,
+    required this.titleColor,
+    required this.mutedColor,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  final _TenantData tenant;
+  final int index;
+  final bool isDark;
+  final Color titleColor;
+  final Color mutedColor;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cardBg = BrutalistPalette.surfaceBg(isDark);
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
+    final statusColor = _statusColor(tenant.status);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: AppRadius.borderLg,
+          border: Border.all(color: borderColor),
+          boxShadow: BrutalistPalette.subtleShadow(isDark),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accentColor.withValues(alpha: 0.1),
+                  ),
+                  child: Center(
+                      child: Text(tenant.initials,
+                          style: AppTypography.titleMediumBold
+                              .copyWith(color: accentColor))),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(tenant.name,
+                              style: AppTypography.titleLargeBold
+                                  .copyWith(color: titleColor)),
+                          if (tenant.isVerified) ...[
+                            const SizedBox(width: 4),
+                            Icon(Icons.verified_rounded,
+                                size: 14, color: accentColor),
+                          ],
+                        ],
+                      ),
+                      Text(tenant.property,
+                          style: AppTypography.bodySmall
+                              .copyWith(color: mutedColor)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: AppRadius.borderFull,
+                  ),
+                  child: Text(tenant.status,
+                      style: AppTypography.propertyTag
+                          .copyWith(color: statusColor, fontSize: 10)),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Icon(Icons.chat_bubble_outline_rounded,
+                    size: 14, color: mutedColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    tenant.lastMessage,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: mutedColor,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text('Contrato: ${tenant.contractEnd}',
+                    style: AppTypography.bodySmall.copyWith(
+                        color: mutedColor, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _statusColor(String label) {
+    switch (label) {
+      case 'Documentação OK':
+        return AppColors.success;
+      case 'Aguardando Assinatura':
+        return AppColors.warning;
+      default:
+        return AppColors.error;
+    }
+  }
+}
+
+class _EmptyTenants extends StatelessWidget {
+  const _EmptyTenants({
+    required this.isDark,
+    required this.titleColor,
+    required this.mutedColor,
+  });
+
+  final bool isDark;
+  final Color titleColor;
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.people_outline_rounded,
+                size: 48, color: mutedColor.withValues(alpha: 0.4)),
+            const SizedBox(height: AppSpacing.md),
+            Text('Nenhum inquilino ativo',
+                style:
+                    AppTypography.headlineSmall.copyWith(color: titleColor)),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Quando um inquilino for vinculado a um dos seus imóveis,\n'
+              'ele aparece aqui com o status do contrato e as mensagens.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(color: mutedColor),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

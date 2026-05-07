@@ -16,6 +16,8 @@ class ConversationSummary {
     required this.lastMessageAt,
     this.unread = false,
     this.counterpartAvatarUrl,
+    this.linkedPropertyId,
+    this.linkedTenantId,
   });
 
   /// ID usado em `context.push('/chat/:id')`. Quando vier do backend,
@@ -41,6 +43,17 @@ class ConversationSummary {
   /// iniciais do nome.
   final String? counterpartAvatarUrl;
 
+  /// UUID do imóvel vinculado à conversa, quando o contexto é sobre um
+  /// imóvel específico (landlord x interessado, landlord x inquilino).
+  /// Null para chats genéricos (ex: conversa com suporte). Ver
+  /// `BACKEND_HANDOFF.md §12`.
+  final String? linkedPropertyId;
+
+  /// UUID do inquilino do outro lado (do ponto de vista do landlord).
+  /// Usado pra cruzar com a lista "Meus Inquilinos" e mostrar preview
+  /// da última mensagem no card.
+  final String? linkedTenantId;
+
   factory ConversationSummary.fromJson(Map<String, dynamic> json) {
     return ConversationSummary(
       id: (json['id'] ?? '').toString(),
@@ -56,6 +69,8 @@ class ConversationSummary {
           (json['unreadCount'] as num) > 0,
       counterpartAvatarUrl:
           (json['counterpartAvatarUrl'] ?? json['avatarUrl']) as String?,
+      linkedPropertyId: json['linkedPropertyId'] as String?,
+      linkedTenantId: json['linkedTenantId'] as String?,
     );
   }
 

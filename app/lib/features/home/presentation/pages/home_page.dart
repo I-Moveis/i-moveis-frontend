@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../notifications/presentation/providers/notifications_notifier.dart';
 import '../../../search/domain/entities/property.dart';
 import '../providers/home_properties_providers.dart';

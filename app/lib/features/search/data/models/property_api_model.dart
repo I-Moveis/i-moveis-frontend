@@ -230,19 +230,24 @@ _ImagesParseResult _parseImages(Object? raw) {
   // consiga carregar — backend serve `/uploads/*` via express-static na
   // raiz do servidor (fora do prefixo `/api`).
   if (raw is! List) return const _ImagesParseResult(urls: [], cover: null);
+  // Hidratação em dois passos: `absoluteImageUrl` resolve path relativo →
+  // URL absoluta usando `kApiBaseUrl`; `_normalizeLocalHost` troca hosts
+  // de emulador (`10.0.2.2`, `127.0.0.1`) por `localhost` pra funcionar
+  // também em dispositivo físico conectado via `adb reverse`.
+  String hydrate(String url) => _normalizeLocalHost(absoluteImageUrl(url));
   final entries = <_ImageEntry>[];
   for (final item in raw) {
     if (item is Map) {
       final url = (item['url'] ?? '').toString();
       if (url.isEmpty) continue;
       final isCover = item['isCover'] == true || item['is_cover'] == true;
-      entries.add(_ImageEntry(url: absoluteImageUrl(url), isCover: isCover));
+      entries.add(_ImageEntry(url: hydrate(url), isCover: isCover));
     } else if (item is String) {
       if (item.isEmpty) continue;
       // No shape de array de strings, não há marcador `isCover` — o primeiro
       // é tratado como capa por convenção.
       entries.add(_ImageEntry(
-        url: absoluteImageUrl(item),
+        url: hydrate(item),
         isCover: entries.isEmpty,
       ));
     }

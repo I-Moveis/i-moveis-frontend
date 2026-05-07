@@ -180,7 +180,7 @@ class _TenantContractPageState extends ConsumerState<TenantContractPage> {
     final vigencia = property != null
         ? _formatVigencia(property)
         : 'A definir no contrato';
-    final registro = property?.id.isNotEmpty == true
+    final registro = (property?.id.isNotEmpty ?? false)
         ? '#${property!.id.substring(0, property.id.length.clamp(0, 12))}'
         : '#—';
 

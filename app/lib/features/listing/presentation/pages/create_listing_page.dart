@@ -368,6 +368,4 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
       }
     });
   }
-
 }
-

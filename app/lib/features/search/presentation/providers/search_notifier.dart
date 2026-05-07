@@ -55,6 +55,12 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
   /// resposta lenta sobrescreva uma resposta recente (race condition).
   int _requestSeq = 0;
 
+  /// Guard explícito para `loadNextPage`. `state.isLoading` não funciona
+  /// porque a paginação não muda o AsyncValue para loading (mantém os
+  /// itens visíveis enquanto carrega a próxima página). Sem este flag,
+  /// cada frame do scroll que atingir o limite dispara uma nova request.
+  bool _isLoadingNextPage = false;
+
   @override
   FutureOr<SearchState> build() async {
     // Watch filter changes to trigger rebuild
@@ -95,37 +101,49 @@ class SearchNotifier extends AsyncNotifier<SearchState> {
 
   /// Loads the next page and appends to existing state
   Future<void> loadNextPage() async {
-    if ((state.value?.hasReachedMax ?? false) || state.isLoading) return;
+    if (_isLoadingNextPage ||
+        (state.value?.hasReachedMax ?? false) ||
+        state.isLoading) {
+      return;
+    }
 
     final currentState = state.value;
     if (currentState == null) return;
 
-    final nextPage = _currentPage + 1;
-    final seq = ++_requestSeq;
+    _isLoadingNextPage = true;
+    try {
+      final nextPage = _currentPage + 1;
+      final seq = ++_requestSeq;
 
-    final result = await AsyncValue.guard(() => _fetchPage(nextPage));
+      final result = await AsyncValue.guard(() => _fetchPage(nextPage));
 
-    // Descarte silencioso se outra request já foi disparada no meio-tempo.
-    if (seq != _requestSeq) return;
+      // Descarte silencioso se outra request já foi disparada no meio-tempo.
+      if (seq != _requestSeq) return;
 
-    result.when(
-      data: (searchResult) {
-        if (searchResult.properties.isEmpty) {
-          state = AsyncValue.data(currentState.copyWith(hasReachedMax: true));
-        } else {
-          _currentPage = nextPage;
-          state = AsyncValue.data(currentState.copyWith(
-            properties: [...currentState.properties, ...searchResult.properties],
-            isOffline: searchResult.isOffline, // Update offline status
-          ));
-        }
-      },
-      error: (err, stack) {
-        // Keep previous data visible while surfacing the error for pagination failures.
-        state = AsyncValue<SearchState>.error(err, stack);
-      },
-      loading: () {},
-    );
+      result.when(
+        data: (searchResult) {
+          if (searchResult.properties.isEmpty) {
+            state = AsyncValue.data(currentState.copyWith(hasReachedMax: true));
+          } else {
+            _currentPage = nextPage;
+            state = AsyncValue.data(currentState.copyWith(
+              properties: [
+                ...currentState.properties,
+                ...searchResult.properties,
+              ],
+              isOffline: searchResult.isOffline, // Update offline status
+            ));
+          }
+        },
+        error: (err, stack) {
+          // Keep previous data visible while surfacing the error for pagination failures.
+          state = AsyncValue<SearchState>.error(err, stack);
+        },
+        loading: () {},
+      );
+    } finally {
+      _isLoadingNextPage = false;
+    }
   }
 
   Future<SearchResult> _fetchPage(int page) async {

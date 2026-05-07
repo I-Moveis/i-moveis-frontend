@@ -42,7 +42,8 @@ class _PropertyHeaderState extends ConsumerState<PropertyHeader> {
     final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final isFavorite = ref.watch(favoritesProvider).contains(widget.property.id);
+    final isFavorite =
+        ref.watch(favoritedIdsProvider).contains(widget.property.id);
     final imageCount = widget.property.imageUrls.length;
 
     return SizedBox(
@@ -53,15 +54,18 @@ class _PropertyHeaderState extends ConsumerState<PropertyHeader> {
           // Image carousel
           _buildCarousel(isDark, imageCount),
 
-          // Bottom gradient scrim
+          // Bottom gradient scrim — IgnorePointer pra não roubar o swipe
+          // do PageView do carrossel atrás.
           Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, bg.withValues(alpha: 0.95)],
-                  stops: const [0.3, 1.0],
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, bg.withValues(alpha: 0.95)],
+                    stops: const [0.3, 1.0],
+                  ),
                 ),
               ),
             ),
@@ -186,16 +190,19 @@ class _PropertyHeaderState extends ConsumerState<PropertyHeader> {
       controller: _pageController,
       itemCount: imageCount,
       onPageChanged: (i) => setState(() => _currentPage = i),
-      itemBuilder: (_, i) => Image.network(
-        widget.property.imageUrls[i],
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => ColoredBox(
-          color: BrutalistPalette.imagePlaceholderBg(isDark),
-          child: Center(
-            child: Icon(
-              IconData(widget.property.thumbnailIconCode, fontFamily: 'MaterialIcons'),
-              size: 64,
-              color: (isDark ? Colors.white : BrutalistPalette.warmBrown).withValues(alpha: 0.08),
+      itemBuilder: (_, i) => GestureDetector(
+        onTap: widget.onPhotosTap,
+        child: Image.network(
+          widget.property.imageUrls[i],
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => ColoredBox(
+            color: BrutalistPalette.imagePlaceholderBg(isDark),
+            child: Center(
+              child: Icon(
+                IconData(widget.property.thumbnailIconCode, fontFamily: 'MaterialIcons'),
+                size: 64,
+                color: (isDark ? Colors.white : BrutalistPalette.warmBrown).withValues(alpha: 0.08),
+              ),
             ),
           ),
         ),

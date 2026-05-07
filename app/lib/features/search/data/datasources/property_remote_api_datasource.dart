@@ -174,10 +174,9 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
     PropertyInput input,
     List<XFile> photos,
   ) async {
-    final jsonBody = propertyToCreateJson(input);
     // `images` (URLs antigas) não faz sentido num POST multipart com fotos
     // novas — o backend gera as URLs a partir dos arquivos.
-    jsonBody.remove('images');
+    final jsonBody = propertyToCreateJson(input)..remove('images');
 
     final fields = <MapEntry<String, String>>[];
     jsonBody.forEach((key, value) {

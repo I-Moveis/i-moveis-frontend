@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../notifications/presentation/providers/notifications_notifier.dart';
 import '../../../search/domain/entities/property.dart';
 import '../providers/home_properties_providers.dart';
 import '../widgets/category_bar.dart';
@@ -828,9 +829,9 @@ class _HomePageState extends ConsumerState<HomePage>
 }
 
 /// Sino com o dot laranja de "tem notificação nova" — específico da
-/// home do tenant. O dashboard do landlord usa um similar sem dot;
-/// mantidos separados até existir um sistema de notificação real.
-class _HomeNotificationBell extends StatelessWidget {
+/// home do tenant. Toca → abre `/notifications`. O dot só aparece quando
+/// há itens não lidos no cache local (`unreadNotificationsCountProvider`).
+class _HomeNotificationBell extends ConsumerWidget {
   const _HomeNotificationBell({
     required this.isDark,
     required this.mutedColor,
@@ -842,9 +843,10 @@ class _HomeNotificationBell extends StatelessWidget {
   final Color accentColor;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationsCountProvider);
     return GestureDetector(
-      onTap: () {},
+      onTap: () => context.push('/notifications'),
       child: Container(
         width: 44,
         height: 44,
@@ -856,18 +858,19 @@ class _HomeNotificationBell extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Icon(Icons.notifications_outlined, size: 22, color: mutedColor),
-            Positioned(
-              top: 11,
-              right: 13,
-              child: Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  shape: BoxShape.circle,
+            if (unread > 0)
+              Positioned(
+                top: 11,
+                right: 13,
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

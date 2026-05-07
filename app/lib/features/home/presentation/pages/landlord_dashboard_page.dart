@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../../listing/presentation/providers/my_properties_notifier.dart';
+import '../../../notifications/presentation/providers/notifications_notifier.dart';
 import '../../../search/domain/entities/property.dart';
 import '../../../visits/presentation/providers/landlord_visits_notifier.dart';
 import '../../domain/entities/landlord_monthly_metrics.dart';
@@ -57,25 +58,51 @@ class LandlordDashboardPage extends ConsumerWidget {
 }
 
 /// Sino de notificações exibido no canto direito do header do dashboard.
-/// Hoje é read-only (sem handler) — fica plumbed pra ligar no futuro
-/// quando houver central de notificações.
-class _NotificationBell extends StatelessWidget {
+/// Toca → abre `/notifications`. Mostra um dot laranja quando há
+/// notificações não lidas no cache local (populado pelo listener FCM
+/// no futuro, hoje só ingest manual em dev).
+class _NotificationBell extends ConsumerWidget {
   const _NotificationBell({required this.isDark});
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: BrutalistPalette.subtleBg(isDark),
-        borderRadius: AppRadius.borderMd,
-      ),
-      child: Icon(
-        Icons.notifications_outlined,
-        size: 22,
-        color: isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationsCountProvider);
+    final accentColor = BrutalistPalette.accentPeach(isDark);
+    return GestureDetector(
+      onTap: () => context.push('/notifications'),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: BrutalistPalette.subtleBg(isDark),
+          borderRadius: AppRadius.borderMd,
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              Icons.notifications_outlined,
+              size: 22,
+              color: isDark
+                  ? AppColors.whiteMuted
+                  : AppColors.lightTextTertiary,
+            ),
+            if (unread > 0)
+              Positioned(
+                top: 11,
+                right: 13,
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -389,6 +416,12 @@ class _ActionItem extends StatelessWidget {
   }
 }
 
+/// Card horizontal na dashboard com os imóveis **efetivamente alugados**
+/// do landlord. Filtra a lista por `status == 'RENTED'` e usa o
+/// `currentTenant.name` real de cada imóvel (US-004). Quando o landlord
+/// tem mais de 3 rented, o 4º slot vira tile "Ver mais" que navega para
+/// /my-properties. Tocar num tile abre a análise do imóvel
+/// (/my-properties/:id/analytics).
 class _RentedPropertiesSection extends StatelessWidget {
   const _RentedPropertiesSection({
     required this.isDark,
@@ -402,6 +435,10 @@ class _RentedPropertiesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rented =
+        properties.where((p) => p.status == 'RENTED').toList(growable: false);
+    final mutedColor = BrutalistPalette.muted(isDark);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -410,7 +447,7 @@ class _RentedPropertiesSection extends StatelessWidget {
           title: 'Imóveis Locados',
         ),
         const SizedBox(height: AppSpacing.md),
-        if (isLoading && properties.isEmpty)
+        if (isLoading && rented.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.screenHorizontal,
@@ -424,12 +461,42 @@ class _RentedPropertiesSection extends StatelessWidget {
               ),
             ),
           )
-        else if (properties.isEmpty)
+        else if (rented.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-            child: Text(
-              'Nenhum imóvel locado.',
-              style: AppTypography.bodyMedium.copyWith(color: BrutalistPalette.muted(isDark)),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: BrutalistPalette.surfaceBg(isDark),
+                borderRadius: AppRadius.borderLg,
+                border:
+                    Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.home_work_outlined,
+                    size: 32,
+                    color: mutedColor.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Nenhum imóvel alugado ainda.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: mutedColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    'Seus imóveis aparecem aqui quando fecharem contrato.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall.copyWith(color: mutedColor),
+                  ),
+                ],
+              ),
             ),
           )
         else
@@ -438,24 +505,30 @@ class _RentedPropertiesSection extends StatelessWidget {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-              itemCount: properties.length > 3 ? 4 : properties.length,
+              itemCount: rented.length > 3 ? 4 : rented.length,
               itemBuilder: (context, index) {
-                if (index == 3 && properties.length > 3) {
+                if (index == 3 && rented.length > 3) {
                   return _SeeMoreTile(
-                    count: properties.length - 3,
+                    count: rented.length - 3,
                     isDark: isDark,
                     onTap: () => context.go('/my-properties'),
                   );
                 }
 
-                final property = properties[index];
+                final property = rented[index];
+                final rawTenantName = property.currentTenant?.name ?? '';
+                final tenantName = rawTenantName.isNotEmpty
+                    ? rawTenantName
+                    : 'Inquilino não identificado';
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.md),
                   child: _PropertyTile(
                     title: property.title,
-                    tenant: 'Inquilino ${index + 1}',
+                    tenant: tenantName,
                     price: property.price,
                     isDark: isDark,
+                    onTap: () =>
+                        context.go('/my-properties/${property.id}/analytics'),
                   ),
                 );
               },
@@ -529,31 +602,54 @@ class _PropertyTile extends StatelessWidget {
     required this.tenant,
     required this.price,
     required this.isDark,
+    this.onTap,
   });
   final String title;
   final String tenant;
   final String price;
   final bool isDark;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: BrutalistPalette.surfaceBg(isDark),
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: AppTypography.titleSmallBold.copyWith(color: BrutalistPalette.title(isDark)), maxLines: 1),
-          const SizedBox(height: 4),
-          Text('Inquilino: $tenant', style: AppTypography.bodySmall.copyWith(color: BrutalistPalette.muted(isDark))),
-          const Spacer(),
-          Text(price, style: AppTypography.titleMediumAccent.copyWith(color: BrutalistPalette.accentPeach(isDark))),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 220,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: BrutalistPalette.surfaceBg(isDark),
+          borderRadius: AppRadius.borderLg,
+          border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppTypography.titleSmallBold
+                  .copyWith(color: BrutalistPalette.title(isDark)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Inquilino: $tenant',
+              style: AppTypography.bodySmall
+                  .copyWith(color: BrutalistPalette.muted(isDark)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Text(
+              price,
+              style: AppTypography.titleMediumAccent
+                  .copyWith(color: BrutalistPalette.accentPeach(isDark)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

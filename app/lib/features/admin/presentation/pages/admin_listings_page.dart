@@ -440,11 +440,15 @@ class _ListingRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(property.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTypography.titleSmallBold
                         .copyWith(color: titleColor)),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   '${property.type} · ${property.price}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style:
                       AppTypography.bodySmall.copyWith(color: mutedColor),
                 ),

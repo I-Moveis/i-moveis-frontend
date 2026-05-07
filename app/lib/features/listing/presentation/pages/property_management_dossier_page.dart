@@ -613,11 +613,15 @@ class _PaymentPill extends StatelessWidget {
               color: selected ? Colors.black : bg,
             ),
             const SizedBox(width: 6),
-            Text(
-              status.label,
-              style: AppTypography.labelSmall.copyWith(
-                color: selected ? Colors.black : bg,
-                fontWeight: FontWeight.w800,
+            Flexible(
+              child: Text(
+                status.label,
+                style: AppTypography.labelSmall.copyWith(
+                  color: selected ? Colors.black : bg,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

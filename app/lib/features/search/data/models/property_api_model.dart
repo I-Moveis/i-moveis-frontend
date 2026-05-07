@@ -1,3 +1,4 @@
+import '../../../../core/constants.dart';
 import '../../domain/entities/property.dart';
 import '../../domain/entities/property_input.dart';
 
@@ -221,13 +222,32 @@ class _ImagesParseResult {
 }
 
 _ImagesParseResult _parseImages(Object? raw) {
+  // Aceita dois shapes do backend:
+  //   - `images: [{ url, isCover }]` — caminho atual (US-006/007);
+  //   - `images: ["url1", "url2"]`   — caso legado/simplificado.
+  // Em ambos os casos, URL pode ser relativa (`/uploads/...`) ou
+  // absoluta (CDN). Hidrata com `absoluteImageUrl` pra que `Image.network`
+  // consiga carregar — backend serve `/uploads/*` via express-static na
+  // raiz do servidor (fora do prefixo `/api`).
   if (raw is! List) return const _ImagesParseResult(urls: [], cover: null);
-  final entries = raw.whereType<Map<dynamic, dynamic>>().map((m) {
-    final url = (m['url'] ?? '').toString();
-    final isCover = m['isCover'] == true || m['is_cover'] == true;
-    return _ImageEntry(url: url, isCover: isCover);
-  }).where((e) => e.url.isNotEmpty).toList()
-    ..sort((a, b) => (a.isCover ? 0 : 1).compareTo(b.isCover ? 0 : 1));
+  final entries = <_ImageEntry>[];
+  for (final item in raw) {
+    if (item is Map) {
+      final url = (item['url'] ?? '').toString();
+      if (url.isEmpty) continue;
+      final isCover = item['isCover'] == true || item['is_cover'] == true;
+      entries.add(_ImageEntry(url: absoluteImageUrl(url), isCover: isCover));
+    } else if (item is String) {
+      if (item.isEmpty) continue;
+      // No shape de array de strings, não há marcador `isCover` — o primeiro
+      // é tratado como capa por convenção.
+      entries.add(_ImageEntry(
+        url: absoluteImageUrl(item),
+        isCover: entries.isEmpty,
+      ));
+    }
+  }
+  entries.sort((a, b) => (a.isCover ? 0 : 1).compareTo(b.isCover ? 0 : 1));
 
   final cover = entries.firstWhere(
     (e) => e.isCover,

@@ -356,10 +356,14 @@ class _UserTile extends StatelessWidget {
                           .copyWith(color: titleColor)),
                   const SizedBox(height: AppSpacing.xxs),
                   Row(children: [
-                    Text(
-                      '${user.roleLabel} · ${user.phoneNumber}',
-                      style:
-                          AppTypography.bodySmall.copyWith(color: mutedColor),
+                    Flexible(
+                      child: Text(
+                        '${user.roleLabel} · ${user.phoneNumber}',
+                        style:
+                            AppTypography.bodySmall.copyWith(color: mutedColor),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     // Status badge — mockado (todos Ativo até backend ter o campo)

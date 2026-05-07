@@ -177,19 +177,24 @@ class PropertyListTile extends ConsumerWidget {
                       borderRadius: AppRadius.borderMd,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Total (c/ taxas)',
                           style: AppTypography.labelMedium.copyWith(color: mutedColor),
                         ),
-                        Semantics(
-                          label: 'Preço total incluindo taxas',
-                          child: Text(
-                            'R\$ ${property.totalPrice.toInt()}',
-                            style: AppTypography.labelLarge.copyWith(
-                              color: titleColor,
-                              fontWeight: FontWeight.w800,
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Semantics(
+                            label: 'Preço total incluindo taxas',
+                            child: Text(
+                              'R\$ ${property.totalPrice.toInt()}',
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: titleColor,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),

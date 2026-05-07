@@ -89,13 +89,12 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
   _AnalyticsPaymentStatus? _paymentInflight;
   bool _savingPayment = false;
 
-  // Mock data that changes based on filter
-  Map<String, int> _getMetrics() {
-    return switch (_selectedFilter) {
-      '7 dias' => {'views': 42, 'favs': 5, 'props': 1, 'visits': 2},
-      '30 dias' => {'views': 142, 'favs': 23, 'props': 5, 'visits': 8},
-      _ => {'views': 890, 'favs': 112, 'props': 28, 'visits': 45},
-    };
+  /// Analytics por imóvel + janela de tempo (7d / 30d / Total) depende de
+  /// um endpoint que ainda não existe — `GET /properties/:id/analytics?window=`
+  /// (ver `BACKEND_PENDENCIAS_LANDLORD.md §2.1`). Enquanto isso os cards
+  /// renderizam `—` sem animação, mantendo layout e rótulos vivos.
+  Map<String, int?> _getMetrics() {
+    return const {'views': null, 'favs': null, 'props': null, 'visits': null};
   }
 
   /// Dispara PUT /properties/:id/payments/current. Mesmo padrão
@@ -285,7 +284,7 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
     );
   }
 
-  Widget _buildSummaryMetrics(Color accentColor, Map<String, int> metrics) {
+  Widget _buildSummaryMetrics(Color accentColor, Map<String, int?> metrics) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -327,17 +326,33 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
         const SizedBox(height: AppSpacing.xl),
         Row(
           children: [
-            AppMetricCard(icon: Icons.visibility_outlined, value: metrics['views']!, label: 'Visualizações'),
+            _MetricCardValue(
+              icon: Icons.visibility_outlined,
+              value: metrics['views'],
+              label: 'Visualizações',
+            ),
             const SizedBox(width: AppSpacing.md),
-            AppMetricCard(icon: Icons.favorite_outline, value: metrics['favs']!, label: 'Favoritos'),
+            _MetricCardValue(
+              icon: Icons.favorite_outline,
+              value: metrics['favs'],
+              label: 'Favoritos',
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
         Row(
           children: [
-            AppMetricCard(icon: Icons.description_outlined, value: metrics['props']!, label: 'Propostas'),
+            _MetricCardValue(
+              icon: Icons.description_outlined,
+              value: metrics['props'],
+              label: 'Propostas',
+            ),
             const SizedBox(width: AppSpacing.md),
-            AppMetricCard(icon: Icons.calendar_today_outlined, value: metrics['visits']!, label: 'Visitas'),
+            _MetricCardValue(
+              icon: Icons.calendar_today_outlined,
+              value: metrics['visits'],
+              label: 'Visitas',
+            ),
           ],
         ),
       ],
@@ -396,143 +411,158 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
     );
   }
 
-  Widget _buildTenantHistory(bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
-    final tenants = [
-      {'name': 'João Silva', 'period': 'Abr 2023 - Mar 2024', 'status': 'Finalizado'},
-      {'name': 'Maria Oliveira', 'period': 'Abr 2022 - Mar 2023', 'status': 'Finalizado'},
-      {'name': 'Pedro Santos', 'period': 'Abr 2024 - Atual', 'status': 'Ativo'},
-    ];
-
-    return Column(
-      children: tenants.map((t) => Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: BrutalistPalette.surfaceBg(isDark),
-          borderRadius: AppRadius.borderMd,
-          border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: accentColor.withValues(alpha: 0.1),
-              child: Text(t['name']![0], style: TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(t['name']!, style: AppTypography.titleSmall.copyWith(color: titleColor, fontWeight: FontWeight.bold)),
-                  Text(t['period']!, style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: t['status'] == 'Ativo' ? AppColors.success.withValues(alpha: 0.1) : Colors.transparent,
-                borderRadius: AppRadius.borderFull,
-                border: Border.all(color: t['status'] == 'Ativo' ? AppColors.success : mutedColor.withValues(alpha: 0.2)),
-              ),
-              child: Text(
-                t['status']!,
-                style: AppTypography.labelSmall.copyWith(
-                  color: t['status'] == 'Ativo' ? AppColors.success : mutedColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-      )).toList(),
+  /// Histórico de inquilinos — aguarda endpoint que devolva contratos
+  /// passados pro imóvel (hoje só temos `Contract` ATIVO via US-014).
+  /// Layout do card permanece pra quando o endpoint existir, basta
+  /// trocar o empty state por `ListView` dos inquilinos retornados.
+  Widget _buildTenantHistory(
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+    Color accentColor,
+  ) {
+    return _EmptySectionCard(
+      isDark: isDark,
+      mutedColor: mutedColor,
+      icon: Icons.people_outline_rounded,
+      message:
+          'Nenhum inquilino cadastrado ainda. O histórico de inquilinos aparece aqui quando houver contratos fechados.',
     );
   }
 
-  Widget _buildRentHistory(bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
-    final rents = [
-      {'year': '2024', 'value': r'R$ 2.500', 'increase': '+8.5% (IGP-M)'},
-      {'year': '2023', 'value': r'R$ 2.300', 'increase': '+9.2% (IGP-M)'},
-      {'year': '2022', 'value': r'R$ 2.100', 'increase': 'Valor Inicial'},
-    ];
+  /// Evolução do aluguel — depende de série temporal de
+  /// `monthlyRent` por contrato. Sem endpoint entregue ainda.
+  Widget _buildRentHistory(
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+    Color accentColor,
+  ) {
+    return _EmptySectionCard(
+      isDark: isDark,
+      mutedColor: mutedColor,
+      icon: Icons.trending_up_rounded,
+      message:
+          'Evolução do aluguel indisponível — aparece aqui conforme os contratos forem renovados com reajuste.',
+    );
+  }
 
+  /// Encargos (IPTU / Condomínio) — depende do modelo `Expense` no
+  /// backend, que ainda não expõe endpoint de listagem por imóvel.
+  Widget _buildTaxHistory(
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+    Color accentColor,
+  ) {
+    return _EmptySectionCard(
+      isDark: isDark,
+      mutedColor: mutedColor,
+      icon: Icons.receipt_long_outlined,
+      message:
+          'Nenhum encargo registrado ainda. IPTU e condomínio aparecem aqui conforme forem lançados.',
+    );
+  }
+}
+
+/// Variante do [AppMetricCard] que aceita valor nulo — renderiza `—`
+/// sem count-up e mantém layout/rótulo originais. Usada enquanto o
+/// endpoint de analytics por imóvel ainda não foi entregue.
+class _MetricCardValue extends ConsumerWidget {
+  const _MetricCardValue({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final int? value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (value != null) {
+      return AppMetricCard(icon: icon, value: value!, label: label);
+    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = BrutalistPalette.surfaceBg(isDark);
+    final border = BrutalistPalette.surfaceBorder(isDark);
+    final titleColor = BrutalistPalette.title(isDark);
+    final mutedColor = BrutalistPalette.muted(isDark);
+    final accentColor = BrutalistPalette.accentOrange(isDark);
+
+    return Expanded(
+      child: Tooltip(
+        message: 'Métrica ainda não disponível',
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: AppRadius.borderLg,
+            border: Border.all(color: border),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 20, color: accentColor.withValues(alpha: 0.5)),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                '—',
+                style: AppTypography.headlineLarge
+                    .copyWith(color: titleColor.withValues(alpha: 0.4)),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(color: mutedColor),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Card vazio genérico — usado para seções cujo endpoint ainda não
+/// existe. Mantém a altura sem parecer quebrado e dá contexto do que
+/// vai aparecer no lugar.
+class _EmptySectionCard extends StatelessWidget {
+  const _EmptySectionCard({
+    required this.isDark,
+    required this.mutedColor,
+    required this.icon,
+    required this.message,
+  });
+
+  final bool isDark;
+  final Color mutedColor;
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: BrutalistPalette.surfaceBg(isDark),
         borderRadius: AppRadius.borderLg,
         border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
       ),
       child: Column(
-        children: rents.asMap().entries.map((entry) {
-          final r = entry.value;
-          final isLast = entry.key == rents.length - 1;
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(r['year']!, style: AppTypography.titleMedium.copyWith(color: titleColor, fontWeight: FontWeight.bold)),
-                        Text(r['increase']!, style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-                      ],
-                    ),
-                    Text(r['value']!, style: AppTypography.titleMedium.copyWith(color: accentColor, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              if (!isLast) Divider(color: BrutalistPalette.surfaceBorder(isDark), height: AppSpacing.md),
-            ],
-          );
-        }).toList(),
+        children: [
+          Icon(icon, size: 32, color: mutedColor.withValues(alpha: 0.4)),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(color: mutedColor),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildTaxHistory(bool isDark, Color titleColor, Color mutedColor, Color accentColor) {
-    final taxes = [
-      {'type': 'IPTU 2024', 'status': 'Pago', 'info': 'Cota Única - 05/02'},
-      {'type': 'Condomínio', 'status': 'Pago', 'info': 'Referente a Abril/2024'},
-      {'type': 'Condomínio', 'status': 'Pendente', 'info': 'Vence em 10/05'},
-    ];
-
-    return Column(
-      children: taxes.map((tax) => Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: BrutalistPalette.subtleBg(isDark),
-          borderRadius: AppRadius.borderMd,
-          border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              tax['status'] == 'Pago' ? Icons.check_circle_rounded : Icons.pending_rounded,
-              color: tax['status'] == 'Pago' ? AppColors.success : AppColors.warning,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(tax['type']!, style: AppTypography.titleSmall.copyWith(color: titleColor, fontWeight: FontWeight.bold)),
-                  Text(tax['info']!, style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-                ],
-              ),
-            ),
-            Text(
-              tax['status']!,
-              style: AppTypography.labelMedium.copyWith(
-                color: tax['status'] == 'Pago' ? AppColors.success : AppColors.warning,
-              ),
-            ),
-          ],
-        ),
-      )).toList(),
     );
   }
 }

@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../admin_users/presentation/providers/admin_users_notifier.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
-import '../../../listing/presentation/providers/my_properties_notifier.dart';
 import '../providers/admin_metrics_notifier.dart';
 import '../providers/admin_shared_providers.dart';
 
@@ -29,23 +29,28 @@ class AdminDashboardPage extends ConsumerWidget {
         final metrics = metricsAsync.value;
         final userCount = metrics?.totalUsers ?? 0;
         final propertyCount = metrics?.totalProperties ?? 0;
-        final visitCount = metrics?.totalVisits ?? 0;
         final pendingCount = metrics?.pendingModeration ?? 0;
-        
+
         final errorMessage = metricsAsync.hasError
             ? (metricsAsync.error is Failure
                 ? (metricsAsync.error! as Failure).message
                 : 'Erro ao carregar métricas.')
             : null;
 
-        // Taxa de ocupação calculada client-side a partir do status dos imóveis.
-        final properties = ref.watch(myPropertiesNotifierProvider);
-        final propertyList = properties.value ?? const [];
-        final rentedCount =
-            propertyList.where((p) => p.type == 'RENTED').length;
+        // Ocupação: RENTED / totalProperties vindos direto do GET /admin/metrics.
+        final rentedCount = metrics?.propertiesByStatus['RENTED'] ?? 0;
         final occupancyRate = propertyCount > 0
             ? ((rentedCount / propertyCount) * 100).round()
-            : 42; // valor ilustrativo quando lista está vazia
+            : 0;
+
+        // Novos usuários (últimos 7 dias): filtro client-side sobre GET /users.
+        final usersAsync = ref.watch(adminUsersNotifierProvider);
+        final allUsers = usersAsync.value ?? const [];
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        final newUsersCount = allUsers
+            .where((u) =>
+                u.createdAt != null && u.createdAt!.isAfter(sevenDaysAgo))
+            .length;
 
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -102,54 +107,71 @@ class AdminDashboardPage extends ConsumerWidget {
                         ),
                       ),
 
-                    Row(children: [
-                      AppMetricCard(
-                        icon: Icons.people_outline,
-                        value: userCount,
-                        label: 'Usuários',
+                    // Layout: coluna esquerda (3 cards) | coluna direita (2 cards)
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: Column(children: [
+                              AppMetricCard(
+                                icon: Icons.people_outline,
+                                value: userCount,
+                                label: 'Usuários',
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              AppMetricCard(
+                                icon: Icons.home_outlined,
+                                value: propertyCount,
+                                label: 'Imóveis',
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              AppMetricCard(
+                                icon: Icons.donut_large_outlined,
+                                value: occupancyRate,
+                                label: 'Ocupação %',
+                              ),
+                            ]),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(children: [
+                              _NewUsersMetricCard(
+                                count: newUsersCount,
+                                accentColor: accentColor,
+                                cardBg: cardBg,
+                                borderColor: borderColor,
+                                titleColor: titleColor,
+                                mutedColor: mutedColor,
+                                onTap: () => context.push('/admin/new-users'),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              _TappableMetricCard(
+                                icon: Icons.pending_outlined,
+                                value: pendingCount,
+                                label: 'Pendentes',
+                                accentColor: accentColor,
+                                cardBg: cardBg,
+                                borderColor: borderColor,
+                                titleColor: titleColor,
+                                mutedColor: mutedColor,
+                                onTap: () {
+                                  try {
+                                    ref
+                                        .read(adminModerationTabProvider
+                                            .notifier)
+                                        .selectPending();
+                                  } on Object {
+                                    // provider pode não existir na primeira carga
+                                  }
+                                  context.push('/admin/listings');
+                                },
+                              ),
+                            ]),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: AppSpacing.md),
-                      AppMetricCard(
-                        icon: Icons.home_outlined,
-                        value: propertyCount,
-                        label: 'Imóveis',
-                      ),
-                    ]),
-                    const SizedBox(height: AppSpacing.md),
-
-                    Row(children: [
-                      AppMetricCard(
-                        icon: Icons.donut_large_outlined,
-                        value: occupancyRate,
-                        label: 'Ocupação %',
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      _MockMetricCard(
-                        icon: Icons.fiber_new_outlined,
-                        displayValue: '3',
-                        label: 'Novos (7d)',
-                        accentColor: accentColor,
-                        cardBg: cardBg,
-                        borderColor: borderColor,
-                        titleColor: titleColor,
-                        mutedColor: mutedColor,
-                      ),
-                    ]),
-                    const SizedBox(height: AppSpacing.md),
-
-                    Row(children: [
-                      AppMetricCard(
-                        icon: Icons.event_available_outlined,
-                        value: visitCount,
-                        label: 'Visitas',
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      AppMetricCard(
-                        icon: Icons.pending_outlined,
-                        value: pendingCount,
-                        label: 'Pendentes',
-                      ),
-                    ]),
+                    ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     // ── Alertas Críticos ──────────────────────────────
@@ -211,31 +233,32 @@ class AdminDashboardPage extends ConsumerWidget {
   }
 }
 
-class _MockMetricCard extends StatelessWidget {
-  const _MockMetricCard({
-    required this.icon,
-    required this.displayValue,
-    required this.label,
+/// Card de Novos Usuários: ícone person_add + contagem real (client-side).
+class _NewUsersMetricCard extends StatelessWidget {
+  const _NewUsersMetricCard({
+    required this.count,
     required this.accentColor,
     required this.cardBg,
     required this.borderColor,
     required this.titleColor,
     required this.mutedColor,
+    required this.onTap,
   });
 
-  final IconData icon;
-  final String displayValue;
-  final String label;
+  final int count;
   final Color accentColor;
   final Color cardBg;
   final Color borderColor;
   final Color titleColor;
   final Color mutedColor;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: cardBg,
@@ -243,31 +266,61 @@ class _MockMetricCard extends StatelessWidget {
           border: Border.all(color: borderColor),
         ),
         child: Column(children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(icon, size: 20, color: accentColor.withValues(alpha: 0.5)),
-              Positioned(
-                top: -4,
-                right: -8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 3, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text('demo',
-                      style: AppTypography.tagBadge
-                          .copyWith(color: AppColors.warning, fontSize: 7)),
-                ),
-              ),
-            ],
-          ),
+          Icon(Icons.person_add_outlined,
+              size: 20, color: accentColor.withValues(alpha: 0.7)),
           const SizedBox(height: AppSpacing.md),
-          Text(displayValue,
-              style:
-                  AppTypography.headlineLarge.copyWith(color: titleColor)),
+          Text('$count',
+              style: AppTypography.headlineLarge.copyWith(color: titleColor)),
+          const SizedBox(height: AppSpacing.xs),
+          Text('Novos',
+              style: AppTypography.bodySmall.copyWith(color: mutedColor)),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Card de métrica clicável genérico (usado pelo card Pendentes).
+class _TappableMetricCard extends StatelessWidget {
+  const _TappableMetricCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.accentColor,
+    required this.cardBg,
+    required this.borderColor,
+    required this.titleColor,
+    required this.mutedColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final int value;
+  final String label;
+  final Color accentColor;
+  final Color cardBg;
+  final Color borderColor;
+  final Color titleColor;
+  final Color mutedColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: AppRadius.borderLg,
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(children: [
+          Icon(icon, size: 20, color: accentColor.withValues(alpha: 0.7)),
+          const SizedBox(height: AppSpacing.md),
+          Text('$value',
+              style: AppTypography.headlineLarge.copyWith(color: titleColor)),
           const SizedBox(height: AppSpacing.xs),
           Text(label,
               style: AppTypography.bodySmall.copyWith(color: mutedColor)),

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +12,11 @@ import '../../../../features/auth/presentation/providers/auth_notifier.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/auth/presentation/providers/auth_state.dart';
 
-/// Edit profile ÔÇö preenche os campos com os dados do usu├írio atual e
-/// persiste altera├º├Áes via `PATCH /users/me` (endpoint do self-service
-/// que s├│ aceita `phoneNumber` + `role`). Nome e email ficam read-only:
-/// nome ├® mantido pelo Firebase Auth (updateDisplayName) e email ├®
-/// identificador imut├ível.
+/// Edit profile — preenche os campos com os dados do usuário atual e
+/// persiste alterações via `PATCH /users/me` (endpoint do self-service
+/// que só aceita `phoneNumber` + `role`). Nome e email ficam read-only:
+/// nome é mantido pelo Firebase Auth (updateDisplayName) e email é
+/// identificador imutável.
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
@@ -56,7 +56,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   /// Converte input brasileiro (ex: `(11) 99999-9999`) para E.164
-  /// (`+5511999999999`). `null` quando n├úo h├í d├¡gitos suficientes ÔÇö o
+  /// (`+5511999999999`). `null` quando não há dígitos suficientes — o
   /// backend valida via regex `^\+\d{1,15}$`.
   String? _normalizeToE164(String raw) {
     final trimmed = raw.trim();
@@ -76,12 +76,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     if (rawPhone.isNotEmpty && normalized == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Telefone inv├ílido')),
+        const SnackBar(content: Text('Telefone inválido')),
       );
       return;
     }
 
-    // Nenhuma mudan├ºa detectada ÔÇö sai sem bater na API.
+    // Nenhuma mudança detectada — sai sem bater na API.
     if (normalized == _initialPhone ||
         (rawPhone.isEmpty && _initialPhone.isEmpty)) {
       context.pop();
@@ -118,23 +118,23 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
   }
 
-  /// Mensagem amig├ível para o PATCH /users/me.
+  /// Mensagem amigável para o PATCH /users/me.
   ///
   /// Cobre dois caminhos pro conflito de telefone duplicado:
   /// - 409 Conflict (depois que o backend mapear o `P2002` do Prisma)
   /// - 500 com "Unique constraint" no body (comportamento atual enquanto o
-  ///   backend n├úo trata o erro do Prisma)
+  ///   backend não trata o erro do Prisma)
   String _friendlyPatchError(DioException e) {
     final inner = e.error;
     if (inner is NetworkException &&
         inner.kind == NetworkErrorKind.conflict) {
-      return 'Este telefone j├í est├í cadastrado em outra conta.';
+      return 'Este telefone já está cadastrado em outra conta.';
     }
 
     final bodyText = e.response?.data?.toString() ?? '';
     if (bodyText.contains('Unique constraint') &&
         bodyText.contains('phone')) {
-      return 'Este telefone j├í est├í cadastrado em outra conta.';
+      return 'Este telefone já está cadastrado em outra conta.';
     }
 
     return 'Erro ao salvar: ${e.message ?? 'tente novamente'}';
@@ -250,7 +250,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       ),
                       const SizedBox(height: AppSpacing.xxxl),
                       BrutalistGradientButton(
-                        label: _submitting ? 'SALVANDOÔÇª' : 'SALVAR',
+                        label: _submitting ? 'SALVANDO…' : 'SALVAR',
                         icon: Icons.check_rounded,
                         onTap: _submitting
                             ? null

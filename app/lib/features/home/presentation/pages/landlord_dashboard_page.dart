@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../listing/presentation/providers/my_properties_notifier.dart';
 import '../../../search/domain/entities/property.dart';
+import '../../../visits/presentation/providers/landlord_visits_notifier.dart';
+import '../../domain/entities/landlord_monthly_metrics.dart';
+import '../providers/landlord_monthly_metrics_provider.dart';
 
 class LandlordDashboardPage extends ConsumerWidget {
   const LandlordDashboardPage({super.key});
@@ -34,7 +37,7 @@ class LandlordDashboardPage extends ConsumerWidget {
                 trailing: _NotificationBell(isDark: isDark),
               ),
             ),
-            SliverToBoxAdapter(child: _StatsSection(isDark: isDark)),
+            const SliverToBoxAdapter(child: _StatsSection()),
             SliverToBoxAdapter(child: _QuickActionsSection(isDark: isDark)),
             SliverToBoxAdapter(
               child: _RentedPropertiesSection(
@@ -43,8 +46,8 @@ class LandlordDashboardPage extends ConsumerWidget {
                 isLoading: propertiesAsync.isLoading,
               ),
             ),
-            SliverToBoxAdapter(child: _RecentTenantsSection(isDark: isDark)),
-            SliverToBoxAdapter(child: _ChartsSection(isDark: isDark)),
+            const SliverToBoxAdapter(child: _RecentTenantsSection()),
+            const SliverToBoxAdapter(child: _ChartsSection()),
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         );
@@ -78,43 +81,70 @@ class _NotificationBell extends StatelessWidget {
   }
 }
 
-class _StatsSection extends StatelessWidget {
-  const _StatsSection({required this.isDark});
-  final bool isDark;
+/// Métricas do topo da dashboard. **Inquilinos** e **Visitas hoje** são
+/// derivados dos providers que já existem (`myPropertiesNotifier` +
+/// `landlordVisitsNotifier`). **Visitas ao perfil** e **Propostas** ainda
+/// não têm endpoint no backend — renderizam `—` com tooltip explicando.
+/// Ver `BACKEND_HANDOFF.md §11`.
+class _StatsSection extends ConsumerWidget {
+  const _StatsSection();
 
   @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final properties =
+        ref.watch(myPropertiesNotifierProvider).asData?.value ??
+            const <Property>[];
+    final visits =
+        ref.watch(landlordVisitsNotifierProvider).asData?.value ?? const [];
+
+    // Conta inquilinos com contrato ativo — 1 por property.currentTenant
+    // não-nulo. Se o mesmo tenant aluga 2 imóveis, conta 2 (cada imóvel
+    // é uma unidade de gestão pro landlord).
+    final tenantCount =
+        properties.where((p) => p.currentTenant != null).length;
+
+    // Visitas agendadas pra hoje (00:00–23:59 no timezone local).
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final tomorrowStart = todayStart.add(const Duration(days: 1));
+    final visitsToday = visits.where((v) {
+      return v.scheduledAt.isAfter(todayStart) &&
+          v.scheduledAt.isBefore(tomorrowStart);
+    }).length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
           Row(
             children: [
-              AppMetricCard(
+              const _PendingMetricCard(
                 icon: Icons.visibility_outlined,
-                value: 1240,
                 label: 'Visitas ao perfil',
+                tooltip:
+                    'Métrica ainda não disponível — backend em expansão.',
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               AppMetricCard(
                 icon: Icons.group_outlined,
-                value: 24,
+                value: tenantCount,
                 label: 'Inquilinos',
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Row(
             children: [
-              AppMetricCard(
+              const _PendingMetricCard(
                 icon: Icons.description_outlined,
-                value: 12,
                 label: 'Propostas',
+                tooltip:
+                    'Métrica ainda não disponível — backend em expansão.',
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               AppMetricCard(
                 icon: Icons.calendar_today_outlined,
-                value: 5,
+                value: visitsToday,
                 label: 'Visitas hoje',
               ),
             ],
@@ -125,19 +155,96 @@ class _StatsSection extends StatelessWidget {
   }
 }
 
-class _ChartsSection extends StatelessWidget {
-  const _ChartsSection({required this.isDark});
-  final bool isDark;
+/// Card visualmente idêntico ao [AppMetricCard] mas exibe `—` no lugar
+/// do número. Usado quando a métrica depende de endpoint que ainda não
+/// existe no backend. Hover mostra tooltip explicativo.
+class _PendingMetricCard extends StatelessWidget {
+  const _PendingMetricCard({
+    required this.icon,
+    required this.label,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final String label;
+  final String tooltip;
 
   @override
   Widget build(BuildContext context) {
-    final months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = BrutalistPalette.title(isDark);
+    final mutedColor = BrutalistPalette.muted(isDark);
+    final accentColor = BrutalistPalette.accentOrange(isDark);
 
+    return Expanded(
+      child: Tooltip(
+        message: tooltip,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: BrutalistPalette.surfaceBg(isDark),
+            borderRadius: AppRadius.borderLg,
+            border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 20, color: accentColor.withValues(alpha: 0.5)),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                '—',
+                style: AppTypography.headlineLarge.copyWith(
+                  color: titleColor.withValues(alpha: 0.5),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(color: mutedColor),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Seção de análise de performance — 3 gráficos lado a lado + abaixo.
+/// Consome `landlordMonthlyMetricsProvider`, que tenta o endpoint do
+/// backend e cai em 6 meses zerados quando ele não existe ainda (ver
+/// BACKEND_HANDOFF.md §11). Assim a estrutura visual fica no lugar,
+/// os eixos ficam visíveis, e quando o endpoint subir, os valores
+/// populam sozinhos.
+class _ChartsSection extends ConsumerWidget {
+  const _ChartsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final async = ref.watch(landlordMonthlyMetricsProvider);
+    // Enquanto carrega, usa o fallback zerado — evita flash de loading
+    // e mantém a tela estável. O provider já devolve esse mesmo
+    // fallback quando o backend não responde, então o pior caso é
+    // simplesmente "6 meses com zero".
+    final LandlordMonthlyMetrics metrics = async.asData?.value ??
+        LandlordMonthlyMetrics.emptyLast();
+    final labels = metrics.shortMonthLabels;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 40),
         const AppSectionHeader(title: 'Análise de Performance'),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Evolução dos seus aluguéis nos últimos 6 meses: imóveis '
+            'ocupados, inquilinos novos e receita arrecadada.',
+            style: AppTypography.bodySmall.copyWith(
+              color: BrutalistPalette.muted(isDark),
+            ),
+          ),
+        ),
         const SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -149,9 +256,11 @@ class _ChartsSection extends StatelessWidget {
                   Expanded(
                     child: BrutalistBarChart(
                       isDark: isDark,
-                      title: 'Locações Mensais',
-                      labels: months,
-                      data: const [2, 3, 5, 4, 6, 8],
+                      title: 'Imóveis Alugados',
+                      labels: labels,
+                      data: metrics.rentals
+                          .map((v) => v.toDouble())
+                          .toList(),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -159,8 +268,10 @@ class _ChartsSection extends StatelessWidget {
                     child: BrutalistBarChart(
                       isDark: isDark,
                       title: 'Novos Inquilinos',
-                      labels: months,
-                      data: const [1, 2, 4, 3, 5, 7],
+                      labels: labels,
+                      data: metrics.newTenants
+                          .map((v) => v.toDouble())
+                          .toList(),
                     ),
                   ),
                 ],
@@ -169,15 +280,11 @@ class _ChartsSection extends StatelessWidget {
               BrutalistLineChart(
                 isDark: isDark,
                 title: r'Receita Mensal (R$)',
-                labels: months,
+                labels: labels,
                 valuePrefix: r'R$ ',
-                points: const [
-                  fl.FlSpot(0, 4500),
-                  fl.FlSpot(1, 8200),
-                  fl.FlSpot(2, 7800),
-                  fl.FlSpot(3, 12400),
-                  fl.FlSpot(4, 15600),
-                  fl.FlSpot(5, 18900),
+                points: [
+                  for (var i = 0; i < metrics.monthlyRevenue.length; i++)
+                    fl.FlSpot(i.toDouble(), metrics.monthlyRevenue[i]),
                 ],
               ),
             ],
@@ -452,12 +559,33 @@ class _PropertyTile extends StatelessWidget {
   }
 }
 
-class _RecentTenantsSection extends StatelessWidget {
-  const _RecentTenantsSection({required this.isDark});
-  final bool isDark;
+/// Inquilinos que atualmente moram nos imóveis do landlord. Derivado
+/// de `myPropertiesNotifier` — um item por property que tem
+/// `currentTenant != null`. Sem inquilinos reais cadastrados (estado
+/// inicial ou backend ainda sem devolver `currentTenant`), renderiza
+/// um estado vazio.
+///
+/// Status textual (Aluguel em dia / Em negociação / etc.) é **derivado**
+/// de `property.status` — não é o status real de pagamento mensal,
+/// que depende de endpoint que ainda não existe (`BACKEND_HANDOFF.md §3`).
+class _RecentTenantsSection extends ConsumerWidget {
+  const _RecentTenantsSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final properties =
+        ref.watch(myPropertiesNotifierProvider).asData?.value ??
+            const <Property>[];
+
+    // Mostra só os imóveis com inquilino vinculado, os 5 mais recentes.
+    // Sem campo `contractStartedAt`, mantemos a ordem de `myProperties`
+    // (que vem do backend — geralmente por createdAt DESC).
+    final withTenant = properties
+        .where((p) => p.currentTenant != null)
+        .take(5)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -466,15 +594,66 @@ class _RecentTenantsSection extends StatelessWidget {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              _TenantItem(name: 'Carlos Mendes', property: 'Cobertura Vila Madalena', status: 'Aluguel em dia', isDark: isDark),
-              const SizedBox(height: 12),
-              _TenantItem(name: 'Ana Paula', property: 'Loft Industrial', status: 'Novo Contrato', isDark: isDark),
-            ],
-          ),
+          child: withTenant.isEmpty
+              ? _EmptyTenants(isDark: isDark)
+              : Column(
+                  children: [
+                    for (int i = 0; i < withTenant.length; i++) ...[
+                      _TenantItem(
+                        name: withTenant[i].currentTenant!.name,
+                        property: withTenant[i].title,
+                        status: _statusLabel(withTenant[i].status),
+                        isDark: isDark,
+                      ),
+                      if (i < withTenant.length - 1)
+                        const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
         ),
       ],
+    );
+  }
+
+  static String _statusLabel(String? propertyStatus) {
+    switch (propertyStatus) {
+      case 'RENTED':
+        return 'Aluguel ativo';
+      case 'IN_NEGOTIATION':
+        return 'Em negociação';
+      case 'AVAILABLE':
+      default:
+        return 'Aluguel ativo';
+    }
+  }
+}
+
+class _EmptyTenants extends StatelessWidget {
+  const _EmptyTenants({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = BrutalistPalette.muted(isDark);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: BrutalistPalette.subtleBg(isDark),
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.people_outline_rounded, color: muted),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'Nenhum inquilino ativo nos seus imóveis ainda.',
+              style: AppTypography.bodyMedium.copyWith(color: muted),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

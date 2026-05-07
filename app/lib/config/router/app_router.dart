@@ -169,7 +169,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'rent-history',
                     builder: (_, state) => TenantRentHistoryPage(
-                      tenantName: state.uri.queryParameters['name'] ?? 'Inquilino',
+                      tenantName:
+                          state.uri.queryParameters['name'] ?? 'Inquilino',
+                      tenantId: state.uri.queryParameters['tenantId'],
+                      propertyId: state.uri.queryParameters['propertyId'],
                     ),
                   ),
                   GoRoute(

@@ -199,35 +199,54 @@ class _TenantDetailsSheet extends StatelessWidget {
                   const SizedBox(height: AppSpacing.md),
                   AppMenuGroup(items: [
                     AppMenuGroupItem(
-                      icon: Icons.chat_outlined, 
-                      label: 'Abrir Chat com Inquilino', 
+                      icon: Icons.chat_outlined,
+                      label: 'Abrir Chat com Inquilino',
                       onTap: () {
                         Navigator.pop(context); // Close sheet
-                        context.go('/chat/conversation-$index');
+                        // ID composto (property + tenant) é a convenção
+                        // aceita pelo /chat/:conversationId enquanto o
+                        // backend não expõe o resolver oficial
+                        // (BACKEND_HANDOFF.md §4). Quando existir,
+                        // substituir por fetch do ID real da conversa.
+                        context.push(
+                          '/chat/property-${tenant.propertyId}-tenant-${tenant.tenantId}',
+                        );
                       },
                     ),
                     AppMenuGroupItem(
-                      icon: Icons.description_outlined, 
-                      label: 'Ver Documentos Enviados', 
+                      icon: Icons.description_outlined,
+                      label: 'Ver Documentos Enviados',
                       onTap: () {
                         Navigator.pop(context);
-                        context.push('/search/documents?name=${Uri.encodeComponent(tenant.name)}');
+                        context.push(
+                          '/search/documents?name=${Uri.encodeComponent(tenant.name)}',
+                        );
                       },
                     ),
                     AppMenuGroupItem(
-                      icon: Icons.history_rounded, 
-                      label: 'Histórico de Aluguéis', 
+                      icon: Icons.history_rounded,
+                      label: 'Histórico de Aluguéis',
                       onTap: () {
                         Navigator.pop(context);
-                        context.push('/search/rent-history?name=${Uri.encodeComponent(tenant.name)}');
+                        context.push(
+                          '/search/rent-history'
+                          '?name=${Uri.encodeComponent(tenant.name)}'
+                          '&tenantId=${Uri.encodeComponent(tenant.tenantId)}'
+                          '&propertyId=${Uri.encodeComponent(tenant.propertyId)}',
+                        );
                       },
                     ),
                     AppMenuGroupItem(
-                      icon: Icons.gavel_rounded, 
-                      label: 'Visualizar Contrato Digital', 
+                      icon: Icons.gavel_rounded,
+                      label: 'Visualizar Contrato Digital',
                       onTap: () {
                         Navigator.pop(context);
-                        context.push('/search/contract?name=${Uri.encodeComponent(tenant.name)}');
+                        context.push(
+                          '/search/contract'
+                          '?name=${Uri.encodeComponent(tenant.name)}'
+                          '&tenantId=${Uri.encodeComponent(tenant.tenantId)}'
+                          '&propertyId=${Uri.encodeComponent(tenant.propertyId)}',
+                        );
                       },
                     ),
                   ]),
@@ -291,6 +310,7 @@ class _TenantDetailsSheet extends StatelessWidget {
 class _TenantEntry {
   const _TenantEntry({
     required this.tenantId,
+    required this.propertyId,
     required this.tenantName,
     required this.propertyTitle,
     required this.status,
@@ -299,6 +319,7 @@ class _TenantEntry {
   });
 
   final String tenantId;
+  final String propertyId;
   final String tenantName;
   final String propertyTitle;
 
@@ -337,6 +358,7 @@ class _TenantEntry {
     }
     return _TenantEntry(
       tenantId: tenant.id,
+      propertyId: property.id,
       tenantName: tenant.name,
       propertyTitle: property.title,
       status: _statusFromProperty(property.status),
@@ -373,11 +395,14 @@ class _TenantEntry {
     return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
-  /// Converte pro shape legado [_TenantData] que o `_TenantDetailsSheet`
-  /// ainda consome. O sheet será reescrito em etapa separada — esta
-  /// ponte permite entregar a tela de lista sem tocar no sheet agora.
+  /// Converte pro shape legado [_TenantData] consumido pelo sheet. O
+  /// sheet passa o `tenantId` + `propertyId` pras rotas que precisam
+  /// identificar tanto o inquilino quanto o imóvel (chat, histórico
+  /// financeiro, etc.).
   _TenantData toLegacyData() {
     return _TenantData(
+      tenantId: tenantId,
+      propertyId: propertyId,
       name: tenantName,
       initials: initials,
       property: propertyTitle,
@@ -447,9 +472,15 @@ class _TenantCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(tenant.name,
+                          Flexible(
+                            child: Text(
+                              tenant.name,
                               style: AppTypography.titleLargeBold
-                                  .copyWith(color: titleColor)),
+                                  .copyWith(color: titleColor),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                           if (tenant.isVerified) ...[
                             const SizedBox(width: 4),
                             Icon(Icons.verified_rounded,
@@ -559,6 +590,8 @@ class _EmptyTenants extends StatelessWidget {
 
 class _TenantData {
   const _TenantData({
+    required this.tenantId,
+    required this.propertyId,
     required this.name,
     required this.initials,
     required this.property,
@@ -567,6 +600,8 @@ class _TenantData {
     required this.contractEnd,
     required this.isVerified,
   });
+  final String tenantId;
+  final String propertyId;
   final String name;
   final String initials;
   final String property;

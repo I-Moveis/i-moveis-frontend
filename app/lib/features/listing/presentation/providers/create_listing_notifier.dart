@@ -1,11 +1,13 @@
 import 'package:app/core/error/failures.dart';
 import 'package:app/core/providers/current_user_provider.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../search/data/providers/data_providers.dart';
 import '../../../search/domain/entities/property.dart';
 import '../../../search/domain/entities/property_input.dart';
+import 'my_properties_notifier.dart';
 
 /// Form state carried by [CreateListingNotifier]. Immutable so we can rebuild
 /// the page on every mutation via `state = state.copyWith(...)`.
@@ -53,9 +55,16 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
     bool? isFurnished,
     bool? petsAllowed,
     bool? nearSubway,
+    bool? isFeatured,
     double? condoFee,
     double? propertyTax,
-    List<PropertyImageInput>? images,
+    List<XFile>? photos,
+    // Campos UI-only (sem backend) — o PropertyInput carrega como
+    // metadata pra o form manter estado, mas o datasource ignora no
+    // JSON. Quando o backend adicionar, liga só aqui.
+    String? extendedType,
+    bool? hasWifi,
+    bool? hasPool,
   }) async {
     final userId = await ref.read(currentUserIdProvider.future);
     if (userId == null || userId.isEmpty) {
@@ -82,14 +91,23 @@ class CreateListingNotifier extends Notifier<CreateListingState> {
         isFurnished: isFurnished,
         petsAllowed: petsAllowed,
         nearSubway: nearSubway,
+        isFeatured: isFeatured,
         condoFee: condoFee,
         propertyTax: propertyTax,
-        images: images,
+        photos: photos,
+        extendedType: extendedType,
+        hasWifi: hasWifi,
+        hasPool: hasPool,
       ));
       this.state = this.state.copyWith(
             submitting: false,
             lastCreated: created,
           );
+      // Invalida o cache de "meus imóveis" pra que, quando a MyPropertiesPage
+      // voltar ao topo da pilha (após pop do create), o notifier refetche e
+      // a nova propriedade apareça. Sem isso, o usuário cria e acha que nada
+      // aconteceu porque o cache antigo continua sendo exibido.
+      ref.invalidate(myPropertiesNotifierProvider);
       return created;
     } on Failure {
       this.state = this.state.copyWith(submitting: false);

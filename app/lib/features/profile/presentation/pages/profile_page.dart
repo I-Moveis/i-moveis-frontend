@@ -24,7 +24,7 @@ class ProfilePage extends ConsumerWidget {
 
         final authUser = ref.watch(authNotifierProvider).maybeWhen(
               authenticated: (user) => (
-                name: user.name.isNotEmpty ? user.name : 'Usu├írio',
+                name: user.name.isNotEmpty ? user.name : 'Usuário',
                 email: user.email,
                 avatarUrl: user.avatarUrl,
                 isOwner: user.isOwner,
@@ -32,7 +32,7 @@ class ProfilePage extends ConsumerWidget {
               ),
               orElse: () => null,
             );
-        final displayName = authUser?.name ?? 'Usu├írio';
+        final displayName = authUser?.name ?? 'Usuário';
         final displayEmail = authUser?.email ?? '';
         final avatarUrl = authUser?.avatarUrl;
         final isOwner = authUser?.isOwner ?? false;
@@ -141,7 +141,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.calendar_today_outlined,
                     label: 'Minhas visitas',
-                    onTap: () => context.push('/profile/my-visits'),
+                    onTap: () => context.go('/profile/my-visits'),
                   ),
                   AppMenuGroupItem(
                     icon: Icons.article_outlined,
@@ -157,8 +157,8 @@ class ProfilePage extends ConsumerWidget {
               const AppSectionHeader(title: 'Sistema'),
               const SizedBox(height: AppSpacing.md),
               AppMenuGroup(items: [
-                AppMenuGroupItem(icon: Icons.settings_outlined, label: 'Configura├º├Áes', onTap: () => context.go('/profile/settings')),
-                AppMenuGroupItem(icon: Icons.support_agent_outlined, label: 'Suporte', onTap: () {}),
+                AppMenuGroupItem(icon: Icons.settings_outlined, label: 'Configurações', onTap: () => context.go('/profile/settings')),
+                AppMenuGroupItem(icon: Icons.support_agent_outlined, label: 'Suporte', onTap: () => context.push('/support')),
               ]),
 
               const SizedBox(height: AppSpacing.xxl),

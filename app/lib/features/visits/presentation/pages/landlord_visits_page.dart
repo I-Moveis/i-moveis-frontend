@@ -5,9 +5,11 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/visit.dart';
 import '../providers/landlord_visits_notifier.dart';
+import '../widgets/visit_calendar_view.dart';
 
-/// Shows the visits scheduled on the current user's properties (landlord
-/// perspective). Read-only — no cancel/edit from here.
+/// Smart agenda do landlord: calendário mensal das visitas agendadas nos
+/// imóveis dele, com dots nos dias que têm visita e lista filtrada pelo dia
+/// selecionado. Read-only — não dá pra cancelar/editar daqui.
 class LandlordVisitsPage extends ConsumerWidget {
   const LandlordVisitsPage({super.key});
 
@@ -35,29 +37,31 @@ class LandlordVisitsPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              data: (visits) {
-                if (visits.isEmpty) {
-                  return _EmptyView(isDark: isDark);
-                }
-                return RefreshIndicator(
-                  onRefresh: () => ref
-                      .read(landlordVisitsNotifierProvider.notifier)
-                      .refresh(),
-                  child: ListView.separated(
-                    physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics()),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenHorizontal,
-                      vertical: AppSpacing.lg,
+              // Sempre mostra o calendário. Quando a lista vem vazia, o
+              // grid segue visível (sem dots) e a _DayList interna mostra
+              // "Nenhuma visita para este dia" — assim o landlord já se
+              // familiariza com a agenda antes de ter dados.
+              data: (visits) => Column(
+                children: [
+                  if (visits.isEmpty)
+                    _EmptyBanner(
+                      isDark: isDark,
+                      icon: Icons.event_busy_outlined,
+                      message:
+                          'Nenhuma visita agendada nos seus imóveis ainda.',
                     ),
-                    itemCount: visits.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (_, i) =>
-                        _LandlordVisitTile(visit: visits[i], isDark: isDark),
+                  Expanded(
+                    child: VisitCalendarView(
+                      visits: visits,
+                      onRefresh: () => ref
+                          .read(landlordVisitsNotifierProvider.notifier)
+                          .refresh(),
+                      tileBuilder: (_, visit) =>
+                          _LandlordVisitTile(visit: visit, isDark: isDark),
+                    ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
         ]);
@@ -94,7 +98,7 @@ class _LandlordVisitTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _formatDate(visit.scheduledAt),
+                  _formatTime(visit.scheduledAt),
                   style: AppTypography.titleSmallBold
                       .copyWith(color: titleColor),
                 ),
@@ -118,42 +122,57 @@ class _LandlordVisitTile extends StatelessWidget {
     );
   }
 
-  static String _formatDate(DateTime dt) {
-    const months = [
-      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-      'jul', 'ago', 'set', 'out', 'nov', 'dez',
-    ];
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = months[dt.month - 1];
+  // O dia já aparece no header da _DayList; aqui só o horário.
+  static String _formatTime(DateTime dt) {
     final hh = dt.hour.toString().padLeft(2, '0');
     final mm = dt.minute.toString().padLeft(2, '0');
-    return '$day $month · $hh:$mm';
+    return '$hh:$mm';
   }
 }
 
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.isDark});
+/// Banner slim acima do calendário quando não há nenhuma visita ainda.
+/// Não ocupa a tela toda — o calendário continua visível embaixo.
+class _EmptyBanner extends StatelessWidget {
+  const _EmptyBanner({
+    required this.isDark,
+    required this.icon,
+    required this.message,
+  });
   final bool isDark;
+  final IconData icon;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     final mutedColor = BrutalistPalette.muted(isDark);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.event_busy_outlined, size: 48, color: mutedColor),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Nenhuma visita agendada nos seus imóveis.',
-              textAlign: TextAlign.center,
-              style:
-                  AppTypography.bodyMedium.copyWith(color: mutedColor),
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.screenHorizontal,
+        AppSpacing.sm,
+        AppSpacing.screenHorizontal,
+        0,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.borderMd,
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: mutedColor, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodySmall.copyWith(color: mutedColor),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

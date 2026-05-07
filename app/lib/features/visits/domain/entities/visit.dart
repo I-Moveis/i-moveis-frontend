@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'visit_source.dart';
 import 'visit_status.dart';
 
 @immutable
@@ -16,6 +17,7 @@ class Visit {
     required this.updatedAt,
     this.rentalProcessId,
     this.notes,
+    this.source = VisitSource.manual,
   });
 
   final String id;
@@ -29,6 +31,9 @@ class Visit {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Quem agendou: usuário manual ou agente de IA. Ver [VisitSource].
+  final VisitSource source;
 
   DateTime get endsAt =>
       scheduledAt.add(Duration(minutes: durationMinutes));
@@ -45,6 +50,7 @@ class Visit {
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
+    VisitSource? source,
   }) {
     return Visit(
       id: id ?? this.id,
@@ -58,6 +64,7 @@ class Visit {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      source: source ?? this.source,
     );
   }
 
@@ -70,7 +77,8 @@ class Visit {
           status == other.status &&
           scheduledAt == other.scheduledAt &&
           durationMinutes == other.durationMinutes &&
-          notes == other.notes;
+          notes == other.notes &&
+          source == other.source;
 
   @override
   int get hashCode =>
@@ -78,5 +86,6 @@ class Visit {
       status.hashCode ^
       scheduledAt.hashCode ^
       durationMinutes.hashCode ^
-      notes.hashCode;
+      notes.hashCode ^
+      source.hashCode;
 }

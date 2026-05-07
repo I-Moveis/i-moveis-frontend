@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../../domain/entities/property.dart';
 import '../../domain/entities/property_input.dart';
@@ -140,20 +142,155 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
 
   @override
   Future<Property> create(PropertyInput input) async {
+    final photos = input.photos;
+    final hasPhotos = photos != null && photos.isNotEmpty;
+
+    // Dois caminhos no mesmo endpoint:
+    //   sem photos → application/json (caminho legado)
+    //   com photos → multipart/form-data, campo "photos" (convenção do
+    //                backend; primeira foto vira capa automaticamente)
+    if (!hasPhotos) {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/properties',
+        data: propertyToCreateJson(input),
+      );
+      return propertyFromApiJson(response.data ?? const {});
+    }
+
+    final form = await _buildCreateFormData(input, photos);
     final response = await _dio.post<Map<String, dynamic>>(
       '/properties',
-      data: propertyToCreateJson(input),
+      data: form,
+      options: Options(contentType: 'multipart/form-data'),
     );
     return propertyFromApiJson(response.data ?? const {});
   }
 
+  /// Monta o FormData pro POST multipart. Campos escalares vão como string
+  /// (convenção HTTP — multipart não carrega número/bool), arquivos vão no
+  /// campo `photos`. Mantém a mesma lista de chaves do JSON (landlordId,
+  /// title, etc.) — o backend reusa o validador.
+  Future<FormData> _buildCreateFormData(
+    PropertyInput input,
+    List<XFile> photos,
+  ) async {
+    final jsonBody = propertyToCreateJson(input);
+    // `images` (URLs antigas) não faz sentido num POST multipart com fotos
+    // novas — o backend gera as URLs a partir dos arquivos.
+    jsonBody.remove('images');
+
+    final fields = <MapEntry<String, String>>[];
+    jsonBody.forEach((key, value) {
+      if (value == null) return;
+      fields.add(MapEntry(key, value.toString()));
+    });
+
+    final files = <MapEntry<String, MultipartFile>>[];
+    for (final photo in photos) {
+      final bytes = await photo.readAsBytes();
+      final filename = photo.name.isNotEmpty
+          ? photo.name
+          : 'photo-${DateTime.now().millisecondsSinceEpoch}.jpg';
+      // Deduz o mime pela extensão do arquivo. Backend só aceita JPEG/PNG;
+      // qualquer outra coisa cai no jpeg default e o backend rejeita com
+      // mensagem clara de validação em vez de dar 500.
+      final dot = filename.lastIndexOf('.');
+      final ext = dot >= 0 ? filename.substring(dot + 1).toLowerCase() : '';
+      final mime = switch (ext) {
+        'png' => MediaType('image', 'png'),
+        'jpg' || 'jpeg' => MediaType('image', 'jpeg'),
+        _ => MediaType('image', 'jpeg'),
+      };
+      files.add(MapEntry(
+        'photos',
+        MultipartFile.fromBytes(bytes, filename: filename, contentType: mime),
+      ));
+    }
+
+    return FormData()
+      ..fields.addAll(fields)
+      ..files.addAll(files);
+  }
+
   @override
   Future<Property> update(String id, PropertyInput input) async {
+    final photos = input.photos;
+    final photosToRemove = input.photosToRemove;
+    final hasNewPhotos = photos != null && photos.isNotEmpty;
+    final hasRemoval =
+        photosToRemove != null && photosToRemove.isNotEmpty;
+
+    if (!hasNewPhotos && !hasRemoval) {
+      final response = await _dio.put<Map<String, dynamic>>(
+        '/properties/$id',
+        data: propertyToPatchJson(input),
+      );
+      return propertyFromApiJson(response.data ?? const {});
+    }
+
+    final form = await _buildUpdateFormData(input, photos, photosToRemove);
     final response = await _dio.put<Map<String, dynamic>>(
       '/properties/$id',
-      data: propertyToPatchJson(input),
+      data: form,
+      options: Options(contentType: 'multipart/form-data'),
     );
     return propertyFromApiJson(response.data ?? const {});
+  }
+
+  /// Monta FormData pro PUT multipart. Segue a mesma convenção do POST:
+  /// campos escalares como string, arquivos no campo `photos`. Remoção
+  /// de imagens existentes vai via campo `photosToRemove[]` (lista de URLs
+  /// ou IDs — o backend decide qual formato aceita; por enquanto mandamos
+  /// a URL, já que é o que a UI tem em mãos). Se o backend ainda não
+  /// expôs isso, o campo é ignorado; o frontend não quebra.
+  Future<FormData> _buildUpdateFormData(
+    PropertyInput input,
+    List<XFile>? photos,
+    List<String>? photosToRemove,
+  ) async {
+    final jsonBody = propertyToPatchJson(input)..remove('images');
+
+    final fields = <MapEntry<String, String>>[];
+    jsonBody.forEach((key, value) {
+      if (value == null) return;
+      fields.add(MapEntry(key, value.toString()));
+    });
+
+    if (photosToRemove != null) {
+      for (final url in photosToRemove) {
+        fields.add(MapEntry('photosToRemove', url));
+      }
+    }
+
+    final files = <MapEntry<String, MultipartFile>>[];
+    if (photos != null) {
+      for (final photo in photos) {
+        final bytes = await photo.readAsBytes();
+        final filename = photo.name.isNotEmpty
+            ? photo.name
+            : 'photo-${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final dot = filename.lastIndexOf('.');
+        final ext =
+            dot >= 0 ? filename.substring(dot + 1).toLowerCase() : '';
+        final mime = switch (ext) {
+          'png' => MediaType('image', 'png'),
+          'jpg' || 'jpeg' => MediaType('image', 'jpeg'),
+          _ => MediaType('image', 'jpeg'),
+        };
+        files.add(MapEntry(
+          'photos',
+          MultipartFile.fromBytes(
+            bytes,
+            filename: filename,
+            contentType: mime,
+          ),
+        ));
+      }
+    }
+
+    return FormData()
+      ..fields.addAll(fields)
+      ..files.addAll(files);
   }
 
   @override

@@ -12,7 +12,7 @@ Property propertyFromApiJson(Map<String, dynamic> json) {
       double.tryParse((json['price'] ?? '0').toString()) ?? 0;
   final type = (json['type'] ?? 'APARTMENT').toString();
   final address = _buildAddress(json);
-  final images = _imageUrls(json['images']);
+  final imagesResult = _parseImages(json['images']);
 
   return Property(
     id: json['id'] as String? ?? '',
@@ -31,13 +31,18 @@ Property propertyFromApiJson(Map<String, dynamic> json) {
     condoFee: _toDouble(_pick(json, 'condoFee', 'condo_fee')) ?? 0,
     taxes: _toDouble(_pick(json, 'propertyTax', 'property_tax')) ?? 0,
     thumbnailIconCode: _thumbnailIcon(type),
-    imageUrls: images,
+    imageUrls: imagesResult.urls,
+    coverImageUrl: imagesResult.cover,
     address: address,
     amenities: _deriveAmenities(json),
     badges: _deriveBadges(json),
     landlordId: _pick(json, 'landlordId', 'landlord_id') as String?,
     moderationStatus:
         _pick(json, 'moderationStatus', 'moderation_status') as String?,
+    status: json['status'] as String?,
+    currentTenant: _parseTenant(
+      _pick(json, 'currentTenant', 'current_tenant') ?? json['tenant'],
+    ),
   );
 }
 
@@ -205,21 +210,55 @@ String _buildAddress(Map<String, dynamic> json) {
   return parts.join(', ');
 }
 
-List<String> _imageUrls(Object? raw) {
-  if (raw is! List) return const [];
+/// Resultado do parse de `images[]` — lista ordenada (capa primeiro) +
+/// URL da capa explicitamente marcada. Quando nenhum item vem com
+/// `isCover=true`, `cover` é `null` e a UI decide usar `urls.first` ou
+/// um placeholder.
+class _ImagesParseResult {
+  const _ImagesParseResult({required this.urls, required this.cover});
+  final List<String> urls;
+  final String? cover;
+}
+
+_ImagesParseResult _parseImages(Object? raw) {
+  if (raw is! List) return const _ImagesParseResult(urls: [], cover: null);
   final entries = raw.whereType<Map<dynamic, dynamic>>().map((m) {
     final url = (m['url'] ?? '').toString();
     final isCover = m['isCover'] == true || m['is_cover'] == true;
     return _ImageEntry(url: url, isCover: isCover);
   }).where((e) => e.url.isNotEmpty).toList()
     ..sort((a, b) => (a.isCover ? 0 : 1).compareTo(b.isCover ? 0 : 1));
-  return entries.map((e) => e.url).toList();
+
+  final cover = entries.firstWhere(
+    (e) => e.isCover,
+    orElse: () => const _ImageEntry(url: '', isCover: false),
+  ).url;
+
+  return _ImagesParseResult(
+    urls: entries.map((e) => e.url).toList(),
+    cover: cover.isEmpty ? null : cover,
+  );
 }
 
 class _ImageEntry {
   const _ImageEntry({required this.url, required this.isCover});
   final String url;
   final bool isCover;
+}
+
+/// Lê o shape do inquilino atual do imóvel. Aceita dois formatos:
+/// `{"id": "...", "name": "..."}` e uma variante achatada onde o backend
+/// devolve `tenantId` + `tenantName` direto no objeto Property — ambos
+/// dão no mesmo pra UI. Retorna `null` se faltar dado essencial.
+PropertyTenant? _parseTenant(Object? raw) {
+  if (raw is Map) {
+    final id = (raw['id'] ?? raw['userId'] ?? raw['tenantId'])?.toString();
+    final name = (raw['name'] ?? raw['fullName'])?.toString();
+    if (id != null && id.isNotEmpty && name != null && name.isNotEmpty) {
+      return PropertyTenant(id: id, name: name);
+    }
+  }
+  return null;
 }
 
 List<String> _deriveAmenities(Map<String, dynamic> json) {

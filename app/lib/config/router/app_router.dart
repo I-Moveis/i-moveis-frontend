@@ -388,7 +388,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'contracts',
-            builder: (_, _) => const AdminContractsPage(),
+            builder: (_, state) => AdminContractsPage(
+              initialFilter: state.uri.queryParameters['filter'],
+            ),
           ),
           GoRoute(
             path: 'reports',

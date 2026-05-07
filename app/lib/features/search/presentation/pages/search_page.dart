@@ -97,8 +97,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
         );
 
-        final titleColor = BrutalistPalette.title(isDark);
-
         return Scaffold(
           backgroundColor: Colors.transparent,
           floatingActionButton: _showScrollToTop
@@ -114,24 +112,24 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
-                SliverToBoxAdapter(
+                const SliverToBoxAdapter(
+                  child: BrutalistPageHeader(
+                    title: 'Buscar',
+                    subtitle: 'Encontre o imóvel ideal pra você',
+                  ),
+                ),
+                const SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenHorizontal),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: AppSpacing.xl),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Buscar', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xxl),
-                        const SearchBarWidget(),
-                        const SizedBox(height: AppSpacing.xxl),
-                        const FilterChipBar(),
-                        const SizedBox(height: AppSpacing.xl),
+                        SizedBox(height: AppSpacing.md),
+                        SearchBarWidget(),
+                        SizedBox(height: AppSpacing.xxl),
+                        FilterChipBar(),
+                        SizedBox(height: AppSpacing.xl),
                       ],
                     ),
                   ),

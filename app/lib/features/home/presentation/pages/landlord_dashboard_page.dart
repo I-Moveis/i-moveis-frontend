@@ -27,7 +27,13 @@ class LandlordDashboardPage extends ConsumerWidget {
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(child: _HeaderSection(isDark: isDark)),
+            SliverToBoxAdapter(
+              child: BrutalistPageHeader(
+                title: 'Seu Painel',
+                subtitle: 'Bem-vindo de volta!',
+                trailing: _NotificationBell(isDark: isDark),
+              ),
+            ),
             SliverToBoxAdapter(child: _StatsSection(isDark: isDark)),
             SliverToBoxAdapter(child: _QuickActionsSection(isDark: isDark)),
             SliverToBoxAdapter(
@@ -47,49 +53,26 @@ class LandlordDashboardPage extends ConsumerWidget {
   }
 }
 
-class _HeaderSection extends StatelessWidget {
-  const _HeaderSection({required this.isDark});
+/// Sino de notificações exibido no canto direito do header do dashboard.
+/// Hoje é read-only (sem handler) — fica plumbed pra ligar no futuro
+/// quando houver central de notificações.
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell({required this.isDark});
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = isDark ? AppColors.white : AppColors.black;
-    final subtitleColor = isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
-
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bem-vindo de volta!',
-                  style: AppTypography.bodyLarge.copyWith(color: subtitleColor),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Seu Painel',
-                  style: AppTypography.headlineLarge.copyWith(color: titleColor),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: BrutalistPalette.subtleBg(isDark),
-              borderRadius: AppRadius.borderMd,
-            ),
-            child: Icon(
-              Icons.notifications_outlined,
-              size: 22,
-              color: isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary,
-            ),
-          ),
-        ],
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: BrutalistPalette.subtleBg(isDark),
+        borderRadius: AppRadius.borderMd,
+      ),
+      child: Icon(
+        Icons.notifications_outlined,
+        size: 22,
+        color: isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary,
       ),
     );
   }

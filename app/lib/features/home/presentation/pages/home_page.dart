@@ -138,82 +138,19 @@ class _HomePageState extends ConsumerState<HomePage>
   //  HEADER ÔÇö friendly greeting, warm and human
   // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
   Widget _buildHeader(bool isDark) {
-    final titleColor = isDark ? AppColors.white : AppColors.black;
-    final subtitleColor =
-        isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
     final mutedColor =
         isDark ? AppColors.whiteMuted : AppColors.lightTextTertiary;
     final accentColor = BrutalistPalette.accentPeach(isDark);
 
     return Opacity(
       opacity: _headerFade.value,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.screenHorizontal,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.xl),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ol├í!',
-                        style: AppTypography.bodyLarge.copyWith(
-                          color: subtitleColor,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        'Encontre seu lar',
-                        style: AppTypography.headlineLarge.copyWith(
-                          color: titleColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: BrutalistPalette.subtleBg(isDark),
-                      borderRadius: AppRadius.borderMd,
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Icon(
-                          Icons.notifications_outlined,
-                          size: 22,
-                          color: mutedColor,
-                        ),
-                        Positioned(
-                          top: 11,
-                          right: 13,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: accentColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-          ],
+      child: BrutalistPageHeader(
+        title: 'Encontre seu lar',
+        subtitle: 'Olá! Vamos achar o próximo.',
+        trailing: _HomeNotificationBell(
+          isDark: isDark,
+          mutedColor: mutedColor,
+          accentColor: accentColor,
         ),
       ),
     );
@@ -881,6 +818,54 @@ class _HomePageState extends ConsumerState<HomePage>
               child: Text(
                 'TENTAR DE NOVO',
                 style: AppTypography.labelSmall.copyWith(color: accentColor),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sino com o dot laranja de "tem notificação nova" — específico da
+/// home do tenant. O dashboard do landlord usa um similar sem dot;
+/// mantidos separados até existir um sistema de notificação real.
+class _HomeNotificationBell extends StatelessWidget {
+  const _HomeNotificationBell({
+    required this.isDark,
+    required this.mutedColor,
+    required this.accentColor,
+  });
+
+  final bool isDark;
+  final Color mutedColor;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: BrutalistPalette.subtleBg(isDark),
+          borderRadius: AppRadius.borderMd,
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(Icons.notifications_outlined, size: 22, color: mutedColor),
+            Positioned(
+              top: 11,
+              right: 13,
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ],

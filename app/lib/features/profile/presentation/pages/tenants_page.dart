@@ -53,16 +53,18 @@ class TenantsPage extends StatelessWidget {
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
+              const SliverToBoxAdapter(
+                child: BrutalistPageHeader(
+                  title: 'Meus Inquilinos',
+                  subtitle: 'Gerencie quem mora nos seus imóveis',
+                ),
+              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: AppSpacing.xl),
-                      Text('Meus Inquilinos', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text('Gerencie quem mora nos seus imóveis', style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),

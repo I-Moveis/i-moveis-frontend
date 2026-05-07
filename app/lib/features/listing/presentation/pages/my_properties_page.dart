@@ -28,11 +28,18 @@ class MyPropertiesPage extends ConsumerWidget {
 
         final async = ref.watch(myPropertiesNotifierProvider);
 
+        // Quando aberta via bottom nav (showBack=false, default), mostra o
+        // header padronizado com logo + subtítulo — mesmo visual de
+        // "Meus Inquilinos" e "Conversas". Quando chegou por push de
+        // outra tela (showBack=true), cai no AppBar com botão de voltar.
         return Column(children: [
-          BrutalistAppBar(
-            title: title,
-            showBack: showBack,
-          ),
+          if (showBack)
+            BrutalistAppBar(title: title, showBack: showBack)
+          else
+            const BrutalistPageHeader(
+              title: 'Meus Imóveis',
+              subtitle: 'Gerencie seus anúncios ativos',
+            ),
           Expanded(
             child: async.when(
               loading: () => const Center(

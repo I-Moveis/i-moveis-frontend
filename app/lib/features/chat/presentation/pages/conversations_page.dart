@@ -42,12 +42,18 @@ class ConversationsPage extends ConsumerWidget {
             return Opacity(opacity: fade.value, child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                SliverToBoxAdapter(
+                  child: BrutalistPageHeader(
+                    title: 'Conversas',
+                    subtitle: isOwner
+                        ? 'Suas mensagens com inquilinos e interessados'
+                        : 'Suas mensagens com proprietários e suporte',
+                  ),
+                ),
                 SliverToBoxAdapter(child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const SizedBox(height: AppSpacing.xl),
-                    Text('Conversas', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.lg),
                     if (conversations.isEmpty)
                       _buildEmptyState(isDark, titleColor, mutedColor, accentColor)
                     else

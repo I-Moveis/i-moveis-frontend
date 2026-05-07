@@ -35,13 +35,9 @@ class FavoritesPage extends ConsumerWidget {
             return Opacity(
               opacity: fade.value,
               child: Column(children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const SizedBox(height: AppSpacing.xl),
-                    Text('Salvos', style: AppTypography.headlineLarge.copyWith(color: titleColor)),
-                  ]),
+                const BrutalistPageHeader(
+                  title: 'Salvos',
+                  subtitle: 'Imóveis que você favoritou pra ver depois',
                 ),
                 // Empty state
                 Expanded(child: Center(child: Padding(

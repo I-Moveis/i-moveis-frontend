@@ -1,10 +1,7 @@
-import 'dart:math';
-
-import 'package:app/core/providers/dio_provider.dart';
 import 'package:app/design_system/design_system.dart';
 import 'package:app/features/auth/presentation/providers/auth_notifier.dart';
 import 'package:app/features/auth/presentation/providers/auth_state.dart';
-import 'package:dio/dio.dart';
+import 'package:app/features/support/presentation/providers/support_tickets_notifier.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,33 +32,16 @@ class _SupportTicketPageState extends ConsumerState<SupportTicketPage> {
 
   bool _submitting = false;
 
-  /// Quando setado, o formulário é substituído pela tela de confirmação
-  /// com o código do ticket.
+  /// Código do ticket após envio. Enquanto null, mostra o form;
+  /// quando setado, mostra a confirmação. O usuário clica em FECHAR
+  /// e volta pra lista.
   String? _confirmedCode;
-
-  /// Indica se o ticket foi registrado de verdade no backend ou se caiu
-  /// no fallback offline (código gerado localmente, nada persistido).
-  bool _backendConfirmed = false;
 
   @override
   void dispose() {
     _title.dispose();
     _description.dispose();
     super.dispose();
-  }
-
-  /// Gera código humano-legível fallback: `SUP-AAMMDD-XXXX` onde o
-  /// sufixo é aleatório base36. Usado só quando o POST falha (backend
-  /// sem endpoint) — o usuário vê algo coerente e nossa equipe consegue
-  /// rastrear pelo timestamp.
-  String _localTicketCode() {
-    final now = DateTime.now();
-    final date = '${now.year.toString().substring(2)}'
-        '${now.month.toString().padLeft(2, '0')}'
-        '${now.day.toString().padLeft(2, '0')}';
-    final random = Random().nextInt(46655); // 36^3 - 1
-    final suffix = random.toRadixString(36).toUpperCase().padLeft(4, '0');
-    return 'SUP-$date-$suffix';
   }
 
   Future<void> _submit() async {
@@ -79,48 +59,27 @@ class _SupportTicketPageState extends ConsumerState<SupportTicketPage> {
 
     setState(() => _submitting = true);
 
-    final dio = ref.read(dioProvider);
     try {
-      // Backend anexa userId, nome, role e createdAt a partir do JWT.
-      final response = await dio.post<Map<String, dynamic>>(
-        '/support/tickets',
-        data: {
-          'title': title,
-          'description': description,
-        },
-      );
-      final serverCode = (response.data?['code'] as String?) ??
-          (response.data?['id'] as String?) ??
-          _localTicketCode();
+      // Repo cuida do POST + fallback local. Code vem real do backend
+      // quando o endpoint existir, local quando não (ver
+      // BACKEND_HANDOFF.md §10).
+      final ticket = await ref
+          .read(supportTicketsProvider.notifier)
+          .create(title: title, description: description);
       if (!mounted) return;
       setState(() {
-        _confirmedCode = serverCode;
-        _backendConfirmed = true;
-        _submitting = false;
-      });
-    } on DioException catch (e) {
-      // 404 → endpoint ainda não existe; qualquer outro erro também cai
-      // aqui. Geramos código local e avisamos explicitamente o usuário.
-      if (kDebugMode) {
-        debugPrint(
-          '[support] POST /support/tickets falhou '
-          '(${e.response?.statusCode ?? '---'}): ${e.message}',
-        );
-      }
-      if (!mounted) return;
-      setState(() {
-        _confirmedCode = _localTicketCode();
-        _backendConfirmed = false;
+        _confirmedCode = ticket.code;
         _submitting = false;
       });
     } on Object catch (e) {
-      if (kDebugMode) debugPrint('[support] falha inesperada: $e');
+      if (kDebugMode) debugPrint('[support] create falhou: $e');
       if (!mounted) return;
-      setState(() {
-        _confirmedCode = _localTicketCode();
-        _backendConfirmed = false;
-        _submitting = false;
-      });
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível abrir o chamado. Tente novamente.'),
+        ),
+      );
     }
   }
 
@@ -137,7 +96,6 @@ class _SupportTicketPageState extends ConsumerState<SupportTicketPage> {
                 ? _buildForm(isDark)
                 : _ConfirmationView(
                     code: _confirmedCode!,
-                    backendConfirmed: _backendConfirmed,
                     isDark: isDark,
                     onClose: () => context.pop(),
                   ),
@@ -308,13 +266,11 @@ class _BrutalistTextField extends StatelessWidget {
 class _ConfirmationView extends StatelessWidget {
   const _ConfirmationView({
     required this.code,
-    required this.backendConfirmed,
     required this.isDark,
     required this.onClose,
   });
 
   final String code;
-  final bool backendConfirmed;
   final bool isDark;
   final VoidCallback onClose;
 
@@ -369,9 +325,8 @@ class _ConfirmationView extends StatelessWidget {
                   Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
             ),
             child: Text(
-              backendConfirmed
-                  ? 'Nossa equipe foi notificada. Você receberá a resposta pelo mesmo e-mail do seu cadastro.'
-                  : 'Anotamos sua mensagem. O canal com a equipe está sendo ativado — assim que subir, seu chamado entra na fila automaticamente. Guarde o número acima.',
+              'Chamado salvo. Você pode acompanhar o atendimento pela tela '
+              'de Suporte no seu perfil.',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(color: muted),
             ),

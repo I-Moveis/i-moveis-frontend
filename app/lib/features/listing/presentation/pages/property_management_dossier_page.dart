@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -397,7 +398,12 @@ class _CoverHeader extends StatelessWidget {
               Image.network(
                 resolved,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _CoverPlaceholder(isDark: isDark),
+                errorBuilder: (context, error, stack) {
+                  if (kDebugMode) {
+                    debugPrint('[cover] falha ao carregar: $resolved — $error');
+                  }
+                  return _CoverPlaceholder(isDark: isDark);
+                },
               )
             else
               _CoverPlaceholder(isDark: isDark),
@@ -613,11 +619,15 @@ class _PaymentPill extends StatelessWidget {
               color: selected ? Colors.black : bg,
             ),
             const SizedBox(width: 6),
-            Text(
-              status.label,
-              style: AppTypography.labelSmall.copyWith(
-                color: selected ? Colors.black : bg,
-                fontWeight: FontWeight.w800,
+            Flexible(
+              child: Text(
+                status.label,
+                style: AppTypography.labelSmall.copyWith(
+                  color: selected ? Colors.black : bg,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

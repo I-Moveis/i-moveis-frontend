@@ -295,10 +295,19 @@ class _TenantDetailsSheet extends StatelessWidget {
 
   Widget _buildInfoRow(String label, String value, bool isDark) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: AppTypography.bodyMedium.copyWith(color: BrutalistPalette.muted(isDark))),
-        Text(value, style: AppTypography.titleSmallBold.copyWith(color: BrutalistPalette.title(isDark))),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: AppTypography.titleSmallBold.copyWith(color: BrutalistPalette.title(isDark)),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+        ),
       ],
     );
   }

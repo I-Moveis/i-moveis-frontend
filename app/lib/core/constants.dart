@@ -10,6 +10,32 @@ String get kApiBaseUrl {
 const Duration kApiConnectTimeout = Duration(seconds: 15);
 const Duration kApiReceiveTimeout = Duration(seconds: 30);
 
+/// Converte um path de imagem para URL absoluta. O backend guarda
+/// `PropertyImage.url` como path relativo (`/uploads/<propertyId>/<file>.jpg`)
+/// que é servido pelo express-static na raiz do servidor — **fora** do
+/// prefixo `/api`. Essa função:
+///
+/// - devolve a string intacta quando já começa com `http://` ou `https://`
+///   (absoluta — ex.: CDN ou signed URL);
+/// - prepend a ORIGEM do `kApiBaseUrl` (sem o `/api`) quando começa com `/`.
+///
+/// `Image.network` exige URL absoluta; URL relativa falha sem mensagem
+/// clara. Use este helper em todo ponto da UI que renderiza uma imagem
+/// vinda do backend.
+String absoluteImageUrl(String raw) {
+  final trimmed = raw.trim();
+  if (trimmed.isEmpty) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  final base = kApiBaseUrl;
+  final baseUri = Uri.tryParse(base);
+  if (baseUri == null) return trimmed;
+  final origin = '${baseUri.scheme}://${baseUri.authority}';
+  final normalizedPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+  return '$origin$normalizedPath';
+}
+
 /// When true, data layers return hardcoded mock data instead of hitting the
 /// backend. Default is `true` on this branch so the demo works without a
 /// running backend (admin login, listings, users — all mocked).

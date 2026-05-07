@@ -27,6 +27,7 @@ import '../../features/listing/presentation/pages/edit_listing_page.dart';
 import '../../features/listing/presentation/pages/listing_analytics_page.dart';
 import '../../features/listing/presentation/pages/my_properties_page.dart';
 import '../../features/listing/presentation/pages/property_management_dossier_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
@@ -315,6 +316,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // /support           → lista de chamados do usuário
       // /support/new       → formulário pra abrir um novo
       // /support/:code     → acompanhamento de um chamado específico
+      // Tela de notificações do usuário — aberta ao tocar no sino do
+      // header do dashboard (landlord) ou da home (tenant). Lê do cache
+      // local enquanto o endpoint `GET /api/notifications` não existir.
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/notifications',
+        builder: (_, _) => const NotificationsPage(),
+      ),
+
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/support',

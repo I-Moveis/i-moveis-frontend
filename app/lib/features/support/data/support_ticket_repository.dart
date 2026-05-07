@@ -35,8 +35,13 @@ class SupportTicketRepository {
 
   static const _localKey = 'support.local_tickets';
 
-  /// Lista todos os chamados do usuário atual. Tenta remoto primeiro.
-  /// Se falhar (endpoint ausente, rede caiu), cai no cache local.
+  /// Lista todos os chamados do usuário atual. **Estado do backend (2026-05-07)**:
+  /// só existe `GET /api/admin/support/tickets` (US-019), restrito a ADMIN.
+  /// Não há endpoint pro próprio landlord/tenant listar seus tickets — o
+  /// repo tenta `/support/tickets` mesmo assim (pra o dia que subir), e
+  /// cai no cache local em qualquer erro. O cache é alimentado pelo
+  /// `create()` a cada POST bem-sucedido, garantindo que o usuário veja
+  /// o histórico dele com title/description preservados do request.
   Future<List<SupportTicket>> list() async {
     try {
       final response =
@@ -81,7 +86,30 @@ class SupportTicketRepository {
         data: {'title': title, 'description': description},
       );
       if (response.data != null) {
-        final ticket = SupportTicket.fromJson(response.data!);
+        // O backend (US-018) devolve **apenas** `{id, code, createdAt}` —
+        // title/description/status NÃO vêm ecoados. Se a gente chamar
+        // `SupportTicket.fromJson(response.data!)` direto, o ticket
+        // aparece com título vazio na lista ("(sem título)"). Hidrata-se
+        // title/description do payload que subimos + id/code/createdAt
+        // do servidor. Status padrão é `open` já que o backend cria
+        // sempre em OPEN por convenção da US-017.
+        final body = response.data!;
+        final ticket = SupportTicket(
+          id: (body['id'] as String?) ??
+              (body['code'] as String?) ??
+              _localCode(),
+          code: (body['code'] as String?) ??
+              (body['id'] as String?) ??
+              _localCode(),
+          title: title,
+          description: description,
+          createdAt:
+              DateTime.tryParse((body['createdAt'] as String?) ?? '')
+                      ?.toLocal() ??
+                  DateTime.now(),
+          status: SupportTicketStatus.fromApi(body['status'] as String?),
+          userRole: body['userRole'] as String?,
+        );
         // Boa prática: mesmo quando o POST sobe limpo, guardamos uma
         // cópia local por enquanto — quando o GET também funcionar,
         // o próximo refresh sobrescreve. Assim a lista nunca fica vazia

@@ -36,12 +36,18 @@ class PriceBreakdown extends StatelessWidget {
           ),
         Divider(height: AppSpacing.xxl, color: accentColor.withValues(alpha: 0.2)),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text('Total / mês', style: AppTypography.titleLargeBold.copyWith(color: titleColor)),
-            Text(
-              'R\$ ${property.totalPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
-              style: AppTypography.headlineMediumBold.copyWith(color: accentColor),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                'R\$ ${property.totalPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+                textAlign: TextAlign.end,
+                style: AppTypography.headlineMediumBold.copyWith(color: accentColor),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
           ],
         ),
@@ -53,10 +59,18 @@ class PriceBreakdown extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: AppTypography.bodyMedium.copyWith(color: mutedColor)),
-          Text(value, style: AppTypography.titleSmall.copyWith(color: titleColor)),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: AppTypography.titleSmall.copyWith(color: titleColor),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
         ],
       ),
     );

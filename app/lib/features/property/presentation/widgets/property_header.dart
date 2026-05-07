@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../design_system/design_system.dart';
@@ -195,16 +196,26 @@ class _PropertyHeaderState extends ConsumerState<PropertyHeader> {
         child: Image.network(
           widget.property.imageUrls[i],
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => ColoredBox(
-            color: BrutalistPalette.imagePlaceholderBg(isDark),
-            child: Center(
-              child: Icon(
-                IconData(widget.property.thumbnailIconCode, fontFamily: 'MaterialIcons'),
-                size: 64,
-                color: (isDark ? Colors.white : BrutalistPalette.warmBrown).withValues(alpha: 0.08),
+          errorBuilder: (context, error, stack) {
+            if (kDebugMode) {
+              debugPrint(
+                '[property-header] falha ao carregar '
+                '${widget.property.imageUrls[i]} — $error',
+              );
+            }
+            return ColoredBox(
+              color: BrutalistPalette.imagePlaceholderBg(isDark),
+              child: Center(
+                child: Icon(
+                  IconData(widget.property.thumbnailIconCode,
+                      fontFamily: 'MaterialIcons'),
+                  size: 64,
+                  color: (isDark ? Colors.white : BrutalistPalette.warmBrown)
+                      .withValues(alpha: 0.08),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

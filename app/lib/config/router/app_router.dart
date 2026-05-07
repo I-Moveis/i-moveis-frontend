@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/pages/admin_contracts_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_listings_page.dart';
+import '../../features/admin/presentation/pages/admin_new_users_page.dart';
 import '../../features/admin/presentation/pages/admin_reports_page.dart';
 import '../../features/admin/presentation/pages/admin_users_page.dart';
 import '../../features/admin_users/presentation/pages/admin_user_form_page.dart';
@@ -392,6 +393,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'reports',
             builder: (_, _) => const AdminReportsPage(),
+          ),
+          GoRoute(
+            path: 'new-users',
+            builder: (_, _) => const AdminNewUsersPage(),
           ),
         ],
       ),

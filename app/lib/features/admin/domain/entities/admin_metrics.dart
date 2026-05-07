@@ -22,7 +22,7 @@ class AdminMetrics {
   /// Ex: `{TENANT: 12, LANDLORD: 3, ADMIN: 1}`.
   final Map<String, int> usersByRole;
 
-  /// Ex: `{AVAILABLE: 8, RENTED: 2, IN_NEGOTIATION: 1}`.
+  /// Ex: `{AVAILABLE: 8, RENTED: 2, NEGOTIATING: 1}`.
   final Map<String, int> propertiesByStatus;
 
   /// Ex: `{PENDING: 4, APPROVED: 7, REJECTED: 0}`.

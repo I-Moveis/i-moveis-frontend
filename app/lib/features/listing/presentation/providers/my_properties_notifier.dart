@@ -8,7 +8,7 @@ import '../../../search/presentation/providers/search_filters_provider.dart';
 
 /// Lista os imóveis do usuário corrente via
 /// `GET /properties/search?landlordId=<uuid>` — o backend devolve todos os
-/// status (AVAILABLE/IN_NEGOTIATION/RENTED) quando o filtro é aplicado.
+/// status (AVAILABLE/NEGOTIATING/RENTED) quando o filtro é aplicado.
 class MyPropertiesNotifier extends AsyncNotifier<List<Property>> {
   @override
   Future<List<Property>> build() async {

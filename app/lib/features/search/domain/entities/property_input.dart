@@ -65,7 +65,7 @@ class PropertyInput {
   final bool? nearSubway;
   final bool? isFeatured;
 
-  /// API enum: `AVAILABLE`, `IN_NEGOTIATION`, `RENTED`.
+  /// API enum: `AVAILABLE`, `NEGOTIATING`, `RENTED`.
   final String? status;
   final double? condoFee;
   final double? propertyTax;

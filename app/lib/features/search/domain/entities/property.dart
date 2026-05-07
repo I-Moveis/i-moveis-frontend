@@ -81,12 +81,12 @@ class Property {
   /// filtram internamente para APPROVED.
   final String? moderationStatus;
 
-  /// Status operacional: `AVAILABLE` | `IN_NEGOTIATION` | `RENTED`. Null
+  /// Status operacional: `AVAILABLE` | `NEGOTIATING` | `RENTED`. Null
   /// quando o endpoint não devolve (usar default `AVAILABLE` na UI).
   final String? status;
 
   /// Inquilino atualmente associado ao imóvel (só faz sentido quando
-  /// [status] == `RENTED` ou `IN_NEGOTIATION`). Null caso contrário.
+  /// [status] == `RENTED` ou `NEGOTIATING`). Null caso contrário.
   /// Hoje o backend não devolve esse shape ainda — ver docs/BACKEND_*.md.
   final PropertyTenant? currentTenant;
 

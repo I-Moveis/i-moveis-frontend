@@ -13,4 +13,10 @@ abstract class AdminRepository {
     int page = 1,
     int limit = 20,
   });
+
+  /// `POST /api/admin/broadcast` — envia notificação global para todos os usuários.
+  Future<void> sendBroadcast({
+    required String title,
+    required String body,
+  });
 }

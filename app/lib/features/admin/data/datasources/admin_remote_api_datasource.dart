@@ -50,6 +50,17 @@ class AdminRemoteApiDataSource implements AdminRemoteDataSource {
       totalPages: _int(meta['totalPages']),
     );
   }
+
+  @override
+  Future<void> sendBroadcast({
+    required String title,
+    required String body,
+  }) async {
+    await _dio.post<void>(
+      '/admin/broadcast',
+      data: {'title': title, 'body': body},
+    );
+  }
 }
 
 int _int(Object? v, {int fallback = 0}) =>

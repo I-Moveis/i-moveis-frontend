@@ -6,6 +6,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../admin_users/presentation/providers/admin_users_notifier.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../data/providers/admin_data_providers.dart';
 import '../providers/admin_metrics_notifier.dart';
 import '../providers/admin_shared_providers.dart';
 
@@ -225,6 +226,11 @@ class AdminDashboardPage extends ConsumerWidget {
                         icon: Icons.flag_outlined,
                         label: 'Central de denúncias',
                         onTap: () => context.push('/admin/reports'),
+                      ),
+                      AppMenuGroupItem(
+                        icon: Icons.campaign_outlined,
+                        label: 'Notificação Global',
+                        onTap: () => _showBroadcastDialog(context, ref),
                       ),
                     ]),
                     const SizedBox(height: AppSpacing.massive),
@@ -462,4 +468,160 @@ class _Alert {
   final String message;
   final Color color;
   final VoidCallback onTap;
+}
+
+void _showBroadcastDialog(BuildContext context, WidgetRef ref) {
+  showDialog<void>(
+    context: context,
+    builder: (_) => _BroadcastDialog(ref: ref),
+  );
+}
+
+class _BroadcastDialog extends StatefulWidget {
+  const _BroadcastDialog({required this.ref});
+  final WidgetRef ref;
+
+  @override
+  State<_BroadcastDialog> createState() => _BroadcastDialogState();
+}
+
+class _BroadcastDialogState extends State<_BroadcastDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _bodyController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _isLoading = true);
+    try {
+      await widget.ref.read(adminRepositoryProvider).sendBroadcast(
+            title: _titleController.text.trim(),
+            body: _bodyController.text.trim(),
+          );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Notificação enviada com sucesso!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } on Failure catch (f) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(f.message), backgroundColor: AppColors.error),
+      );
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao enviar notificação. Tente novamente.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.borderLg),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenHorizontal,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Icon(Icons.campaign_outlined, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Enviar Notificação Global',
+                    style: AppTypography.titleMedium,
+                  ),
+                ),
+              ]),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Todos os usuários receberão esta mensagem.',
+                style: AppTypography.bodySmall
+                    .copyWith(color: AppColors.lightTextTertiary),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              TextFormField(
+                controller: _titleController,
+                maxLength: 100,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Título',
+                  hintText: 'Ex: Manutenção programada',
+                  counterText: '',
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Título obrigatório' : null,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                controller: _bodyController,
+                maxLength: 500,
+                maxLines: 4,
+                minLines: 3,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Mensagem',
+                  hintText: 'Descreva o conteúdo da notificação...',
+                  alignLabelWithHint: true,
+                  counterText: '',
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Mensagem obrigatória' : null,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        _isLoading ? null : () => Navigator.of(context).pop(),
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  FilledButton(
+                    onPressed: _isLoading ? null : _submit,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Enviar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -13,7 +13,7 @@ final favoriteRemoteDataSourceProvider =
   if (kUseMockData) {
     return FavoriteRemoteMockDataSource();
   }
-  return FavoriteRemoteApiDataSource(ref.watch(dioProvider));
+  return FavoriteApiDataSource(ref.watch(dioProvider));
 });
 
 final favoriteRepositoryProvider = Provider<FavoriteRepository>((ref) {

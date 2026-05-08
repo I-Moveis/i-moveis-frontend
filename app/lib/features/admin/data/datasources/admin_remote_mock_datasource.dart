@@ -26,4 +26,12 @@ class AdminRemoteMockDataSource implements AdminRemoteDataSource {
       totalPages: 0,
     );
   }
+
+  @override
+  Future<void> sendBroadcast({
+    required String title,
+    required String body,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+  }
 }

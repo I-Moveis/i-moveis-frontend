@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../data/providers/notifications_data_providers.dart';
 import '../../domain/entities/app_notification.dart';
 import '../providers/notifications_notifier.dart';
 
@@ -22,7 +23,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     // Efeito: ao abrir a tela, zera o badge. Se o usuário quiser manter
     // algo "unread", é só não abrir. Para fluxos mais sofisticados (marcar
     // individualmente), expor um menu de ações.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // Sincroniza com o backend antes de marcar como lido
+      await ref.read(syncNotificationsProvider.future).catchError((_) => 0);
       if (mounted) {
         ref.read(notificationsNotifierProvider.notifier).markAllRead();
       }

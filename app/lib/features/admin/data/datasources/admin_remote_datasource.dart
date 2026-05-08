@@ -10,4 +10,9 @@ abstract class AdminRemoteDataSource {
     int page = 1,
     int limit = 20,
   });
+
+  Future<void> sendBroadcast({
+    required String title,
+    required String body,
+  });
 }

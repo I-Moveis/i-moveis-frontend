@@ -53,4 +53,11 @@ class AdminRepositoryImpl implements AdminRepository {
   }) =>
       _guard(() =>
           _remote.listForModeration(status: status, page: page, limit: limit));
+
+  @override
+  Future<void> sendBroadcast({
+    required String title,
+    required String body,
+  }) =>
+      _guard(() => _remote.sendBroadcast(title: title, body: body));
 }

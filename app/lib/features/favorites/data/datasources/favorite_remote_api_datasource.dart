@@ -1,44 +1,52 @@
 import 'package:dio/dio.dart';
 
-import '../../domain/entities/favorite.dart';
-import '../models/favorite_api_model.dart';
 import 'favorite_datasources.dart';
 
-/// Implementação real contra `/api/favorites*`. Dio é esperado já
-/// configurado com baseUrl + AuthInterceptor (Bearer JWT).
-class FavoriteRemoteApiDataSource implements FavoriteRemoteDataSource {
-  FavoriteRemoteApiDataSource(this._dio);
+/// Talks to the I-Moveis favorites API endpoints.
+///
+/// * `POST   /favorites`          — add a favorite
+/// * `GET    /favorites`          — list favorites (with property details)
+/// * `DELETE /favorites/:id`      — remove a favorite
+/// * `GET    /favorites/:id/check`— check if favorited
+class FavoriteApiDataSource implements FavoriteRemoteDataSource {
+  FavoriteApiDataSource(this._dio);
 
   final Dio _dio;
 
   @override
-  Future<List<Favorite>> list() async {
-    final res = await _dio.get<List<dynamic>>('/favorites');
-    final data = res.data ?? const [];
-    return data
-        .whereType<Map<dynamic, dynamic>>()
-        .map((e) => favoriteFromApiJson(Map<String, dynamic>.from(e)))
-        .toList();
-  }
-
-  @override
-  Future<Favorite> add(String propertyId) async {
-    final res = await _dio.post<Map<String, dynamic>>(
+  Future<void> toggleFavorite(String propertyId) async {
+    await _dio.post<void>(
       '/favorites',
       data: {'propertyId': propertyId},
     );
-    return favoriteFromApiJson(res.data ?? const {});
   }
 
   @override
-  Future<void> remove(String propertyId) async {
+  Future<void> removeFavorite(String propertyId) async {
     await _dio.delete<void>('/favorites/$propertyId');
   }
 
   @override
-  Future<bool> check(String propertyId) async {
-    final res =
-        await _dio.get<Map<String, dynamic>>('/favorites/$propertyId/check');
-    return (res.data?['favorited'] as bool?) ?? false;
+  Future<bool> isPropertyFavorited(String propertyId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/favorites/$propertyId/check',
+    );
+    return response.data?['favorited'] == true;
+  }
+
+  @override
+  Future<List<String>> listFavoriteIds() async {
+    final response = await _dio.get<List<dynamic>>('/favorites');
+    final data = response.data ?? [];
+    return data
+        .map((f) => (f as Map<String, dynamic>)['propertyId'] as String)
+        .toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> listFavoritesWithProperties() async {
+    final response = await _dio.get<List<dynamic>>('/favorites');
+    final data = response.data ?? [];
+    return data.cast<Map<String, dynamic>>();
   }
 }

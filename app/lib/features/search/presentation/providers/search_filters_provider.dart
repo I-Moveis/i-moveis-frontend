@@ -328,8 +328,29 @@ class SearchFiltersNotifier extends Notifier<SearchFilters> {
   }
 
   void updateLocation(String location) {
+    // Se usuario digitar "Cidade, UF", separamos location e state.
+    if (location.contains(', ')) {
+      final parts = location.split(', ');
+      if (parts.length == 2 && parts.last.length == 2) {
+        final possibleState = parts.last.toUpperCase();
+        if (_isBrState(possibleState)) {
+          state = state.copyWith(location: parts.first, state: possibleState);
+          _persist();
+          return;
+        }
+      }
+    }
     state = state.copyWith(location: location);
     _persist();
+  }
+
+  static bool _isBrState(String s) {
+    const states = {
+      'AC','AL','AP','AM','BA','CE','DF','ES','GO',
+      'MA','MT','MS','MG','PA','PB','PR','PE','PI',
+      'RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+    };
+    return states.contains(s);
   }
 
   void toggleBedroom(int count) {

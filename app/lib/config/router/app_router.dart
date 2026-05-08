@@ -46,9 +46,12 @@ import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/search/presentation/providers/search_filters_provider.dart';
 import '../../features/shell/presentation/pages/main_shell_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../design_system/design_system.dart';
+import '../../features/support/presentation/pages/support_ticket_chat_page.dart';
 import '../../features/support/presentation/pages/support_ticket_detail_page.dart';
 import '../../features/support/presentation/pages/support_ticket_page.dart';
 import '../../features/support/presentation/pages/support_tickets_list_page.dart';
+import '../../features/support/presentation/providers/support_tickets_notifier.dart';
 import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
@@ -342,6 +345,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           code: state.pathParameters['code'] ?? '',
         ),
       ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/support/:code/chat',
+        builder: (_, state) => _SupportChatRoute(
+          code: state.pathParameters['code'] ?? '',
+        ),
+      ),
 
       // ── Chat detail (full screen, outside shell) ──────────────
       GoRoute(
@@ -455,6 +465,41 @@ class _HomeBranch extends ConsumerWidget {
       debugPrint('[router] /home → isOwner=$isOwner');
     }
     return isOwner ? const LandlordDashboardPage() : const HomePage();
+  }
+}
+
+/// Converte o code do ticket (SUP-...) em ticketId (UUID) via provider
+/// e renderiza a SupportTicketChatPage.
+class _SupportChatRoute extends ConsumerWidget {
+  const _SupportChatRoute({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ticketsAsync = ref.watch(supportTicketsProvider);
+    return ticketsAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (_, __) => Scaffold(
+        body: Center(
+          child: Text('Erro ao carregar ticket',
+              style: TextStyle(color: BrutalistPalette.muted(false))),
+        ),
+      ),
+      data: (tickets) {
+        final ticket = tickets.where((t) => t.code == code).firstOrNull;
+        if (ticket == null) {
+          return Scaffold(
+            body: Center(
+              child: Text('Ticket não encontrado',
+                  style: TextStyle(color: BrutalistPalette.muted(false))),
+            ),
+          );
+        }
+        return SupportTicketChatPage(ticketId: ticket.id);
+      },
+    );
   }
 }
 

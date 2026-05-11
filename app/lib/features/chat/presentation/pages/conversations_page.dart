@@ -5,14 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
-import '../../data/models/chat_models.dart';
-import '../providers/chat_providers.dart';
+import '../../domain/entities/conversation_summary.dart';
+import '../providers/conversations_notifier.dart';
 
-/// Lista de conversas do usuário — mesma tela pra tenant e landlord, com
-/// copy de subtítulo trocando pelo papel. Dados vêm do
-/// `conversationsProvider`, que hoje cai em lista vazia enquanto o
-/// backend não expõe `GET /api/conversations`
-/// (ver `BACKEND_HANDOFF.md §4`).
 class ConversationsPage extends ConsumerWidget {
   const ConversationsPage({super.key});
 
@@ -23,7 +18,7 @@ class ConversationsPage extends ConsumerWidget {
           orElse: () => false,
         );
 
-    final async = ref.watch(sessionsProvider);
+    final async = ref.watch(conversationsProvider);
 
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
@@ -48,8 +43,8 @@ class ConversationsPage extends ConsumerWidget {
                 child: BrutalistPageHeader(
                   title: 'Conversas',
                   subtitle: isOwner
-                      ? 'Suas mensagens com inquilinos e interessados'
-                      : 'Suas mensagens com proprietários e suporte',
+                      ? 'Mensagens com seus inquilinos'
+                      : 'Mensagens com proprietários',
                 ),
               ),
               SliverToBoxAdapter(
@@ -68,20 +63,16 @@ class ConversationsPage extends ConsumerWidget {
                                 CircularProgressIndicator(strokeWidth: 2),
                           ),
                         ),
-                        // Erro também cai no estado vazio — o provider
-                        // já tenta recuperar sozinho. Não tem sentido
-                        // mostrar "erro ao carregar" enquanto o backend
-                        // nem expõe o endpoint.
                         error: (_, _) => _buildEmptyState(
                             isDark, titleColor, mutedColor, accentColor),
-                        data: (sessions) => sessions.isEmpty
+                        data: (conversations) => conversations.isEmpty
                             ? _buildEmptyState(
                                 isDark, titleColor, mutedColor, accentColor)
                             : Column(
                                 children: [
-                                  for (final s in sessions) ...[
+                                  for (final c in conversations) ...[
                                     _ConversationCard(
-                                      session: s,
+                                      conversation: c,
                                       isDark: isDark,
                                       titleColor: titleColor,
                                       mutedColor: mutedColor,
@@ -124,8 +115,8 @@ class ConversationsPage extends ConsumerWidget {
                 )),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Suas mensagens com inquilinos, proprietários e suporte\n'
-              'aparecerão aqui.',
+              'Suas conversas com inquilinos aparecerão aqui.\n'
+              'Quando um inquilino entrar em contato, você verá a conversa nesta lista.',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(color: mutedColor),
             ),
@@ -138,14 +129,14 @@ class ConversationsPage extends ConsumerWidget {
 
 class _ConversationCard extends StatelessWidget {
   const _ConversationCard({
-    required this.session,
+    required this.conversation,
     required this.isDark,
     required this.titleColor,
     required this.mutedColor,
     required this.accentColor,
   });
 
-  final ChatSessionModel session;
+  final ConversationSummary conversation;
   final bool isDark;
   final Color titleColor;
   final Color mutedColor;
@@ -155,10 +146,9 @@ class _ConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final lastAt = session.lastMessageAt ?? session.startedAt;
 
     return GestureDetector(
-      onTap: () => context.push('/chat/${session.id}'),
+      onTap: () => context.push('/conversation/${conversation.id}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -177,7 +167,7 @@ class _ConversationCard extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  session.initials,
+                  conversation.initials,
                   style: AppTypography.titleSmallBold
                       .copyWith(color: accentColor),
                 ),
@@ -188,15 +178,31 @@ class _ConversationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    session.tenantName ?? 'Inquilino',
-                    style: AppTypography.titleLargeBold
-                        .copyWith(color: titleColor),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conversation.counterpartName,
+                          style: AppTypography.titleLargeBold
+                              .copyWith(color: titleColor),
+                        ),
+                      ),
+                      if (conversation.unread)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.warning,
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    session.lastMessage ?? '',
-                    style: AppTypography.bodySmall.copyWith(color: mutedColor),
+                    conversation.lastMessage,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: mutedColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -205,7 +211,7 @@ class _ConversationCard extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.md),
             Text(
-              _formatTime(lastAt),
+              _formatTime(conversation.lastMessageAt),
               style: AppTypography.bodySmall.copyWith(color: mutedColor),
             ),
           ],

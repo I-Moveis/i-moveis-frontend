@@ -18,7 +18,10 @@ const Duration kApiReceiveTimeout = Duration(seconds: 30);
 /// prefixo `/api`. Essa função:
 ///
 /// - devolve a string intacta quando já começa com `http://` ou `https://`
-///   (absoluta — ex.: CDN ou signed URL);
+///   (absoluta — ex.: CDN, signed URL ou backend local em
+///   `http://localhost`); o upgrade automático de HTTP→HTTPS NÃO é mais
+///   aplicado, pois quebrava localhost sem certificado na branch
+///   `hospedagem_local`;
 /// - prepend a ORIGEM do `kApiBaseUrl` (sem o `/api`) quando começa com `/`.
 ///
 /// `Image.network` exige URL absoluta; URL relativa falha sem mensagem
@@ -28,13 +31,7 @@ String absoluteImageUrl(String raw) {
   final trimmed = raw.trim();
   if (trimmed.isEmpty) return trimmed;
 
-  // Força HTTPS se a URL já for absoluta mas usar HTTP. Isso corrige casos
-  // onde o backend devolve URLs absolutas via protocolo inseguro.
-  if (trimmed.startsWith('http://')) {
-    return trimmed.replaceFirst('http://', 'https://');
-  }
-
-  if (trimmed.startsWith('https://')) {
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return trimmed;
   }
 

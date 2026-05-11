@@ -4,7 +4,7 @@ Started: Mon May 11 08:28:57 PM -03 2026
 ## Codebase Patterns
 - Project is a Flutter app; primary working dir is `app/`. Quality gate is `flutter analyze` + `flutter pub get`. Build target for this branch: Android only.
 - API base URL is centralized in `lib/core/constants.dart` via `kApiBaseUrl` (compile-time `String.fromEnvironment('API_BASE_URL')`). Override at build time with `--dart-define=API_BASE_URL=...`.
-- `absoluteImageUrl(...)` in `lib/core/constants.dart` historically force-upgraded `http://` to `https://`; on `hospedagem_local` we strip that to support localhost serving over plaintext.
+- `absoluteImageUrl(...)` in `lib/core/constants.dart` historically force-upgraded `http://` to `https://`; on `hospedagem_local` esse upgrade foi removido (US-003): URLs http:// e https:// retornam intactas, paths relativos continuam sendo prefixados com a origem de `kApiBaseUrl`.
 - Android cleartext traffic is already enabled in `android/app/src/main/AndroidManifest.xml` (`android:usesCleartextTraffic="true"`).
 - Branch policy: `development` is sacrosanct on this work — never moved or rewritten. All hospedagem_local work branches off it.
 
@@ -32,4 +32,16 @@ Started: Mon May 11 08:28:57 PM -03 2026
   - O criterio `grep "lab.alphaedtech" lib/` retornar 0 e ESTRITO — nao basta trocar o `return`, qualquer mencao ao dominio (incluindo em docstrings/exemplos) precisa sumir do `lib/`. Mantive a referencia generica ("apontar de volta para o backend remoto") sem citar URL.
   - `flutter analyze` na linha base ja tem 54 issues `info`-level em outros arquivos. Para "sem warnings novos" basta verificar que nenhum do baseline pertence ao arquivo editado e nenhum issue novo foi introduzido. Fazer grep por nome do arquivo na saida e o jeito mais rapido.
   - A constante e referenciada via `kApiBaseUrl` (getter) pois o valor depende de `String.fromEnvironment` que precisa de avaliacao em call-site. Nao tente convertir em `const` top-level.
+---
+## 2026-05-11 - US-003
+- Removido o bloco que forcava upgrade `http://` -> `https://` em `absoluteImageUrl` (`lib/core/constants.dart`, ex-linhas 31-35). Agora URLs absolutas com qualquer esquema (http ou https) sao devolvidas intactas, e o branch foi unificado em um unico `if (startsWith('http://') || startsWith('https://'))`.
+- Paths relativos (ex.: `/uploads/<id>/<file>.jpg`) continuam sendo prefixados com a origem de `kApiBaseUrl` (logica de Uri.tryParse + concat preservada).
+- Docstring de `absoluteImageUrl` atualizada explicitando que o upgrade HTTP->HTTPS NAO e mais aplicado e citando o motivo (localhost sem TLS quebrava em hospedagem_local).
+- `flutter analyze` => 54 issues (mesmo baseline); nenhum em `lib/core/constants.dart`. Zero novos warnings.
+- Diff escopo: apenas `lib/core/constants.dart` (5 inserts / 8 deletes). PRD e progress.txt sao deltas de tracking.
+- Files changed: `lib/core/constants.dart`, `scrips/ralph/prd.json` (US-003 passes -> true), `scrips/ralph/progress.txt` (este log + atualizacao do bullet de Codebase Patterns).
+- **Learnings for future iterations:**
+  - Quando duas branches de `startsWith` retornam o mesmo valor (intacta), une elas com `||` em um unico `if`. Mais limpo, menos linhas, sem mudar o comportamento esperado pelos criterios de aceitacao.
+  - O comentario em linhas 17-23 ja descrevia o comportamento "intacta para http:// ou https://" (apesar do codigo nao bater). Apos remover o force-upgrade o comentario ficou alinhado com o codigo, mas EXPANDI a docstring pra registrar explicitamente que o upgrade foi removido e por que — futuros leitores vao querer saber a razao.
+  - Para auditar diff escopo da story: `git diff --stat lib/` confirma que so `constants.dart` foi tocado dentro de `lib/`. Nao confiar so em "eu so editei um arquivo" — checar com git.
 ---

@@ -46,8 +46,8 @@
         "`flutter analyze` passa sem warnings novos"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Bloco que reescrevia http:// -> https:// removido; absoluteImageUrl agora devolve URLs http:// e https:// intactas. Branch unificado em um unico if (startsWith http:// || https://). Paths relativos continuam sendo prefixados com a origem de kApiBaseUrl. Docstring atualizada explicitando que o upgrade HTTP->HTTPS nao e mais aplicado e o motivo (localhost sem TLS). Diff toca apenas lib/core/constants.dart (5 inserts / 8 deletes). flutter analyze sem novos warnings (54 issues pre-existentes; nenhum em constants.dart)."
     },
     {
       "id": "US-004",

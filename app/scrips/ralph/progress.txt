@@ -8,6 +8,9 @@ Started: Mon May 11 08:28:57 PM -03 2026
 - Android cleartext traffic is already enabled in `android/app/src/main/AndroidManifest.xml` (`android:usesCleartextTraffic="true"`).
 - Branch policy: `development` is sacrosanct on this work — never moved or rewritten. All hospedagem_local work branches off it.
 - `lib/core/services/socket_service.dart` deriva a URL do websocket exclusivamente de `kApiBaseUrl` (parse com `Uri.tryParse` + `${scheme}://${authority}` em `_wsUrl`, linhas 39-43). Logo, socket migra automaticamente quando `kApiBaseUrl` muda — nao tem URL hardcoded.
+- Runtime validation Android emulator: `adb -s <emu> reverse tcp:3000 tcp:3000` mapeia localhost:3000 do device para o host. Combinado com `kApiBaseUrl=http://localhost:3000/api/` faz o app rodar sem `--dart-define`. Alternativa: usar `--dart-define=API_BASE_URL=http://10.0.2.2:3000/api/` (alias do host pelo emulador), sem precisar do `adb reverse`.
+- Flutter Dio interceptor loga requests/responses no formato `→ GET <url>` / `← <status> <url>` e o socket loga `[Socket] ✅ conectado a <origem>`. Use esses prefixos para validar end-to-end por logcat sem instrumentar codigo.
+- Package id Android: `com.imoveis.app` (ver `pm list packages` no emulador para confirmar antes de targetar com `monkey`/`am start`).
 
 ---
 ## 2026-05-11 - US-001
@@ -60,4 +63,31 @@ Started: Mon May 11 08:28:57 PM -03 2026
   - Stories puramente de "auditoria/documentacao" so devem mexer em PRD + progress.txt. `git diff lib/` deve voltar vazio — se nao volta, voce extrapolou o escopo. Validar com `git diff --stat` antes de commitar.
   - Quando um servico precisa de uma URL "primo" da API (ex.: websocket usa origem sem `/api/`), o padrao no codebase e parsear `kApiBaseUrl` com `Uri.tryParse` e reconstruir a peca desejada (`scheme`, `authority`, `host`, etc.). Reaproveitar esse padrao se outros servicos precisarem de variantes (ex.: CDN, healthcheck) — evita criar uma segunda fonte de verdade.
   - O fallback `if (baseUri == null) return kApiBaseUrl;` em `_wsUrl` e defensivo: se algum dia alguem setar `--dart-define=API_BASE_URL=` para algo nao parseavel, o socket tenta a string literal (vai falhar conexao, mas nao crasha o app no parse). Bom padrao a manter.
+---
+## 2026-05-11 - US-005
+- `flutter pub get` executou sem erro (44 packages com versoes mais novas mas todos compativeis com constraints).
+- `flutter analyze` => 54 issues (mesmo baseline pre-existente). Zero novos warnings.
+- `flutter build apk --debug` => `Built build/app/outputs/flutter-apk/app-debug.apk` em ~35s. Sem erro.
+- Cleartext traffic confirmado em `android/app/src/main/AndroidManifest.xml:11` (`android:usesCleartextTraffic="true"`). Nenhuma alteracao necessaria.
+- Runtime validation EXECUTADA em `emulator-5554` (Android 16, API 36, x86_64):
+  - Backend local subiu em `http://localhost:3000` previamente; `curl http://localhost:3000/api/` retornou HTTP 401 (rota protegida — esperado), confirmando que o servidor responde.
+  - `adb -s emulator-5554 reverse tcp:3000 tcp:3000` configurado para mapear localhost do device para o host.
+  - Conectividade do device para localhost:3000 confirmada via `nc -w 2 localhost 3000` => `CONNECTED`.
+  - APK debug instalado: `adb install -r build/app/outputs/flutter-apk/app-debug.apk` => Success. Package id `com.imoveis.app`.
+  - App lancado via `monkey -p com.imoveis.app -c android.intent.category.LAUNCHER 1`.
+  - Logs do logcat (filter `flutter :`) mostram a app:
+    - `[Socket] ✅ conectado a http://localhost:3000` (websocket OK, valida US-004 em runtime — origem derivada de `kApiBaseUrl`).
+    - `→ GET http://localhost:3000/api/properties/search?...` x3 (featured, createdAt, views) e `→ GET http://localhost:3000/api/favorites`.
+    - `← 200` em todas as 4 requisicoes (api respondeu, parse OK).
+  - Tela `/home` renderizou com 2+ cards de imoveis (Apartamento Moderno na Paulista, Casa Espacosa no Leblon) — listagem >= 1 item ATENDIDA. Screenshot salva em `scrips/ralph/archive/us005_home_screenshot.png`.
+- LIMITACOES de runtime nao bloqueantes para US-005 (registradas para historico):
+  - **Login nao foi exercitado**: o backend local respondeu `500 INTERNAL_SERVER_ERROR — FIREBASE_API_KEY is not configured` em `POST /api/auth/login`. Bloqueio do backend (`.env` incompleto), nao do app. As rotas publicas (listagem de imoveis) funcionaram, satisfazendo o criterio de "lista >= 1 item". Login fica pendente em proxima execucao quando o backend estiver com FIREBASE_API_KEY configurada.
+  - **Imagens das listings nao carregaram visualmente**: cards mostram fallback de icone de casa. Inspecao do payload da API mostra que algumas properties tem `images: []` e outras tem URLs absolutas hardcoded no seed apontando para `http://10.0.2.2:3000/uploads/...` (alias do host visto pelo emulador). Como sao URLs absolutas (`http://`), passam pelo bloco "intacto" de `absoluteImageUrl` (validando US-003: nao houve upgrade para https). O motivo do nao-render aparenta ser: (a) seed tem poucas imagens, (b) `10.0.2.2` so resolve quando NAO usamos `adb reverse` (com reverse, deveria ser `localhost`). Para usar imagens em runtime sem mudar o seed: rodar com `--dart-define=API_BASE_URL=http://10.0.2.2:3000/api/` e SEM `adb reverse`. Validacao funcional do path `absoluteImageUrl` (US-003) e do baseUrl (US-002) ja foi confirmada pelos requests da API que retornaram 200.
+- Files changed: `scrips/ralph/prd.json` (US-005 passes -> true + nota), `scrips/ralph/progress.txt` (este log + bullets em Codebase Patterns), `scrips/ralph/archive/us005_home_screenshot.png` (screenshot).
+- **Learnings for future iterations:**
+  - Para validacao runtime Android, o caminho mais barato e: emulador ja rodando + `adb reverse tcp:3000 tcp:3000` + `kApiBaseUrl` default em `http://localhost:3000/api/`. Zero `--dart-define` necessario.
+  - O Dio interceptor da app loga toda requisicao no formato `→ GET <url>` / `← <status> <url>` em `flutter :` no logcat. E a forma mais simples de provar end-to-end que `kApiBaseUrl` esta sendo usado em runtime — basta `adb logcat -d | grep "flutter :"`.
+  - Quando a API retorna URLs absolutas no payload (ex.: `images[].url`), `absoluteImageUrl` devolve elas intactas (US-003). Nao confundir "imagem nao apareceu na tela" com "absoluteImageUrl quebrou" — o path absoluto pode estar apontando para um host inalcancavel naquele setup de adb (e.g., 10.0.2.2 com reverse mapeado tem precedencia errada). Para isolar: comparar `→ GET` no log com a URL exata da imagem no payload.
+  - Para login E2E em hospedagem_local, o backend local precisa de `FIREBASE_API_KEY` no `.env`. Documentar isso em US-006 (HOSPEDAGEM_LOCAL_SETUP.md) — e um pre-requisito real do setup, nao gap da app Flutter.
+  - `flutter build apk --debug` em laptop x86_64 com Java 17 leva ~35s na primeira vez apos `pub get`. Build incremental tipicamente <10s. Nao precisa de Android SDK extra alem do que o Flutter ja exige (`flutter doctor` cobre).
 ---

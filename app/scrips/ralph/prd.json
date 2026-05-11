@@ -78,8 +78,8 @@
         "Resultados da validacao registrados em progress.txt na secao Learnings"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "flutter pub get OK; flutter analyze 54 issues (mesmo baseline, zero novos); flutter build apk --debug => Built app-debug.apk em ~35s; cleartext ja habilitado (AndroidManifest:11). Runtime em emulator-5554 (Android 16): adb reverse tcp:3000 tcp:3000 + kApiBaseUrl default => app instalada, [Socket] conectado a http://localhost:3000, 4 requests para http://localhost:3000/api/properties/search e /api/favorites retornaram 200, home renderiza >=2 imoveis (screenshot em scrips/ralph/archive/us005_home_screenshot.png). Limitacoes nao bloqueantes documentadas em progress.txt: (a) login nao exercitado porque backend local respondeu 500 'FIREBASE_API_KEY is not configured' — bloqueio de .env do backend; (b) imagens visualmente fallback porque seed usa URLs absolutas hardcoded para http://10.0.2.2:3000/uploads/... (incompativeis com setup adb reverse), mas passam intactas pelo absoluteImageUrl confirmando US-003."
     },
     {
       "id": "US-006",

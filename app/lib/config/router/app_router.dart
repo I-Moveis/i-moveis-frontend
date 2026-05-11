@@ -18,6 +18,7 @@ import '../../features/auth/presentation/providers/auth_notifier.dart';
 import '../../features/auth/presentation/providers/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_status_provider.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/chat/presentation/pages/conversation_chat_page.dart';
 import '../../features/chat/presentation/pages/conversations_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -358,6 +359,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/chat/:conversationId',
         builder: (_, state) => ChatPage(
+          conversationId: state.pathParameters['conversationId']!,
+        ),
+      ),
+
+      // ── Conversation chat (in-app, full screen) ───────────────
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/conversation/:conversationId',
+        builder: (_, state) => ConversationChatPage(
           conversationId: state.pathParameters['conversationId']!,
         ),
       ),

@@ -1,0 +1,23 @@
+# Ralph Progress Log
+Started: Mon May 11 08:28:57 PM -03 2026
+
+## Codebase Patterns
+- Project is a Flutter app; primary working dir is `app/`. Quality gate is `flutter analyze` + `flutter pub get`. Build target for this branch: Android only.
+- API base URL is centralized in `lib/core/constants.dart` via `kApiBaseUrl` (compile-time `String.fromEnvironment('API_BASE_URL')`). Override at build time with `--dart-define=API_BASE_URL=...`.
+- `absoluteImageUrl(...)` in `lib/core/constants.dart` historically force-upgraded `http://` to `https://`; on `hospedagem_local` we strip that to support localhost serving over plaintext.
+- Android cleartext traffic is already enabled in `android/app/src/main/AndroidManifest.xml` (`android:usesCleartextTraffic="true"`).
+- Branch policy: `development` is sacrosanct on this work — never moved or rewritten. All hospedagem_local work branches off it.
+
+---
+## 2026-05-11 - US-001
+- Verified branch `hospedagem_local` exists and is checked out (was already created from `development`).
+- Confirmed `development` and `hospedagem_local` both point at `a0ae284` (Merge PR #56). development bit-for-bit identical to its tip before this story; no commits added on development.
+- `git branch --show-current` => `hospedagem_local`.
+- `git status` clean on development (only untracked files in working tree, scoped to scrips/ tasks/ test/provider_init_test.dart — none touch development).
+- Files changed: `scrips/ralph/progress.txt` (this log), `scrips/ralph/prd.json` (US-001 passes -> true).
+- **Learnings for future iterations:**
+  - Branch was already created before Ralph started; the work for US-001 was verification, not creation. When a story is purely "ensure X state", the deliverable is documentation in progress.txt + PRD flip.
+  - `git rev-parse <ref>` is the cheapest way to assert two refs are at the same SHA without diff noise.
+  - `git log --all --source --decorate` is useful to confirm a branch tracks the expected upstream.
+  - Untracked files (scrips/, tasks/, test/provider_init_test.dart) are present at session start; these belong to ralph scaffolding and the spec doc — they are not contamination from development.
+---

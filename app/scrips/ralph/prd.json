@@ -1,0 +1,100 @@
+{
+  "project": "i-Moveis Frontend",
+  "branchName": "hospedagem_local",
+  "description": "Branch derivada de development que aponta o cliente Flutter para uma API local em http://localhost:3000/api/ ao inves do remoto lab.alphaedtech/server01. development NAO pode ser alterada. Validacao exclusivamente Android.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Criar branch hospedagem_local a partir de development",
+      "description": "Como mantenedor, preciso de uma branch isolada hospedagem_local derivada do tip atual de development, sem mover ou alterar development.",
+      "acceptanceCriteria": [
+        "Branch hospedagem_local criada via `git switch -c hospedagem_local development`",
+        "`git rev-parse development` retorna o mesmo SHA antes e depois (development bit-a-bit identico)",
+        "`git status` em development permanece limpo durante todo o trabalho",
+        "Branch atual confirmada via `git branch --show-current` retorna `hospedagem_local`"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Verificado: development e hospedagem_local ambos em a0ae284; current branch = hospedagem_local; development nao foi alterado."
+    },
+    {
+      "id": "US-002",
+      "title": "Apontar kApiBaseUrl para http://localhost:3000/api/",
+      "description": "Como desenvolvedor rodando o backend localmente, quero que o fallback default de kApiBaseUrl seja http://localhost:3000/api/ para que builds sem --dart-define apontem automaticamente para o backend local.",
+      "acceptanceCriteria": [
+        "Em `lib/core/constants.dart`, o getter `kApiBaseUrl` retorna `'http://localhost:3000/api/'` quando `String.fromEnvironment('API_BASE_URL')` esta vazio",
+        "O override via `--dart-define=API_BASE_URL=...` continua sendo respeitado quando setado",
+        "Docstring acima do getter atualizada para refletir a nova URL default",
+        "`grep -rn \"lab.alphaedtech\" lib/` retorna 0 ocorrencias",
+        "Diff desta story toca apenas `lib/core/constants.dart`",
+        "`flutter analyze` passa sem warnings novos"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Remover upgrade forcado http para https em absoluteImageUrl",
+      "description": "Como usuario, quando o backend local devolve URL com http://, quero que a imagem carregue ao inves de ser reescrita para https:// (que falha em localhost sem certificado).",
+      "acceptanceCriteria": [
+        "O bloco `if (trimmed.startsWith('http://')) { return trimmed.replaceFirst('http://', 'https://'); }` em `lib/core/constants.dart` (linhas ~31-33) e removido por completo",
+        "URLs absolutas comecando com `https://` continuam retornando intactas",
+        "Paths relativos (ex.: `/uploads/...`) continuam sendo prefixados com a origem de `kApiBaseUrl`",
+        "Comentario do metodo `absoluteImageUrl` atualizado para indicar que upgrade HTTP->HTTPS nao e mais aplicado",
+        "Diff desta story toca apenas `lib/core/constants.dart`",
+        "`flutter analyze` passa sem warnings novos"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Verificar que socket_service herda kApiBaseUrl ou documentar gap",
+      "description": "Como mantenedor, preciso confirmar que `lib/core/services/socket_service.dart` constroi sua URL a partir de `kApiBaseUrl` (e portanto migra automaticamente) ou levantar a inconsistencia para alinhamento, sem corrigir fora de escopo.",
+      "acceptanceCriteria": [
+        "Arquivo `lib/core/services/socket_service.dart` lido e a forma como ele determina a URL do socket esta documentada em `progress.txt` na secao Learnings",
+        "Se ele lê de `kApiBaseUrl`: registrar `OK - herda automaticamente` em progress.txt",
+        "Se ele tem URL hardcoded: registrar `GAP - URL hardcoded em <linha>; nao corrigido nesta story` em progress.txt e em uma nota desta US",
+        "Nenhuma alteracao de codigo feita nesta story (apenas leitura e documentacao em progress.txt)",
+        "`flutter analyze` passa sem warnings novos"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Validar build Android e conexao end-to-end com backend local",
+      "description": "Como mantenedor, preciso confirmar que a app refatorada compila para Android e, se um device/emulador estiver disponivel, que conecta no backend local, autentica e renderiza dados reais.",
+      "acceptanceCriteria": [
+        "`flutter pub get` executa sem erro",
+        "`flutter analyze` passa sem warnings novos",
+        "`flutter build apk --debug` (ou `flutter build apk`) completa sem erro",
+        "Cleartext traffic Android confirmado em `android/app/src/main/AndroidManifest.xml` (`android:usesCleartextTraffic=\"true\"` ja presente em linha ~11) - nao requer mudanca",
+        "Se houver device/emulador Android disponivel: `flutter run -d <android>` sobe; tela de login dispara request para `http://localhost:3000/api/...` (verificar via log de rede / Dio interceptor); login retorna token e navega para home; listagem de imoveis carrega >= 1 item; imagens renderizam (valida US-003 em runtime)",
+        "Se nao houver device/emulador disponivel no ambiente de execucao: registrar em progress.txt que validacao runtime e pendente e os criterios de build estatico foram atendidos",
+        "Resultados da validacao registrados em progress.txt na secao Learnings"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Documentar setup Android no commit/PR final da branch",
+      "description": "Como dev futuro entrando nesta branch, quero entender em < 2 minutos como subir tudo (backend local + emulador/device + adb reverse).",
+      "acceptanceCriteria": [
+        "Arquivo `tasks/HOSPEDAGEM_LOCAL_SETUP.md` criado com os passos: (1) subir backend em http://localhost:3000 com prefixo /api/; (2) emulador Android: rodar `adb reverse tcp:3000 tcp:3000`; (3) device USB: idem; (4) device WiFi: usar `--dart-define=API_BASE_URL=http://<ip-host>:3000/api/`; (5) executar `flutter run -d <android>`",
+        "Documento menciona override alternativo `--dart-define=API_BASE_URL=http://10.0.2.2:3000/api/` para emuladores Android sem `adb reverse`",
+        "Documento menciona que `usesCleartextTraffic` ja esta habilitado e nao precisa ser tocado",
+        "Documento menciona como reverter rapidamente para o backend remoto via `--dart-define=API_BASE_URL=https://lab.alphaedtech.org.br/server01/api/` sem trocar de branch",
+        "Diff desta story toca apenas `tasks/HOSPEDAGEM_LOCAL_SETUP.md`"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

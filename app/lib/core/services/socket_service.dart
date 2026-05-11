@@ -19,6 +19,8 @@ class SocketService {
   final _ticketUpdatedController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
+  final _conversationMessageController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onNewMessage =>
       _newMessageController.stream;
@@ -29,6 +31,8 @@ class SocketService {
   Stream<Map<String, dynamic>> get onTicketUpdated =>
       _ticketUpdatedController.stream;
   Stream<bool> get onConnectionChanged => _connectionController.stream;
+  Stream<Map<String, dynamic>> get onConversationMessage =>
+      _conversationMessageController.stream;
 
   bool get isConnected => _socket?.connected ?? false;
 
@@ -105,6 +109,13 @@ class SocketService {
       }
     });
 
+    _socket!.on('conversation:new_message', (data) {
+      if (data != null) {
+        debugPrint('[Socket] 👥 conversation:new_message recebido');
+        _conversationMessageController.add(data as Map<String, dynamic>);
+      }
+    });
+
     _socket!.connect();
   }
 
@@ -130,6 +141,7 @@ class SocketService {
     _ticketMessageController.close();
     _ticketUpdatedController.close();
     _connectionController.close();
+    _conversationMessageController.close();
   }
 }
 

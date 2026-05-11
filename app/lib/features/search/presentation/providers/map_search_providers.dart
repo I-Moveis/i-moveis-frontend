@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter/material.dart';
 
 // --- Mocks Data para exemplo ---
 class PropertyMock {
@@ -27,24 +26,25 @@ class SearchFilter {
   SearchFilter({this.minPrice, this.maxPrice});
 }
 
-class SearchFilterNotifier extends StateNotifier<SearchFilter> {
-  SearchFilterNotifier() : super(SearchFilter());
+class SearchFilterNotifier extends Notifier<SearchFilter> {
+  @override
+  SearchFilter build() => SearchFilter();
 
   void updateFilter({double? min, double? max}) {
     state = SearchFilter(minPrice: min ?? state.minPrice, maxPrice: max ?? state.maxPrice);
   }
 }
 
-final searchFilterProvider = StateNotifierProvider<SearchFilterNotifier, SearchFilter>((ref) {
-  return SearchFilterNotifier();
-});
+final searchFilterProvider =
+    NotifierProvider<SearchFilterNotifier, SearchFilter>(
+        SearchFilterNotifier.new);
 
 // 2. Fetch da API (Mock) baseado no Filtro
 final propertiesListProvider = FutureProvider<List<PropertyMock>>((ref) async {
   final filter = ref.watch(searchFilterProvider);
   
   // Simulando requisição na API Node.js atrasada
-  await Future.delayed(const Duration(seconds: 1));
+  await Future<void>.delayed(const Duration(seconds: 1));
   
   final mockData = [
     PropertyMock(id: '1', title: 'Apartamento Centro', price: 2500, location: const LatLng(-23.550520, -46.633308), imageUrl: 'https://via.placeholder.com/150'),

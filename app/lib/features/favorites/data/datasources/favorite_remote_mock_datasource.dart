@@ -1,5 +1,3 @@
-import '../../domain/entities/favorite.dart';
-import '../models/favorite_api_model.dart';
 import 'favorite_datasources.dart';
 
 /// Implementação em memória usada quando `kUseMockData` está ligado.

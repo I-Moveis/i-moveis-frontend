@@ -3,7 +3,7 @@
 String get kApiBaseUrl {
   const envUrl = String.fromEnvironment('API_BASE_URL');
   if (envUrl.isNotEmpty) return envUrl;
-  return 'https://desafio01.alphaedtech:3000/api';
+  return 'http://desafio01.alphaedtech/api';
 }
 
 /// Network timeouts for the Dio client.

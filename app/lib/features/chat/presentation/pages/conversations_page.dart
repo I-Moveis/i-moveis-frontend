@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
-import '../../domain/entities/conversation_summary.dart';
-import '../providers/conversations_notifier.dart';
+import '../../data/models/chat_models.dart';
+import '../providers/chat_providers.dart';
 
 /// Lista de conversas do usuário — mesma tela pra tenant e landlord, com
 /// copy de subtítulo trocando pelo papel. Dados vêm do
@@ -23,7 +23,7 @@ class ConversationsPage extends ConsumerWidget {
           orElse: () => false,
         );
 
-    final async = ref.watch(conversationsProvider);
+    final async = ref.watch(sessionsProvider);
 
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
@@ -74,14 +74,14 @@ class ConversationsPage extends ConsumerWidget {
                         // nem expõe o endpoint.
                         error: (_, _) => _buildEmptyState(
                             isDark, titleColor, mutedColor, accentColor),
-                        data: (conversations) => conversations.isEmpty
+                        data: (sessions) => sessions.isEmpty
                             ? _buildEmptyState(
                                 isDark, titleColor, mutedColor, accentColor)
                             : Column(
                                 children: [
-                                  for (final c in conversations) ...[
+                                  for (final s in sessions) ...[
                                     _ConversationCard(
-                                      conversation: c,
+                                      session: s,
                                       isDark: isDark,
                                       titleColor: titleColor,
                                       mutedColor: mutedColor,
@@ -138,14 +138,14 @@ class ConversationsPage extends ConsumerWidget {
 
 class _ConversationCard extends StatelessWidget {
   const _ConversationCard({
-    required this.conversation,
+    required this.session,
     required this.isDark,
     required this.titleColor,
     required this.mutedColor,
     required this.accentColor,
   });
 
-  final ConversationSummary conversation;
+  final ChatSessionModel session;
   final bool isDark;
   final Color titleColor;
   final Color mutedColor;
@@ -155,9 +155,10 @@ class _ConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
+    final lastAt = session.lastMessageAt ?? session.startedAt;
 
     return GestureDetector(
-      onTap: () => context.push('/chat/${conversation.id}'),
+      onTap: () => context.push('/chat/${session.id}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -176,7 +177,7 @@ class _ConversationCard extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  conversation.initials,
+                  session.initials,
                   style: AppTypography.titleSmallBold
                       .copyWith(color: accentColor),
                 ),
@@ -188,13 +189,13 @@ class _ConversationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.counterpartName,
+                    session.tenantName ?? 'Inquilino',
                     style: AppTypography.titleLargeBold
                         .copyWith(color: titleColor),
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    conversation.lastMessage,
+                    session.lastMessage ?? '',
                     style: AppTypography.bodySmall.copyWith(color: mutedColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -203,23 +204,9 @@ class _ConversationCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _formatTime(conversation.lastMessageAt),
-                  style: AppTypography.bodySmall.copyWith(color: mutedColor),
-                ),
-                if (conversation.unread) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration:
-                        BoxDecoration(color: accentColor, shape: BoxShape.circle),
-                  ),
-                ],
-              ],
+            Text(
+              _formatTime(lastAt),
+              style: AppTypography.bodySmall.copyWith(color: mutedColor),
             ),
           ],
         ),

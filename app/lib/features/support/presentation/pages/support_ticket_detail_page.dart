@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/support_ticket.dart';
@@ -102,7 +103,24 @@ class _Detail extends StatelessWidget {
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.xl),
-        _AdminPlaceholder(isDark: isDark),
+        if (ticket.status != SupportTicketStatus.resolved)
+          SizedBox(
+            width: double.infinity,
+            child: BrutalistGradientButton(
+              label: 'ABRIR CONVERSA',
+              icon: Icons.chat_bubble_outline_rounded,
+              onTap: () => context.push('/support/${ticket.id}/chat'),
+            ),
+          )
+        else
+          SizedBox(
+            width: double.infinity,
+            child: BrutalistGradientButton(
+              label: 'VER CONVERSA',
+              icon: Icons.chat_bubble_outline_rounded,
+              onTap: () => context.push('/support/${ticket.id}/chat'),
+            ),
+          ),
         const SizedBox(height: AppSpacing.massive),
       ],
     );
@@ -230,39 +248,6 @@ class _MessageBubble extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Placeholder avisando que a resposta do admin aparece aqui — enquanto
-/// o backend de conversa não existe, a tela deixa claro o que vai
-/// acontecer.
-class _AdminPlaceholder extends StatelessWidget {
-  const _AdminPlaceholder({required this.isDark});
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = BrutalistPalette.muted(isDark);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: BrutalistPalette.subtleBg(isDark),
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.hourglass_top_outlined, color: muted),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              'Respostas da equipe aparecem aqui assim que o atendimento começar.',
-              style: AppTypography.bodyMedium.copyWith(color: muted),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

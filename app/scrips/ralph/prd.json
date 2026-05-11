@@ -93,8 +93,8 @@
         "Diff desta story toca apenas `tasks/HOSPEDAGEM_LOCAL_SETUP.md`"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Criado tasks/HOSPEDAGEM_LOCAL_SETUP.md com TL;DR, opcoes A (emulador + adb reverse), B (device USB + adb reverse), C (device WiFi via --dart-define com IP do host), override emulador via 10.0.2.2 sem adb reverse, nota que usesCleartextTraffic ja esta habilitado em AndroidManifest:11 e nao precisa ser tocado, e instrucao de reverter para remoto via --dart-define=API_BASE_URL=https://lab.alphaedtech.org.br/server01/api/ sem trocar de branch. Diff toca apenas tasks/HOSPEDAGEM_LOCAL_SETUP.md (novo arquivo). PRD/progress.txt sao deltas de tracking, fora do escopo de codigo."
     }
   ]
 }

@@ -91,3 +91,25 @@ Started: Mon May 11 08:28:57 PM -03 2026
   - Para login E2E em hospedagem_local, o backend local precisa de `FIREBASE_API_KEY` no `.env`. Documentar isso em US-006 (HOSPEDAGEM_LOCAL_SETUP.md) — e um pre-requisito real do setup, nao gap da app Flutter.
   - `flutter build apk --debug` em laptop x86_64 com Java 17 leva ~35s na primeira vez apos `pub get`. Build incremental tipicamente <10s. Nao precisa de Android SDK extra alem do que o Flutter ja exige (`flutter doctor` cobre).
 ---
+## 2026-05-11 - US-006
+- Criado `tasks/HOSPEDAGEM_LOCAL_SETUP.md` (novo arquivo, ~110 linhas) com guia de setup < 2 min para a branch `hospedagem_local`.
+- Conteudo cobre exatamente os criterios de aceitacao da US:
+  - (1) subir backend em `http://localhost:3000` com prefixo `/api/` + smoke test via `curl` (HTTP 401 esperado em rota raiz protegida);
+  - (2) **Opcao A — Emulador Android**: `adb -s <emu> reverse tcp:3000 tcp:3000` + `flutter run -d <emu>` (sem `--dart-define`, usando default de `kApiBaseUrl`);
+  - (3) **Opcao B — Device USB**: idem (mesma receita do emulador, mesma `adb reverse`);
+  - (4) **Opcao C — Device WiFi**: `--dart-define=API_BASE_URL=http://<ip-do-host>:3000/api/` (host IPv4 da LAN, firewall liberado para porta 3000);
+  - (5) `flutter run -d <android>` documentado em todas as opcoes acima.
+- Override alternativo `--dart-define=API_BASE_URL=http://10.0.2.2:3000/api/` documentado em secao propria, com nota que `10.0.2.2` so funciona no emulador (alias do host) — nao em device fisico.
+- `usesCleartextTraffic` documentado como ja habilitado em `android/app/src/main/AndroidManifest.xml:11` com explicacao do que aconteceria sem ele (Android bloqueia HTTP em `localhost`/LAN silenciosamente).
+- Reverter para backend remoto sem trocar de branch documentado: `--dart-define=API_BASE_URL=https://lab.alphaedtech.org.br/server01/api/`. Inclui nota de que socket migra junto porque deriva de `kApiBaseUrl` (cross-ref com `socket_service.dart:_wsUrl`, US-004).
+- Pre-requisito de `FIREBASE_API_KEY` no `.env` do backend documentado para login E2E (gap conhecido de US-005).
+- Secao "Validar end-to-end (logs)" adicionada com `adb logcat -d | grep "flutter :"` e os prefixos esperados (`[Socket] ✅ conectado a`, `→ GET`, `← 200`) — herdado dos Codebase Patterns de US-005.
+- Diff escopo: apenas `tasks/HOSPEDAGEM_LOCAL_SETUP.md` (novo arquivo). Confirmado via `git status --short` antes de commitar — nenhum outro arquivo de codigo tocado nesta story.
+- Files changed: `tasks/HOSPEDAGEM_LOCAL_SETUP.md` (novo), `scrips/ralph/prd.json` (US-006 passes -> true + nota), `scrips/ralph/progress.txt` (este log).
+- **Learnings for future iterations:**
+  - Stories puramente documentais devem cross-referenciar arquivos de codigo com `path:linha` (ex.: `AndroidManifest.xml:11`, `constants.dart:5-9`) para que o leitor pule direto pra fonte de verdade — evita duplicar conteudo que vai apodrecer com refactors.
+  - O documento de setup so e util se reflete o caminho mais barato testado (Opcao A: emulador + `adb reverse`, sem `--dart-define`). Listar opcoes alternativas (B, C, override 10.0.2.2) com criterio claro de quando usar cada uma — nao deixar o leitor adivinhar.
+  - "Reverter para remoto sem trocar de branch" via `--dart-define` e o tipo de feature implicita do design de `kApiBaseUrl` que merece ser dito em voz alta no setup doc — quem lera o doc nao vai saber que existe a menos que esteja escrito.
+  - PRD acceptance criteria para docs (US-006) sao a melhor checklist contra o documento. Antes de commitar, releia cada bullet do AC e confirme que o doc cobre. Se um bullet diz "menciona X", o documento PRECISA mencionar X com palavras buscaveis (`grep`).
+  - Diff de uma story de docs deve ser literalmente o arquivo novo. Se `git diff --stat` mostra outro arquivo de codigo mudou, voce extrapolou o escopo. Validar antes do commit.
+---

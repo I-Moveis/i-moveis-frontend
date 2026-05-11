@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/services/socket_service.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/support_ticket.dart';
 import '../providers/support_ticket_messages_notifier.dart';
@@ -53,6 +54,8 @@ class _SupportTicketChatPageState
 
   @override
   Widget build(BuildContext context) {
+    final isConnected =
+        ref.watch(socketServiceProvider.select((s) => s.isConnected));
     final ticketAsync = ref.watch(supportTicketsProvider);
     final ticket = ticketAsync.maybeWhen(
       data: (tickets) =>
@@ -73,6 +76,25 @@ class _SupportTicketChatPageState
             isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
         return Column(children: [
+          // Tier 1: Indicador de conexao
+          if (!isConnected)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+              color: AppColors.warning.withValues(alpha: 0.1),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.wifi_off_rounded,
+                      size: 14, color: AppColors.warning),
+                  SizedBox(width: AppSpacing.xs),
+                  Text('Reconectando...',
+                      style: TextStyle(
+                          color: AppColors.warning, fontSize: 12)),
+                ],
+              ),
+            ),
           BrutalistAppBar(
             title: ticket?.code ?? 'Chat',
             onBack: () => context.pop(),

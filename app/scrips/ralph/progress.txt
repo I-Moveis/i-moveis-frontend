@@ -7,6 +7,7 @@ Started: Mon May 11 08:28:57 PM -03 2026
 - `absoluteImageUrl(...)` in `lib/core/constants.dart` historically force-upgraded `http://` to `https://`; on `hospedagem_local` esse upgrade foi removido (US-003): URLs http:// e https:// retornam intactas, paths relativos continuam sendo prefixados com a origem de `kApiBaseUrl`.
 - Android cleartext traffic is already enabled in `android/app/src/main/AndroidManifest.xml` (`android:usesCleartextTraffic="true"`).
 - Branch policy: `development` is sacrosanct on this work — never moved or rewritten. All hospedagem_local work branches off it.
+- `lib/core/services/socket_service.dart` deriva a URL do websocket exclusivamente de `kApiBaseUrl` (parse com `Uri.tryParse` + `${scheme}://${authority}` em `_wsUrl`, linhas 39-43). Logo, socket migra automaticamente quando `kApiBaseUrl` muda — nao tem URL hardcoded.
 
 ---
 ## 2026-05-11 - US-001
@@ -44,4 +45,19 @@ Started: Mon May 11 08:28:57 PM -03 2026
   - Quando duas branches de `startsWith` retornam o mesmo valor (intacta), une elas com `||` em um unico `if`. Mais limpo, menos linhas, sem mudar o comportamento esperado pelos criterios de aceitacao.
   - O comentario em linhas 17-23 ja descrevia o comportamento "intacta para http:// ou https://" (apesar do codigo nao bater). Apos remover o force-upgrade o comentario ficou alinhado com o codigo, mas EXPANDI a docstring pra registrar explicitamente que o upgrade foi removido e por que — futuros leitores vao querer saber a razao.
   - Para auditar diff escopo da story: `git diff --stat lib/` confirma que so `constants.dart` foi tocado dentro de `lib/`. Nao confiar so em "eu so editei um arquivo" — checar com git.
+---
+## 2026-05-11 - US-004
+- Story de leitura/documentacao apenas, sem alteracao de codigo.
+- Lido `lib/core/services/socket_service.dart` (153 linhas). A URL do websocket NAO e hardcoded.
+- **OK - herda automaticamente** de `kApiBaseUrl`:
+  - Linhas 39-43: getter privado `_wsUrl` faz `Uri.tryParse(kApiBaseUrl)` e retorna `'${baseUri.scheme}://${baseUri.authority}'` (cai de volta pra `kApiBaseUrl` literal se o parse falhar).
+  - Para o default atual `http://localhost:3000/api/`, isso resolve para `http://localhost:3000` — exatamente o que o socket.io-client espera (origem sem path).
+  - Linha 60-67: `io.io(_wsUrl, ...)` consome esse getter; ou seja, qualquer mudanca em `kApiBaseUrl` (incluindo `--dart-define=API_BASE_URL=...`) propaga sem tocar este arquivo.
+- Validacao `flutter analyze` => 54 issues (mesmo baseline pre-existente). Zero issues em `socket_service.dart`. Zero novos warnings.
+- `git diff` em `lib/` esta vazio nesta story (confirmado): nenhuma alteracao de codigo, conforme criterio de aceitacao.
+- Files changed: `scrips/ralph/prd.json` (US-004 passes -> true + nota), `scrips/ralph/progress.txt` (este log + bullet em Codebase Patterns sobre socket herdar de kApiBaseUrl).
+- **Learnings for future iterations:**
+  - Stories puramente de "auditoria/documentacao" so devem mexer em PRD + progress.txt. `git diff lib/` deve voltar vazio — se nao volta, voce extrapolou o escopo. Validar com `git diff --stat` antes de commitar.
+  - Quando um servico precisa de uma URL "primo" da API (ex.: websocket usa origem sem `/api/`), o padrao no codebase e parsear `kApiBaseUrl` com `Uri.tryParse` e reconstruir a peca desejada (`scheme`, `authority`, `host`, etc.). Reaproveitar esse padrao se outros servicos precisarem de variantes (ex.: CDN, healthcheck) — evita criar uma segunda fonte de verdade.
+  - O fallback `if (baseUri == null) return kApiBaseUrl;` em `_wsUrl` e defensivo: se algum dia alguem setar `--dart-define=API_BASE_URL=` para algo nao parseavel, o socket tenta a string literal (vai falhar conexao, mas nao crasha o app no parse). Bom padrao a manter.
 ---

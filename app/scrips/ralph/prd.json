@@ -61,8 +61,8 @@
         "`flutter analyze` passa sem warnings novos"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "OK - herda automaticamente. socket_service.dart deriva a URL do websocket de kApiBaseUrl via getter `_wsUrl` (linhas 39-43): `Uri.tryParse(kApiBaseUrl)` + `${scheme}://${authority}`. Para o default atual http://localhost:3000/api/ resolve em http://localhost:3000 (origem sem path, formato esperado pelo socket.io-client). Nenhuma URL hardcoded. flutter analyze => 54 issues do baseline; zero em socket_service.dart; zero novos. git diff em lib/ esta vazio (criterio de zero alteracao de codigo cumprido)."
     },
     {
       "id": "US-005",

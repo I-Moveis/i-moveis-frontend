@@ -1,9 +1,11 @@
-/// Base URL for the i-Móveis REST API. Pode ser sobrescrita em build local
-/// via `--dart-define=API_BASE_URL=http://localhost:3000/api`.
+/// Base URL for the i-Móveis REST API. Default aponta para o backend local
+/// em `http://localhost:3000/api/` (branch `hospedagem_local`). Pode ser
+/// sobrescrita em build via `--dart-define=API_BASE_URL=...` para apontar
+/// de volta para o backend remoto (ou outro endpoint) sem trocar de branch.
 String get kApiBaseUrl {
   const envUrl = String.fromEnvironment('API_BASE_URL');
   if (envUrl.isNotEmpty) return envUrl;
-  return 'https://lab.alphaedtech.org.br/server01/api/';
+  return 'http://localhost:3000/api/';
 }
 
 /// Network timeouts for the Dio client.

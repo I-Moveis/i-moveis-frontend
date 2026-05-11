@@ -30,8 +30,8 @@
         "`flutter analyze` passa sem warnings novos"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "kApiBaseUrl agora retorna 'http://localhost:3000/api/' por default; override via --dart-define=API_BASE_URL=... preservado; docstring atualizada; grep lab.alphaedtech em lib/ retorna 0; flutter analyze sem novos warnings (54 issues pre-existentes em outros arquivos, nenhum em constants.dart)."
     },
     {
       "id": "US-003",

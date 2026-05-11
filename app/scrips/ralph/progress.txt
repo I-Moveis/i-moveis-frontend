@@ -21,3 +21,15 @@ Started: Mon May 11 08:28:57 PM -03 2026
   - `git log --all --source --decorate` is useful to confirm a branch tracks the expected upstream.
   - Untracked files (scrips/, tasks/, test/provider_init_test.dart) are present at session start; these belong to ralph scaffolding and the spec doc — they are not contamination from development.
 ---
+## 2026-05-11 - US-002
+- Edited `lib/core/constants.dart`: default fallback de `kApiBaseUrl` mudou de `https://lab.alphaedtech.org.br/server01/api/` para `http://localhost:3000/api/`. Override via `--dart-define=API_BASE_URL=...` continua funcionando.
+- Atualizei a docstring acima do getter para refletir o novo default e mencionar como apontar de volta ao remoto via dart-define.
+- `grep -rn "lab.alphaedtech" lib/` retorna 0 ocorrencias (validado).
+- `flutter analyze` => 54 issues pre-existentes (nenhum em `lib/core/constants.dart`); zero novos warnings introduzidos.
+- Diff escopo: apenas `lib/core/constants.dart` (5 inserts / 3 deletes). PRD e progress.txt sao deltas de tracking, fora do escopo de codigo.
+- Files changed: `lib/core/constants.dart`, `scrips/ralph/prd.json` (US-002 passes -> true), `scrips/ralph/progress.txt` (este log).
+- **Learnings for future iterations:**
+  - O criterio `grep "lab.alphaedtech" lib/` retornar 0 e ESTRITO — nao basta trocar o `return`, qualquer mencao ao dominio (incluindo em docstrings/exemplos) precisa sumir do `lib/`. Mantive a referencia generica ("apontar de volta para o backend remoto") sem citar URL.
+  - `flutter analyze` na linha base ja tem 54 issues `info`-level em outros arquivos. Para "sem warnings novos" basta verificar que nenhum do baseline pertence ao arquivo editado e nenhum issue novo foi introduzido. Fazer grep por nome do arquivo na saida e o jeito mais rapido.
+  - A constante e referenciada via `kApiBaseUrl` (getter) pois o valor depende de `String.fromEnvironment` que precisa de avaliacao em call-site. Nao tente convertir em `const` top-level.
+---

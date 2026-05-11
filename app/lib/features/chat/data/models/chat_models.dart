@@ -9,6 +9,7 @@ class ChatSessionModel {
     this.status,
     this.lastMessage,
     this.lastMessageAt,
+    this.lastSenderType,
     this.messages = const [],
   });
 
@@ -21,6 +22,7 @@ class ChatSessionModel {
   final String? status;
   final String? lastMessage;
   final DateTime? lastMessageAt;
+  final String? lastSenderType;
   final List<MessageModel> messages;
 
   String get initials {
@@ -42,9 +44,11 @@ class ChatSessionModel {
 
     String? lastMsg;
     DateTime? lastMsgAt;
+    String? lastSendType;
     if (messageList.isNotEmpty) {
       lastMsg = messageList.last.content;
       lastMsgAt = messageList.last.timestamp;
+      lastSendType = messageList.last.senderType;
     }
 
     return ChatSessionModel(
@@ -58,6 +62,7 @@ class ChatSessionModel {
       status: json['status'] as String?,
       lastMessage: lastMsg,
       lastMessageAt: lastMsgAt,
+      lastSenderType: json['lastSenderType'] as String? ?? lastSendType,
       messages: messageList,
     );
   }
@@ -74,6 +79,8 @@ class ChatSessionModel {
       status: status,
       lastMessage: msgs.isNotEmpty ? msgs.last.content : lastMessage,
       lastMessageAt: msgs.isNotEmpty ? msgs.last.timestamp : lastMessageAt,
+      lastSenderType:
+          msgs.isNotEmpty ? msgs.last.senderType : lastSenderType,
       messages: msgs,
     );
   }
@@ -89,6 +96,7 @@ class ChatSessionModel {
       'status': status,
       'lastMessage': lastMessage,
       'lastMessageAt': lastMessageAt?.toIso8601String(),
+      'lastSenderType': lastSenderType,
       'messages': messages.map((m) => m.toJson()).toList(),
     };
   }

@@ -1,58 +1,42 @@
 import 'package:flutter/material.dart';
+
 import '../../../../design_system/design_system.dart';
 import '../../data/models/chat_models.dart';
 
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
     required this.message,
-    this.showSender = false,
-    this.senderName,
+    required this.isDark,
     super.key,
   });
 
   final MessageModel message;
-  final bool showSender;
-  final String? senderName;
+  final bool isDark;
+
+  bool get _isMine => message.senderType == 'LANDLORD';
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isMine = message.senderType == 'LANDLORD';
-
     return Padding(
       padding: EdgeInsets.only(
-        left: isMine ? 48 : 12,
-        right: isMine ? 12 : 48,
+        left: _isMine ? 48 : 12,
+        right: _isMine ? 12 : 48,
         bottom: AppSpacing.xs,
       ),
       child: Column(
         crossAxisAlignment:
-            isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            _isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          if (showSender && senderName != null)
-            Padding(
-              padding: EdgeInsets.only(
-                left: isMine ? 0 : 4,
-                right: isMine ? 4 : 0,
-                bottom: AppSpacing.xxs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    senderName!,
-                    style: AppTypography.tagBadge.copyWith(
-                      color: BrutalistPalette.muted(isDark),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  _buildSenderBadge(isDark),
-                ],
-              ),
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSenderBadge(),
+            ],
+          ),
+          const SizedBox(height: 2),
           Column(
             crossAxisAlignment:
-                isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                _isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               Container(
                 constraints: BoxConstraints(
@@ -63,12 +47,12 @@ class MessageBubble extends StatelessWidget {
                   vertical: AppSpacing.sm + 2,
                 ),
                 decoration: BoxDecoration(
-                  color: _bubbleColor(isDark),
+                  color: _bubbleColor,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(AppRadius.lg),
                     topRight: const Radius.circular(AppRadius.lg),
-                    bottomLeft: Radius.circular(isMine ? AppRadius.lg : AppRadius.xs),
-                    bottomRight: Radius.circular(isMine ? AppRadius.xs : AppRadius.lg),
+                    bottomLeft: Radius.circular(_isMine ? AppRadius.lg : AppRadius.xs),
+                    bottomRight: Radius.circular(_isMine ? AppRadius.xs : AppRadius.lg),
                   ),
                   border: message.senderType == 'BOT'
                       ? Border.all(color: BrutalistPalette.surfaceBorder(isDark))
@@ -77,7 +61,7 @@ class MessageBubble extends StatelessWidget {
                 child: Text(
                   message.content,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: _textColor(isDark),
+                    color: _textColor,
                     height: 1.5,
                   ),
                 ),
@@ -94,9 +78,9 @@ class MessageBubble extends StatelessWidget {
                         color: BrutalistPalette.faint(isDark),
                       ),
                     ),
-                    if (isMine) ...[
+                    if (_isMine) ...[
                       const SizedBox(width: 4),
-                      _buildStatusIcon(isDark),
+                      _buildStatusIcon(),
                     ],
                   ],
                 ),
@@ -108,7 +92,7 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Color _bubbleColor(bool isDark) {
+  Color get _bubbleColor {
     switch (message.senderType) {
       case 'BOT':
         return BrutalistPalette.surfaceBg(isDark);
@@ -125,7 +109,7 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  Color _textColor(bool isDark) {
+  Color get _textColor {
     switch (message.senderType) {
       case 'BOT':
         return BrutalistPalette.title(isDark);
@@ -138,9 +122,9 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  Widget _buildSenderBadge(bool isDark) {
+  Widget _buildSenderBadge() {
     final label = senderTypeLabel(message.senderType);
-    final color = _textColor(isDark);
+    final color = _textColor;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
@@ -157,7 +141,7 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusIcon(bool isDark) {
+  Widget _buildStatusIcon() {
     switch (message.status) {
       case 'sent':
         return Icon(Icons.check, size: 12, color: BrutalistPalette.faint(isDark));

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/providers/dio_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../domain/entities/support_ticket.dart';
+import '../domain/entities/support_ticket_message.dart';
 
 /// Armazena e lista chamados de suporte. **Dois modos**:
 ///
@@ -141,6 +142,30 @@ class SupportTicketRepository {
     // valor enquanto não existe backend pra referenciar.
     await _appendLocal(ticket);
     return ticket;
+  }
+
+  Future<List<SupportTicketMessage>> getMessages(String ticketId) async {
+    final response =
+        await _dio.get<dynamic>('/support/tickets/$ticketId/messages');
+    final data = response.data;
+    if (data is List) {
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map((m) => SupportTicketMessage.fromJson(m))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<SupportTicketMessage> sendMessage({
+    required String ticketId,
+    required String content,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/support/tickets/$ticketId/messages',
+      data: {'content': content},
+    );
+    return SupportTicketMessage.fromJson(response.data!);
   }
 
   Future<SupportTicket?> find(String code) async {

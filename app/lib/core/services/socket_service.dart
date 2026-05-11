@@ -1,82 +1,140 @@
 import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+
 import '../constants.dart';
 
 class SocketService {
   io.Socket? _socket;
 
-  final _newMessageController = StreamController<Map<String, dynamic>>.broadcast();
-  final _sessionUpdatedController = StreamController<Map<String, dynamic>>.broadcast();
+  final _newMessageController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _sessionUpdatedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _ticketMessageController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _ticketUpdatedController =
+      StreamController<Map<String, dynamic>>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
 
-  Stream<Map<String, dynamic>> get onNewMessage => _newMessageController.stream;
-  Stream<Map<String, dynamic>> get onSessionUpdated => _sessionUpdatedController.stream;
+  Stream<Map<String, dynamic>> get onNewMessage =>
+      _newMessageController.stream;
+  Stream<Map<String, dynamic>> get onSessionUpdated =>
+      _sessionUpdatedController.stream;
+  Stream<Map<String, dynamic>> get onTicketMessage =>
+      _ticketMessageController.stream;
+  Stream<Map<String, dynamic>> get onTicketUpdated =>
+      _ticketUpdatedController.stream;
   Stream<bool> get onConnectionChanged => _connectionController.stream;
 
   bool get isConnected => _socket?.connected ?? false;
 
-  void connect(String token) {
-    disconnect();
+  String get _wsUrl {
+    final base = kApiBaseUrl;
+    if (base.endsWith('/api')) return base.substring(0, base.length - 4);
+    return base;
+  }
 
-    final uri = kApiBaseUrl.replaceAll('/api', '');
+  Future<void> connect() async {
+    if (_socket != null && _socket!.connected) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      debugPrint('[Socket] sem usuário autenticado, abortando conexão');
+      return;
+    }
+
+    final token = await user.getIdToken();
+    if (token == null) {
+      debugPrint('[Socket] token nulo, abortando conexão');
+      return;
+    }
 
     _socket = io.io(
-      uri,
+      _wsUrl,
       io.OptionBuilder()
-          .setTransports(['websocket', 'polling'])
-          .enableAutoConnect()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
           .setAuth({'token': 'Bearer $token'})
-          .setReconnectionAttempts(99999)
-          .setReconnectionDelay(2000)
-          .setReconnectionDelayMax(15000)
-          .setTimeout(10000)
           .build(),
     );
 
-    _socket!.onConnect((_) {
-      debugPrint('[Socket] ✅ connected to $uri');
+    _socket!.on('connect', (_) {
+      debugPrint('[Socket] ✅ conectado a $_wsUrl');
       _connectionController.add(true);
     });
 
-    _socket!.onDisconnect((reason) {
-      debugPrint('[Socket] ❌ disconnected: $reason');
+    _socket!.on('disconnect', (_) {
+      debugPrint('[Socket] ❌ desconectado');
       _connectionController.add(false);
     });
 
-    _socket!.onConnectError((err) {
-      debugPrint('[Socket] 🔴 connect error: $err');
+    _socket!.on('connect_error', (err) {
+      debugPrint('[Socket] ⚠️ erro de conexão: $err');
       _connectionController.add(false);
     });
 
     _socket!.on('new_message', (data) {
       if (data != null) {
-        debugPrint('[Socket] 📩 new_message received');
+        debugPrint('[Socket] 💬 new_message recebido');
         _newMessageController.add(data as Map<String, dynamic>);
       }
     });
 
     _socket!.on('session_updated', (data) {
       if (data != null) {
-        debugPrint('[Socket] 🔄 session_updated received');
+        debugPrint('[Socket] 🔄 session_updated recebido');
         _sessionUpdatedController.add(data as Map<String, dynamic>);
       }
     });
 
-    debugPrint('[Socket] connecting to $uri...');
+    _socket!.on('support_ticket_message', (data) {
+      if (data != null) {
+        debugPrint('[Socket] 🎫 support_ticket_message recebido');
+        _ticketMessageController.add(data as Map<String, dynamic>);
+      }
+    });
+
+    _socket!.on('support_ticket_updated', (data) {
+      if (data != null) {
+        debugPrint('[Socket] 🔄 support_ticket_updated recebido');
+        _ticketUpdatedController.add(data as Map<String, dynamic>);
+      }
+    });
+
     _socket!.connect();
   }
 
   void disconnect() {
     _socket?.disconnect();
-    _socket?.dispose();
+    _socket?.destroy();
     _socket = null;
+    debugPrint('[Socket] desconectado manualmente');
+  }
+
+  void joinTicket(String ticketId) {
+    _socket?.emit('join_ticket', ticketId);
+  }
+
+  void leaveTicket(String ticketId) {
+    _socket?.emit('leave_ticket', ticketId);
   }
 
   void dispose() {
     disconnect();
     _newMessageController.close();
     _sessionUpdatedController.close();
+    _ticketMessageController.close();
+    _ticketUpdatedController.close();
     _connectionController.close();
   }
 }
+
+final socketServiceProvider = Provider<SocketService>((ref) {
+  final service = SocketService();
+  ref.onDispose(service.dispose);
+  return service;
+});

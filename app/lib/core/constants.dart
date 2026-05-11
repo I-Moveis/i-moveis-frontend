@@ -25,9 +25,17 @@ const Duration kApiReceiveTimeout = Duration(seconds: 30);
 String absoluteImageUrl(String raw) {
   final trimmed = raw.trim();
   if (trimmed.isEmpty) return trimmed;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+
+  // Força HTTPS se a URL já for absoluta mas usar HTTP. Isso corrige casos
+  // onde o backend devolve URLs absolutas via protocolo inseguro.
+  if (trimmed.startsWith('http://')) {
+    return trimmed.replaceFirst('http://', 'https://');
+  }
+
+  if (trimmed.startsWith('https://')) {
     return trimmed;
   }
+
   final base = kApiBaseUrl;
   final baseUri = Uri.tryParse(base);
   if (baseUri == null) return trimmed;

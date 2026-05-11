@@ -4,12 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../datasources/chat_api_datasource.dart';
 import '../datasources/chat_socket_datasource.dart';
 
-final socketServiceProvider = Provider<SocketService>((ref) {
-  final service = SocketService();
-  ref.onDispose(() => service.dispose());
-  return service;
-});
-
 final chatApiDataSourceProvider = Provider<ChatApiDataSource>((ref) {
   return ChatApiDataSource(ref.watch(dioProvider));
 });

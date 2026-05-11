@@ -3,7 +3,7 @@
 String get kApiBaseUrl {
   const envUrl = String.fromEnvironment('API_BASE_URL');
   if (envUrl.isNotEmpty) return envUrl;
-  return 'http://desafio01.alphaedtech/api';
+  return 'https://lab.alphaedtech.org.br/server01/api/';
 }
 
 /// Network timeouts for the Dio client.
@@ -39,7 +39,11 @@ String absoluteImageUrl(String raw) {
   final base = kApiBaseUrl;
   final baseUri = Uri.tryParse(base);
   if (baseUri == null) return trimmed;
-  final origin = '${baseUri.scheme}://${baseUri.authority}';
+  // Usa o path base até /api para montar URLs de uploads (/api/uploads/...)
+  final basePath = baseUri.path.endsWith('/')
+      ? baseUri.path.substring(0, baseUri.path.length - 1)
+      : baseUri.path;
+  final origin = '${baseUri.scheme}://${baseUri.authority}$basePath';
   final normalizedPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
   return '$origin$normalizedPath';
 }
@@ -47,14 +51,10 @@ String absoluteImageUrl(String raw) {
 /// When true, data layers return hardcoded mock data instead of hitting the
 /// backend. Default is `true` on this branch so the demo works without a
 /// running backend (admin login, listings, users — all mocked).
-const bool kUseMockData = bool.fromEnvironment(
-  'USE_MOCK_DATA',
-);
+const bool kUseMockData = bool.fromEnvironment('USE_MOCK_DATA');
 
 /// When true, auth layer uses mock (fake token/user) instead of Firebase Auth.
 /// Default é `false` — o app conversa com o Firebase em dev e prod. Passa
 /// `--dart-define=USE_MOCK_AUTH=true` pra pular o Firebase em builds de UI
 /// sem projeto configurado.
-const bool kUseMockAuth = bool.fromEnvironment(
-  'USE_MOCK_AUTH',
-);
+const bool kUseMockAuth = bool.fromEnvironment('USE_MOCK_AUTH');

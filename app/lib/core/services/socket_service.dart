@@ -32,9 +32,9 @@ class SocketService {
 
   // Deriva a base URL do WebSocket a partir de kApiBaseUrl (remove /api suffix)
   String get _wsUrl {
-    final base = kApiBaseUrl;
-    if (base.endsWith('/api')) return base.substring(0, base.length - 4);
-    return base;
+    final baseUri = Uri.tryParse(kApiBaseUrl);
+    if (baseUri == null) return kApiBaseUrl;
+    return '${baseUri.scheme}://${baseUri.authority}';
   }
 
   Future<void> connect() async {

@@ -271,16 +271,18 @@ class _ImageEntry {
   final bool isCover;
 }
 
-/// O backend em modo local pode devolver URLs de imagem com host
-/// `10.0.2.2` (alias do emulador Android) ou `127.0.0.1`. Em dispositivo
-/// físico conectado via `adb reverse`, só `localhost` resolve. Reescreve
-/// o host pra `localhost` sem mexer em protocolo, porta ou path.
+/// Reescreve hosts de emulador (10.0.2.2, 127.0.0.1) para o host
+/// configurado em `kApiBaseUrl`. Emulador usa `adb reverse` e precisa
+/// de `localhost`; dispositivo físico na mesma rede WiFi usa o IP real.
 String _normalizeLocalHost(String url) {
   if (url.isEmpty) return url;
   try {
     final uri = Uri.parse(url);
     if (uri.host == '10.0.2.2' || uri.host == '127.0.0.1') {
-      return uri.replace(host: 'localhost').toString();
+      final apiUri = Uri.tryParse(kApiBaseUrl);
+      if (apiUri != null) {
+        return uri.replace(host: apiUri.host, port: apiUri.port).toString();
+      }
     }
   } on FormatException {
     // URL malformada — devolve como veio; a UI já lida com carga falha.

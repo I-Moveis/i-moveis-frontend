@@ -144,9 +144,12 @@ class SupportTicketRepository {
     return ticket;
   }
 
-  Future<List<SupportTicketMessage>> getMessages(String ticketId) async {
-    final response =
-        await _dio.get<dynamic>('/support/tickets/$ticketId/messages');
+  Future<List<SupportTicketMessage>> getMessages(String ticketId,
+      {DateTime? since}) async {
+    final queryParams =
+        since != null ? '?since=${since.toUtc().toIso8601String()}' : '';
+    final response = await _dio
+        .get<dynamic>('/support/tickets/$ticketId/messages$queryParams');
     final data = response.data;
     if (data is List) {
       return data
@@ -160,10 +163,14 @@ class SupportTicketRepository {
   Future<SupportTicketMessage> sendMessage({
     required String ticketId,
     required String content,
+    String? clientMessageId,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/support/tickets/$ticketId/messages',
-      data: {'content': content},
+      data: {
+        'content': content,
+        if (clientMessageId != null) 'clientMessageId': clientMessageId,
+      },
     );
     return SupportTicketMessage.fromJson(response.data!);
   }

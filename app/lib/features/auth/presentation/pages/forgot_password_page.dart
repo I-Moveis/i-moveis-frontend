@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
+import '../providers/auth_notifier.dart';
 
 /// Forgot password page — Brutalist Elegance x Japanese Creative Web
 ///
 /// Same visual language: WaveBackground sunset, warm pastels,
 /// glass input, section marker "DATA-SYSTEM // RECOVERY",
 /// index "03", gradient button.
-class ForgotPasswordPage extends StatefulWidget {
+class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage>
+class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
     with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
@@ -106,15 +108,37 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
     super.dispose();
   }
 
-  void _handleSendLink() {
+  Future<void> _handleSendLink() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showError('Informe seu e-mail.');
+      return;
+    }
+
     setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _linkSent = true;
-      });
-    });
+
+    final error = await ref
+        .read(authNotifierProvider.notifier)
+        .resetPassword(email);
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      _showError(error);
+    } else {
+      setState(() => _linkSent = true);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override

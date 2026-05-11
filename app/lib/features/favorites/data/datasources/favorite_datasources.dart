@@ -1,11 +1,8 @@
-import '../../domain/entities/favorite.dart';
-
-/// Contrato de transporte pro backend `/api/favorites*`. Implementações
-/// podem jogar `DioException` (API) ou `NetworkException` (mock) — o
-/// repository traduz em Failures.
+/// Abstract interface for the favorites remote data source.
 abstract class FavoriteRemoteDataSource {
-  Future<List<Favorite>> list();
-  Future<Favorite> add(String propertyId);
-  Future<void> remove(String propertyId);
-  Future<bool> check(String propertyId);
+  Future<void> toggleFavorite(String propertyId);
+  Future<void> removeFavorite(String propertyId);
+  Future<bool> isPropertyFavorited(String propertyId);
+  Future<List<String>> listFavoriteIds();
+  Future<List<Map<String, dynamic>>> listFavoritesWithProperties();
 }

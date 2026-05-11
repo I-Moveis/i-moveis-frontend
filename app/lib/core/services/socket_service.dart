@@ -18,6 +18,9 @@ class SocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final _ticketUpdatedController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _connectionController = StreamController<bool>.broadcast();
+  final _conversationMessageController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onNewMessage =>
       _newMessageController.stream;
@@ -27,10 +30,12 @@ class SocketService {
       _ticketMessageController.stream;
   Stream<Map<String, dynamic>> get onTicketUpdated =>
       _ticketUpdatedController.stream;
+  Stream<bool> get onConnectionChanged => _connectionController.stream;
+  Stream<Map<String, dynamic>> get onConversationMessage =>
+      _conversationMessageController.stream;
 
   bool get isConnected => _socket?.connected ?? false;
 
-  // Deriva a base URL do WebSocket a partir de kApiBaseUrl (remove /api suffix)
   String get _wsUrl {
     final baseUri = Uri.tryParse(kApiBaseUrl);
     if (baseUri == null) return kApiBaseUrl;
@@ -63,14 +68,17 @@ class SocketService {
 
     _socket!.on('connect', (_) {
       debugPrint('[Socket] ✅ conectado a $_wsUrl');
+      _connectionController.add(true);
     });
 
     _socket!.on('disconnect', (_) {
       debugPrint('[Socket] ❌ desconectado');
+      _connectionController.add(false);
     });
 
     _socket!.on('connect_error', (err) {
       debugPrint('[Socket] ⚠️ erro de conexão: $err');
+      _connectionController.add(false);
     });
 
     _socket!.on('new_message', (data) {
@@ -101,6 +109,13 @@ class SocketService {
       }
     });
 
+    _socket!.on('conversation:new_message', (data) {
+      if (data != null) {
+        debugPrint('[Socket] 👥 conversation:new_message recebido');
+        _conversationMessageController.add(data as Map<String, dynamic>);
+      }
+    });
+
     _socket!.connect();
   }
 
@@ -125,6 +140,8 @@ class SocketService {
     _sessionUpdatedController.close();
     _ticketMessageController.close();
     _ticketUpdatedController.close();
+    _connectionController.close();
+    _conversationMessageController.close();
   }
 }
 

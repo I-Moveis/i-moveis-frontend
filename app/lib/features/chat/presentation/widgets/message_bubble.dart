@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../design_system/design_system.dart';
+import '../../../../design_system/design_system.dart';
 import '../../data/models/chat_models.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -15,109 +15,148 @@ class MessageBubble extends StatelessWidget {
 
   bool get _isMine => message.senderType == 'LANDLORD';
 
-  String get _senderLabel {
-    switch (message.senderType) {
-      case 'BOT':
-        return 'Assistente';
-      case 'TENANT':
-        return 'Cliente';
-      case 'LANDLORD':
-        return 'Proprietário';
-      default:
-        return message.senderType;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final titleColor = BrutalistPalette.title(isDark);
-    final muted = BrutalistPalette.muted(isDark);
-    final accent =
-        isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
-    final bgColor = _isMine
-        ? accent.withValues(alpha: 0.1)
-        : BrutalistPalette.surfaceBg(isDark);
-    final borderColor = _isMine
-        ? accent.withValues(alpha: 0.25)
-        : BrutalistPalette.surfaceBorder(isDark);
-
-    return Row(
-      mainAxisAlignment:
-          _isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (!_isMine)
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.sm, top: 2),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: accent.withValues(alpha: 0.12),
-              child: Icon(
-                message.senderType == 'BOT'
-                    ? Icons.smart_toy_rounded
-                    : Icons.person_rounded,
-                size: 14,
-                color: accent,
-              ),
-            ),
+    return Padding(
+      padding: EdgeInsets.only(
+        left: _isMine ? 48 : 12,
+        right: _isMine ? 12 : 48,
+        bottom: AppSpacing.xs,
+      ),
+      child: Column(
+        crossAxisAlignment:
+            _isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSenderBadge(),
+            ],
           ),
-        Flexible(
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(12),
-                topRight: const Radius.circular(12),
-                bottomLeft:
-                    _isMine ? const Radius.circular(12) : Radius.zero,
-                bottomRight:
-                    _isMine ? Radius.zero : const Radius.circular(12),
-              ),
-              border: Border.all(color: borderColor),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _senderLabel,
-                  style: AppTypography.labelSmall
-                      .copyWith(color: _isMine ? accent : muted),
+          const SizedBox(height: 2),
+          Column(
+            crossAxisAlignment:
+                _isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.7,
                 ),
-                const SizedBox(height: 4),
-                Text(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm + 2,
+                ),
+                decoration: BoxDecoration(
+                  color: _bubbleColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(AppRadius.lg),
+                    topRight: const Radius.circular(AppRadius.lg),
+                    bottomLeft: Radius.circular(_isMine ? AppRadius.lg : AppRadius.xs),
+                    bottomRight: Radius.circular(_isMine ? AppRadius.xs : AppRadius.lg),
+                  ),
+                  border: message.senderType == 'BOT'
+                      ? Border.all(color: BrutalistPalette.surfaceBorder(isDark))
+                      : null,
+                ),
+                child: Text(
                   message.content,
-                  style: AppTypography.bodyMedium.copyWith(color: titleColor),
-                ),
-                const SizedBox(height: 4),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    _formatTime(message.timestamp),
-                    style: AppTypography.bodySmall
-                        .copyWith(color: muted, fontSize: 10),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: _textColor,
+                    height: 1.5,
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _formatTime(message.timestamp),
+                      style: AppTypography.captionTiny.copyWith(
+                        color: BrutalistPalette.faint(isDark),
+                      ),
+                    ),
+                    if (_isMine) ...[
+                      const SizedBox(width: 4),
+                      _buildStatusIcon(),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        if (_isMine)
-          Padding(
-            padding: const EdgeInsets.only(left: AppSpacing.sm, top: 2),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: accent.withValues(alpha: 0.15),
-              child: Icon(Icons.person_rounded, size: 14, color: accent),
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
-  static String _formatTime(DateTime dt) {
-    final hh = dt.hour.toString().padLeft(2, '0');
-    final mm = dt.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
+  Color get _bubbleColor {
+    switch (message.senderType) {
+      case 'BOT':
+        return BrutalistPalette.surfaceBg(isDark);
+      case 'TENANT':
+        return isDark
+            ? BrutalistPalette.deepOrange.withValues(alpha: 0.15)
+            : BrutalistPalette.deepOrange.withValues(alpha: 0.1);
+      case 'LANDLORD':
+        return isDark
+            ? BrutalistPalette.warmBrown.withValues(alpha: 0.25)
+            : BrutalistPalette.deepBrown.withValues(alpha: 0.12);
+      default:
+        return BrutalistPalette.surfaceBg(isDark);
+    }
+  }
+
+  Color get _textColor {
+    switch (message.senderType) {
+      case 'BOT':
+        return BrutalistPalette.title(isDark);
+      case 'TENANT':
+        return isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
+      case 'LANDLORD':
+        return isDark ? BrutalistPalette.warmBrown : BrutalistPalette.deepBrown;
+      default:
+        return BrutalistPalette.title(isDark);
+    }
+  }
+
+  Widget _buildSenderBadge() {
+    final label = senderTypeLabel(message.senderType);
+    final color = _textColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: AppRadius.borderXs,
+      ),
+      child: Text(
+        label,
+        style: AppTypography.captionTiny.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusIcon() {
+    switch (message.status) {
+      case 'sent':
+        return Icon(Icons.check, size: 12, color: BrutalistPalette.faint(isDark));
+      case 'delivered':
+        return Icon(Icons.done_all, size: 12, color: BrutalistPalette.faint(isDark));
+      case 'read':
+        return Icon(Icons.done_all, size: 12, color: BrutalistPalette.warmOrange);
+      default:
+        return Icon(Icons.access_time, size: 10, color: BrutalistPalette.faint(isDark));
+    }
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 }

@@ -5,9 +5,9 @@ import '../../../../core/network/network_exception.dart';
 import '../../domain/entities/favorite.dart';
 import '../../domain/repositories/favorite_repository.dart';
 import '../datasources/favorite_datasources.dart';
+import '../models/favorite_api_model.dart';
 
 /// Traduz `DioException`/`NetworkException` em Failures do domínio.
-/// Padrão idêntico ao VisitRepositoryImpl.
 class FavoriteRepositoryImpl implements FavoriteRepository {
   FavoriteRepositoryImpl(this._remote);
 
@@ -49,17 +49,22 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
   }
 
   @override
-  Future<List<Favorite>> list() => _guard(_remote.list);
+  Future<List<Favorite>> list() => _guard(() async {
+        final items = await _remote.listFavoritesWithProperties();
+        return items.map((json) => favoriteFromApiJson(json)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      });
 
   @override
-  Future<Favorite> add(String propertyId) =>
-      _guard(() => _remote.add(propertyId));
+  Future<Favorite> add(String propertyId) => _guard(() async {
+        await _remote.toggleFavorite(propertyId);
+        return Favorite(propertyId: propertyId, createdAt: DateTime.now());
+      });
 
   @override
   Future<void> remove(String propertyId) async {
-    // 404 no DELETE significa "já não era favorito" — idempotente.
     try {
-      await _remote.remove(propertyId);
+      await _remote.removeFavorite(propertyId);
     } on DioException catch (e) {
       final err = e.error;
       if (err is NetworkException && err.kind == NetworkErrorKind.notFound) {
@@ -71,5 +76,5 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
 
   @override
   Future<bool> check(String propertyId) =>
-      _guard(() => _remote.check(propertyId));
+      _guard(() => _remote.isPropertyFavorited(propertyId));
 }

@@ -69,7 +69,14 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
     };
 
     if (filters.location.isNotEmpty) {
-      params['city'] = filters.location;
+      // Se location veio como "Cidade, UF" (deep link / manual),
+      // envia apenas o nome da cidade para o parametro city.
+      // O state ja vai separado no parametro state abaixo.
+      String cityParam = filters.location;
+      if (filters.location.contains(',') && filters.state.isNotEmpty) {
+        cityParam = filters.location.split(',').first.trim();
+      }
+      params['city'] = cityParam;
     }
     if (filters.state.isNotEmpty) {
       params['state'] = filters.state;

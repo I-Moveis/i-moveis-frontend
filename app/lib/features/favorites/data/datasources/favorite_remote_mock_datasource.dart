@@ -1,38 +1,39 @@
-import '../../domain/entities/favorite.dart';
 import 'favorite_datasources.dart';
 
 /// Implementação em memória usada quando `kUseMockData` está ligado.
-/// Preserva o conjunto de favoritos durante a sessão mas não persiste
-/// entre inicializações — mesmo comportamento dos outros mocks do app.
 class FavoriteRemoteMockDataSource implements FavoriteRemoteDataSource {
-  final Map<String, Favorite> _store = {};
+  final Map<String, DateTime> _store = {};
 
   @override
-  Future<List<Favorite>> list() async {
-    final items = _store.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return items;
+  Future<void> toggleFavorite(String propertyId) async {
+    if (_store.containsKey(propertyId)) {
+      _store.remove(propertyId);
+    } else {
+      _store[propertyId] = DateTime.now();
+    }
   }
 
   @override
-  Future<Favorite> add(String propertyId) async {
-    final existing = _store[propertyId];
-    if (existing != null) return existing;
-    final fav = Favorite(
-      propertyId: propertyId,
-      createdAt: DateTime.now(),
-    );
-    _store[propertyId] = fav;
-    return fav;
-  }
-
-  @override
-  Future<void> remove(String propertyId) async {
+  Future<void> removeFavorite(String propertyId) async {
     _store.remove(propertyId);
   }
 
   @override
-  Future<bool> check(String propertyId) async {
+  Future<bool> isPropertyFavorited(String propertyId) async {
     return _store.containsKey(propertyId);
+  }
+
+  @override
+  Future<List<String>> listFavoriteIds() async {
+    return _store.keys.toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> listFavoritesWithProperties() async {
+    return _store.entries.map((e) => {
+      'propertyId': e.key,
+      'createdAt': e.value.toIso8601String(),
+    }).toList()
+      ..sort((a, b) => (b['createdAt'] as String).compareTo(a['createdAt'] as String));
   }
 }

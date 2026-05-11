@@ -119,6 +119,18 @@ class AuthNotifier extends Notifier<AuthState> {
     _setState(AuthState.authenticated(user: _fakeUserFor(role)));
   }
 
+  /// Envia email de redefinicao de senha via Firebase.
+  /// Retorna `null` em caso de sucesso, ou a mensagem de erro.
+  /// Nao altera o estado global de autenticacao (usuario nao esta logando).
+  Future<String?> resetPassword(String email) async {
+    final result =
+        await ref.read(resetPasswordUseCaseProvider).execute(email: email);
+    return result.fold(
+      (failure) => failure.message,
+      (_) => null,
+    );
+  }
+
   AuthUser _fakeUserFor(DemoRole role) {
     switch (role) {
       case DemoRole.client:

@@ -1,23 +1,37 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/dio_provider.dart';
+import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/services/socket_service.dart';
 import '../../data/models/chat_models.dart';
 
 // ── Sessions (lista de conversas) ────────────────────────────────────────────
 
 class SessionsNotifier extends AsyncNotifier<List<ChatSessionModel>> {
+  static const _cacheKey = 'chat_sessions_cache';
+
+  StreamSubscription<Map<String, dynamic>>? _wsSub;
+
   @override
   Future<List<ChatSessionModel>> build() async {
     _listenWebSocket();
-    return _fetchSessions();
+    ref.onDispose(() => _wsSub?.cancel());
+
+    // Cache-first: mostra dados antigos imediatamente
+    final cached = await _loadCache();
+    if (cached != null && cached.isNotEmpty) {
+      state = AsyncData(cached);
+    }
+
+    return _fetchAndCache();
   }
 
-  Future<List<ChatSessionModel>> _fetchSessions() async {
+  Future<List<ChatSessionModel>> _fetchAndCache() async {
     final dio = ref.read(dioProvider);
     try {
       final response = await dio.get<dynamic>('/chat/sessions');
@@ -28,7 +42,7 @@ class SessionsNotifier extends AsyncNotifier<List<ChatSessionModel>> {
               ? data['data'] as List
               : null;
       if (list == null) return const [];
-      return list
+      final sessions = list
           .whereType<Map<String, dynamic>>()
           .map(ChatSessionModel.fromJson)
           .toList()
@@ -37,6 +51,8 @@ class SessionsNotifier extends AsyncNotifier<List<ChatSessionModel>> {
           final bTime = b.lastMessageAt ?? b.startedAt;
           return bTime.compareTo(aTime);
         });
+      _saveCache(sessions);
+      return sessions;
     } on DioException catch (e) {
       if (kDebugMode) {
         debugPrint(
@@ -51,9 +67,36 @@ class SessionsNotifier extends AsyncNotifier<List<ChatSessionModel>> {
     }
   }
 
+  // ── Cache ──
+
+  Future<List<ChatSessionModel>?> _loadCache() async {
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      final json = prefs.getString(_cacheKey);
+      if (json == null) return null;
+      final list = jsonDecode(json) as List<dynamic>;
+      return list
+          .map((e) => ChatSessionModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveCache(List<ChatSessionModel> sessions) async {
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      final json = jsonEncode(sessions.map((s) => s.toJson()).toList());
+      await prefs.setString(_cacheKey, json);
+    } catch (_) {}
+  }
+
+  // ── WebSocket ──
+
   void _listenWebSocket() {
     final socket = ref.read(socketServiceProvider);
-    final sub = socket.onNewMessage.listen((data) {
+    _wsSub?.cancel();
+    _wsSub = socket.onNewMessage.listen((data) {
       final sessionId = data['sessionId'] as String?;
       if (sessionId == null) return;
       final current = state.asData?.value ?? [];
@@ -70,12 +113,11 @@ class SessionsNotifier extends AsyncNotifier<List<ChatSessionModel>> {
       }).toList();
       state = AsyncData(updated);
     });
-    ref.onDispose(sub.cancel);
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = AsyncValue.data(await _fetchSessions());
+    state = AsyncValue.data(await _fetchAndCache());
   }
 }
 

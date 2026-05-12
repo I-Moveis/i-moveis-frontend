@@ -11,19 +11,12 @@ import '../../../core/providers/shared_preferences_provider.dart';
 import '../domain/entities/support_ticket.dart';
 import '../domain/entities/support_ticket_message.dart';
 
-/// Armazena e lista chamados de suporte. **Dois modos**:
-///
-/// 1. **Remoto** (preferido, quando backend expuser
-///    `POST /api/support/tickets` e `GET /api/support/tickets`): carrega
-///    e salva direto na API.
-/// 2. **Local** (fallback): persiste em SharedPreferences com uma chave
-///    por usuário. Útil até o backend subir — o usuário vê seus próprios
-///    chamados já criados mesmo antes do painel do admin existir.
-///
-/// Quando um chamado é criado no modo local, ele ganha um id sintético
-/// (o próprio code `SUP-...`). Quando o remoto começar a responder, os
-/// tickets locais seguem visíveis até o próximo refresh que vem da API
-/// — aí o backend passa a ser a fonte de verdade.
+/// Armazena e lista chamados de suporte. Backend é a fonte de verdade
+/// (`POST /api/support/tickets`, `GET /api/support/tickets`,
+/// `GET/POST /support/tickets/:id/messages`); o cache local em
+/// SharedPreferences só serve como fallback offline em falhas
+/// transitórias de rede — em qualquer lookup bem-sucedido o backend
+/// substitui o cache.
 class SupportTicketRepository {
   SupportTicketRepository({
     required SharedPreferences prefs,
@@ -36,13 +29,11 @@ class SupportTicketRepository {
 
   static const _localKey = 'support.local_tickets';
 
-  /// Lista todos os chamados do usuário atual. **Estado do backend (2026-05-07)**:
-  /// só existe `GET /api/admin/support/tickets` (US-019), restrito a ADMIN.
-  /// Não há endpoint pro próprio landlord/tenant listar seus tickets — o
-  /// repo tenta `/support/tickets` mesmo assim (pra o dia que subir), e
-  /// cai no cache local em qualquer erro. O cache é alimentado pelo
-  /// `create()` a cada POST bem-sucedido, garantindo que o usuário veja
-  /// o histórico dele com title/description preservados do request.
+  /// Lista os chamados do usuário corrente em
+  /// `GET /api/support/tickets` (filtrado server-side por `userId`).
+  /// Em falha de rede, volta o cache local — ele é alimentado pelo
+  /// `create()` a cada POST bem-sucedido, então mesmo offline o usuário
+  /// vê os tickets que criou.
   Future<List<SupportTicket>> list() async {
     try {
       final response =

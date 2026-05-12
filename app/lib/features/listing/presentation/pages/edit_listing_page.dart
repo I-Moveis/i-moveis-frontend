@@ -106,22 +106,15 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
     _existingPhotos = List.of(property.imageUrls);
   }
 
-  /// Atualiza o tipo selecionado (real ou estendido). Mesma regra do
-  /// CreateListingPage — selecionar estendido força o enum real pro
-  /// default APARTMENT pra não quebrar o PUT.
+  /// Todos os 8 tipos são aceitos pelo backend agora — basta setar.
   void _onSelectType(String key) {
     setState(() {
-      if (ListingTypeChipsRow.realTypes.contains(key)) {
-        _selectedType = key;
-        _extendedType = null;
-      } else {
-        _extendedType = key;
-        _selectedType = 'APARTMENT';
-      }
+      _selectedType = key;
+      _extendedType = null;
     });
   }
 
-  String? _currentTypeKey() => _extendedType ?? _selectedType;
+  String? _currentTypeKey() => _selectedType;
 
   void _removeExistingPhoto(String url) {
     setState(() {
@@ -406,13 +399,13 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
                         onChanged: (v) => setState(() => _nearSubway = v),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      ListingUiOnlyToggle(
+                      ListingToggle(
                         label: 'Wi-Fi incluso',
                         value: _hasWifi,
                         onChanged: (v) => setState(() => _hasWifi = v),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      ListingUiOnlyToggle(
+                      ListingToggle(
                         label: 'Piscina',
                         value: _hasPool,
                         onChanged: (v) => setState(() => _hasPool = v),

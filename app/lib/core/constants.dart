@@ -10,14 +10,14 @@ String get kApiBaseUrl {
 const Duration kApiConnectTimeout = Duration(seconds: 15);
 const Duration kApiReceiveTimeout = Duration(seconds: 30);
 
-/// Converte um path de imagem para URL absoluta. O backend guarda
-/// `PropertyImage.url` como path relativo (`/uploads/<propertyId>/<file>.jpg`)
-/// que é servido pelo express-static na raiz do servidor — **fora** do
-/// prefixo `/api`. Essa função:
+/// Converte um path de imagem para URL absoluta. O backend serve fotos
+/// em `<API_ROOT>/uploads/<propertyId>/<file>.jpg` (express-static
+/// montado em `/api/uploads` — incluso no path do `kApiBaseUrl`):
 ///
-/// - devolve a string intacta quando já começa com `http://` ou `https://`
-///   (absoluta — ex.: CDN ou signed URL);
-/// - prepend a ORIGEM do `kApiBaseUrl` (sem o `/api`) quando começa com `/`.
+/// - se a string já começa com `http://`/`https://` (CDN ou signed URL),
+///   devolve intacta (forçando https quando vier http);
+/// - se começa com `/`, prepend a `origin + basePath` do `kApiBaseUrl`
+///   pra montar a URL absoluta correta.
 ///
 /// `Image.network` exige URL absoluta; URL relativa falha sem mensagem
 /// clara. Use este helper em todo ponto da UI que renderiza uma imagem

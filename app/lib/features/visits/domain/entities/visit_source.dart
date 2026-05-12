@@ -1,12 +1,7 @@
 /// Origem de uma visita: agendada manualmente pelo usuário (app/web) ou
 /// automaticamente por um agente de IA (ex: bot do WhatsApp que processa
-/// mensagem do inquilino e cria a visita sem intervenção humana).
-///
-/// O frontend hoje assume sempre `manual` — o backend ainda não devolve
-/// esse campo. Quando devolver, basta o `visitFromApiJson` parsear o valor
-/// que a UI já acende a distinção visual.
-///
-/// Ver `docs/BACKEND_VISIT_SOURCE.md` para o contrato sugerido.
+/// mensagem do inquilino e cria a visita sem intervenção humana). Vem
+/// como enum `VisitSource { MANUAL, AI }` no response de `GET /api/visits*`.
 enum VisitSource {
   manual,
   ai;

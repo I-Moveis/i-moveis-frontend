@@ -303,15 +303,13 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
                     onChanged: (v) => setState(() => _nearSubway = v),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  // Wi-Fi e Piscina ainda não estão no schema do backend.
-                  // UI-only por ora — ver BACKEND_HANDOFF.md §9.
-                  ListingUiOnlyToggle(
+                  ListingToggle(
                     label: 'Wi-Fi incluso',
                     value: _hasWifi,
                     onChanged: (v) => setState(() => _hasWifi = v),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  ListingUiOnlyToggle(
+                  ListingToggle(
                     label: 'Piscina',
                     value: _hasPool,
                     onChanged: (v) => setState(() => _hasPool = v),
@@ -349,23 +347,14 @@ class _CreateListingPageState extends ConsumerState<CreateListingPage> {
   }
 
   /// Chave corrente da seleção de tipo pra pintar o chip certo — ou o
-  /// enum real (`APARTMENT` etc.) ou o extended ('KITNET' etc.).
-  String? _currentTypeKey() => _extendedType ?? _selectedType;
+  /// Tipo selecionado no chip (todos os 8 valores agora são aceitos
+  /// pelo enum `PropertyType` do backend).
+  String? _currentTypeKey() => _selectedType;
 
-  /// Regras:
-  /// - Selecionar um tipo **real** limpa `_extendedType` e seta `_selectedType`.
-  /// - Selecionar um tipo **estendido** seta `_extendedType` e faz o
-  ///   `_selectedType` cair pro default APARTMENT (pra o backend aceitar
-  ///   o POST — ver BACKEND_HANDOFF.md §9).
   void _onSelectType(String key) {
     setState(() {
-      if (ListingTypeChipsRow.realTypes.contains(key)) {
-        _selectedType = key;
-        _extendedType = null;
-      } else {
-        _extendedType = key;
-        _selectedType = 'APARTMENT';
-      }
+      _selectedType = key;
+      _extendedType = null;
     });
   }
 }

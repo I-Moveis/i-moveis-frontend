@@ -113,6 +113,8 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
     if (filters.isFurnished) params['isFurnished'] = true;
     if (filters.nearSubway) params['nearSubway'] = true;
     if (filters.isFeatured) params['isFeatured'] = true;
+    if (filters.hasWifi) params['hasWifi'] = true;
+    if (filters.hasPool) params['hasPool'] = true;
 
     if (filters.orderBy != null && filters.orderBy!.isNotEmpty) {
       params['orderBy'] = filters.orderBy;
@@ -133,7 +135,8 @@ class PropertyRemoteApiDataSource implements PropertyRemoteDataSource {
       params['tenantId'] = filters.tenantId;
     }
 
-    // NOTE (api-gap): transactionTypes, hasWifi, hasPool have no API equivalent.
+    // NOTE (api-gap): `transactionTypes` ainda não tem campo no schema;
+    // a UI mantém o filtro mas ele é cosmético até o backend decidir.
 
     return params;
   }
@@ -331,7 +334,16 @@ String? _uiTypeToApi(String uiLabel) {
     case 'Studio':
       return 'STUDIO';
     case 'Casa em condomínio':
+    case 'Condomínio':
       return 'CONDO_HOUSE';
+    case 'Kitnet':
+      return 'KITNET';
+    case 'Cobertura':
+      return 'PENTHOUSE';
+    case 'Terreno':
+      return 'LAND';
+    case 'Comercial':
+      return 'COMMERCIAL';
   }
   return null;
 }

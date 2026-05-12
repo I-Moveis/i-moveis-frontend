@@ -6,6 +6,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../rentals/data/current_payment_repository.dart';
 import '../../../rentals/domain/entities/rent_payment.dart';
 import '../../../search/domain/entities/property_input.dart';
+import '../../data/property_analytics_repository.dart';
 import '../providers/edit_listing_notifier.dart';
 import '../providers/my_properties_notifier.dart';
 // Property is used via type inference in the data block
@@ -89,12 +90,19 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
   _AnalyticsPaymentStatus? _paymentInflight;
   bool _savingPayment = false;
 
-  /// Analytics por imóvel + janela de tempo (7d / 30d / Total) depende de
-  /// um endpoint que ainda não existe — `GET /properties/:id/analytics?window=`
-  /// (ver `BACKEND_PENDENCIAS_LANDLORD.md §2.1`). Enquanto isso os cards
-  /// renderizam `—` sem animação, mantendo layout e rótulos vivos.
-  Map<String, int?> _getMetrics() {
-    return const {'views': null, 'favs': null, 'props': null, 'visits': null};
+  /// Analytics por imóvel + janela de tempo (7d / 30d / Total) vem de
+  /// `GET /properties/:id/analytics?window=`. Quando o endpoint falha
+  /// (rede, 500), o provider devolve null e os cards caem em `—`.
+  Map<String, int?> _getMetrics(PropertyAnalytics? analytics) {
+    if (analytics == null) {
+      return const {'views': null, 'favs': null, 'props': null, 'visits': null};
+    }
+    return {
+      'views': analytics.views,
+      'favs': analytics.favorites,
+      'props': analytics.proposalsTotal,
+      'visits': analytics.visitsScheduled,
+    };
   }
 
   /// Dispara PUT /properties/:id/payments/current. Mesmo padrão
@@ -165,7 +173,13 @@ class _ListingAnalyticsPageState extends ConsumerState<ListingAnalyticsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = _getMetrics();
+    final analyticsAsync = ref.watch(propertyAnalyticsProvider(
+      PropertyAnalyticsQuery(
+        propertyId: widget.propertyId,
+        window: AnalyticsWindow.fromUiLabel(_selectedFilter),
+      ),
+    ));
+    final metrics = _getMetrics(analyticsAsync.asData?.value);
     final propertiesAsync = ref.watch(myPropertiesNotifierProvider);
     
     return BrutalistPageScaffold(

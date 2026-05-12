@@ -44,6 +44,8 @@ Property propertyFromApiJson(Map<String, dynamic> json) {
     currentTenant: _parseTenant(
       _pick(json, 'currentTenant', 'current_tenant') ?? json['tenant'],
     ),
+    hasWifi: _pick(json, 'hasWifi', 'has_wifi') == true,
+    hasPool: _pick(json, 'hasPool', 'has_pool') == true,
   );
 }
 
@@ -88,6 +90,8 @@ Map<String, dynamic> propertyToCreateJson(PropertyInput input) {
   _putIfNotNull(body, 'nearSubway', input.nearSubway);
   _putIfNotNull(body, 'isFeatured', input.isFeatured);
   _putIfNotNull(body, 'status', input.status);
+  _putIfNotNull(body, 'hasWifi', input.hasWifi);
+  _putIfNotNull(body, 'hasPool', input.hasPool);
   if (input.condoFee != null) {
     body['condoFee'] = input.condoFee!.toStringAsFixed(2);
   }
@@ -127,6 +131,8 @@ Map<String, dynamic> propertyToPatchJson(PropertyInput input) {
   _putIfNotNull(body, 'nearSubway', input.nearSubway);
   _putIfNotNull(body, 'isFeatured', input.isFeatured);
   _putIfNotNull(body, 'status', input.status);
+  _putIfNotNull(body, 'hasWifi', input.hasWifi);
+  _putIfNotNull(body, 'hasPool', input.hasPool);
   if (input.condoFee != null) {
     body['condoFee'] = input.condoFee!.toStringAsFixed(2);
   }
@@ -176,6 +182,14 @@ String _typeLabel(String apiType) {
       return 'Studio';
     case 'CONDO_HOUSE':
       return 'Casa em condomínio';
+    case 'KITNET':
+      return 'Kitnet';
+    case 'PENTHOUSE':
+      return 'Cobertura';
+    case 'LAND':
+      return 'Terreno';
+    case 'COMMERCIAL':
+      return 'Comercial';
     default:
       return 'Imóvel';
   }
@@ -189,6 +203,14 @@ int _thumbnailIcon(String apiType) {
       return 0xe63d; // Icons.weekend_rounded
     case 'CONDO_HOUSE':
       return 0xe586; // Icons.villa_rounded
+    case 'KITNET':
+      return 0xe1bd; // Icons.bed_rounded
+    case 'PENTHOUSE':
+      return 0xe7d8; // Icons.holiday_village_rounded
+    case 'LAND':
+      return 0xe22e; // Icons.terrain_rounded
+    case 'COMMERCIAL':
+      return 0xe0af; // Icons.business_rounded
     case 'APARTMENT':
     default:
       return 0xe06a; // Icons.apartment_rounded
@@ -227,8 +249,8 @@ _ImagesParseResult _parseImages(Object? raw) {
   //   - `images: ["url1", "url2"]`   — caso legado/simplificado.
   // Em ambos os casos, URL pode ser relativa (`/uploads/...`) ou
   // absoluta (CDN). Hidrata com `absoluteImageUrl` pra que `Image.network`
-  // consiga carregar — backend serve `/uploads/*` via express-static na
-  // raiz do servidor (fora do prefixo `/api`).
+  // consiga carregar — backend serve as fotos em `/api/uploads/*` via
+  // express-static (path incluso no `kApiBaseUrl`).
   if (raw is! List) return const _ImagesParseResult(urls: [], cover: null);
   // Hidratação em dois passos: `absoluteImageUrl` resolve path relativo →
   // URL absoluta usando `kApiBaseUrl`; `_normalizeLocalHost` troca hosts
@@ -299,7 +321,19 @@ PropertyTenant? _parseTenant(Object? raw) {
     final id = (raw['id'] ?? raw['userId'] ?? raw['tenantId'])?.toString();
     final name = (raw['name'] ?? raw['fullName'])?.toString();
     if (id != null && id.isNotEmpty && name != null && name.isNotEmpty) {
-      return PropertyTenant(id: id, name: name);
+      final verifiedAtRaw = (raw['identityVerifiedAt'] ??
+              raw['identity_verified_at'])
+          ?.toString();
+      return PropertyTenant(
+        id: id,
+        name: name,
+        isIdentityVerified: (raw['isIdentityVerified'] ??
+                raw['is_identity_verified']) ==
+            true,
+        identityVerifiedAt: verifiedAtRaw == null
+            ? null
+            : DateTime.tryParse(verifiedAtRaw)?.toLocal(),
+      );
     }
   }
   return null;

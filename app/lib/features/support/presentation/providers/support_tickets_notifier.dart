@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/support_ticket_repository.dart';
 import '../../domain/entities/support_ticket.dart';
 
-/// Lista de chamados de suporte do usuário corrente. Usa o
-/// [SupportTicketRepository] pra carregar — tenta remoto, cai no cache
-/// local em falha. Ver `BACKEND_HANDOFF.md §10`.
+/// Lista de chamados de suporte do usuário corrente, vinda do backend
+/// (`GET /api/support/tickets`). Em falha de rede o repository cai no
+/// cache local pra preservar a UX offline.
 class SupportTicketsNotifier
     extends AsyncNotifier<List<SupportTicket>> {
   @override

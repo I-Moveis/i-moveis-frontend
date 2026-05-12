@@ -6,21 +6,17 @@ import '../../../../design_system/design_system.dart';
 import '../../../chat/domain/entities/conversation_summary.dart';
 import '../../../chat/presentation/providers/conversations_notifier.dart';
 import '../../../listing/presentation/providers/my_properties_notifier.dart';
+import '../../../rentals/data/contract_repository.dart';
+import '../../../rentals/domain/entities/contract.dart';
 import '../../../search/domain/entities/property.dart';
 
 /// Tela "Meus Inquilinos" — mostra um card por inquilino que mora em
-/// algum imóvel do landlord logado. Derivada de:
-/// - `myPropertiesNotifierProvider.where(currentTenant != null)` — um
-///   item por property com inquilino vinculado
-/// - `conversationsProvider` — preview da última mensagem, quando há
-///   conversa linkada àquele tenant
-///
-/// **Dependências de backend** (ver `BACKEND_HANDOFF.md`):
-/// - `property.currentTenant` (§2) — sem isso, lista fica vazia
-/// - `conversation.linkedTenantId` (§12) — sem isso, preview fica "—"
-/// - `tenant.documentStatus` e `contract.endDate` — ainda não existem;
-///   por ora status é derivado de `property.status` e vencimento fica
-///   em "—" (ver §13 proposto)
+/// algum imóvel do landlord logado. Cruza:
+/// - `myPropertiesNotifierProvider.where(currentTenant != null)` — uma
+///   linha por property com inquilino vinculado
+/// - `activeContractProvider` — `documentStatus` (chip de status) e
+///   `endDate` (vencimento) por par (propertyId, tenantId)
+/// - `conversationsProvider` — preview da última mensagem
 class TenantsPage extends ConsumerWidget {
   const TenantsPage({super.key});
 
@@ -40,13 +36,23 @@ class TenantsPage extends ConsumerWidget {
     final conversations =
         ref.watch(conversationsProvider).asData?.value ?? const [];
 
-    // Cruza imóveis (com inquilino) + conversas (linkadas ao tenant) pra
-    // montar os dados de cada card num único passe. Ordem: mais recente
-    // por property.id (sem `rentalStartedAt` dá pra melhorar depois).
+    // Cruza imóveis (com inquilino) + conversas (linkadas ao tenant) +
+    // contrato ativo (status documental + vencimento) pra montar cada card.
+    // O contrato é buscado lazy via provider; null = usar defaults.
     final entries = <_TenantEntry>[
       for (final p in properties)
         if (p.currentTenant != null)
-          _TenantEntry.from(property: p, conversations: conversations),
+          _TenantEntry.from(
+            property: p,
+            conversations: conversations,
+            contract: ref
+                .watch(activeContractProvider(ContractQuery(
+                  propertyId: p.id,
+                  tenantId: p.currentTenant!.id,
+                )))
+                .asData
+                ?.value,
+          ),
     ];
 
     return BrutalistPageScaffold(
@@ -264,9 +270,11 @@ class _TenantDetailsSheet extends StatelessWidget {
                       children: [
                         _buildInfoRow('Vencimento', tenant.contractEnd, isDark),
                         const SizedBox(height: 12),
-                        _buildInfoRow('Valor Mensal', r'R$ 2.500,00', isDark),
-                        const SizedBox(height: 12),
-                        _buildInfoRow('Garantia', 'Seguro Fiança', isDark),
+                        _buildInfoRow(
+                          'Valor Mensal',
+                          tenant.monthlyRent.isEmpty ? '—' : tenant.monthlyRent,
+                          isDark,
+                        ),
                       ],
                     ),
                   ),
@@ -314,8 +322,8 @@ class _TenantDetailsSheet extends StatelessWidget {
 }
 
 /// Dados já enriquecidos pra um card de inquilino — mistura Property,
-/// PropertyTenant e ConversationSummary numa estrutura que a UI
-/// consome direto. Calculado uma vez no build, passado pro card.
+/// PropertyTenant, ConversationSummary e Contract numa estrutura que a
+/// UI consome direto. Calculado uma vez no build, passado pro card.
 class _TenantEntry {
   const _TenantEntry({
     required this.tenantId,
@@ -325,6 +333,8 @@ class _TenantEntry {
     required this.status,
     required this.lastMessage,
     required this.contractEnd,
+    required this.monthlyRent,
+    required this.isIdentityVerified,
   });
 
   final String tenantId;
@@ -332,32 +342,33 @@ class _TenantEntry {
   final String tenantName;
   final String propertyTitle;
 
-  /// Status textual preservado ("Documentação OK" / "Aguardando
-  /// Assinatura" / "Pendente Documentos"). Derivado de `property.status`
-  /// por ora — quando o backend expuser `tenant.documentStatus`, trocar
-  /// aqui. Ver BACKEND_HANDOFF.md §13.
+  /// Status textual derivado de `Contract.documentStatus`
+  /// (PENDING_DOCUMENTS / AWAITING_SIGNATURE / APPROVED). "Sem
+  /// contrato" quando ainda não há contrato ativo.
   final String status;
 
   /// Preview da última mensagem trocada com esse inquilino. Vem de uma
   /// `ConversationSummary` com `linkedTenantId` igual ao tenant id.
-  /// Fallback quando não há conversa: string vazia (a UI oculta o
-  /// preview).
   final String lastMessage;
 
-  /// Mês/ano do fim do contrato (ex: "12/2026"). Backend ainda não
-  /// expõe esse campo — por ora fica em "—". Ver BACKEND_HANDOFF.md §13.
+  /// Mês/ano do fim do contrato (ex: "12/2026"), derivado de
+  /// `Contract.endDate`. "—" quando sem contrato ativo.
   final String contractEnd;
 
-  /// Constrói a partir de uma [Property] que tem `currentTenant != null`
-  /// + a lista global de conversas pra buscar preview linkado.
+  /// Valor mensal do aluguel formatado (ex: "R$ 2.500,00"), de
+  /// `Contract.monthlyRent`. Vazio quando sem contrato.
+  final String monthlyRent;
+
+  /// Identidade do inquilino verificada — vira o checkmark ao lado do
+  /// nome no card. Vem de `PropertyTenant.isIdentityVerified`.
+  final bool isIdentityVerified;
+
   factory _TenantEntry.from({
     required Property property,
     required List<ConversationSummary> conversations,
+    required Contract? contract,
   }) {
     final tenant = property.currentTenant!;
-    // Procura a conversa mais recente linkada a esse tenant. A lista já
-    // vem ordenada DESC por `lastMessageAt` do provider, então
-    // firstWhereOrNull basta.
     ConversationSummary? match;
     for (final c in conversations) {
       if (c.linkedTenantId == tenant.id) {
@@ -370,27 +381,45 @@ class _TenantEntry {
       propertyId: property.id,
       tenantName: tenant.name,
       propertyTitle: property.title,
-      status: _statusFromProperty(property.status),
+      status: _statusFromContract(contract),
       lastMessage: match?.lastMessage ?? '',
-      contractEnd: '—',
+      contractEnd: contract == null
+          ? '—'
+          : '${contract.endDate.month.toString().padLeft(2, '0')}/${contract.endDate.year}',
+      monthlyRent: contract == null
+          ? ''
+          : _formatBrl(contract.monthlyRent),
+      isIdentityVerified: tenant.isIdentityVerified,
     );
   }
 
-  /// Mapeia `property.status` nas 3 labels herdadas da UI original.
-  /// Heurística provisória — ver BACKEND_HANDOFF.md §13 pra proposta
-  /// de `tenant.documentStatus` dedicado.
-  static String _statusFromProperty(String? status) {
-    switch (status) {
-      case 'RENTED':
+  /// Mapeia `Contract.documentStatus` nas labels da UI. Sem contrato
+  /// ativo significa que o landlord ainda precisa formalizar — tratamos
+  /// como "Sem contrato" pra ele notar.
+  static String _statusFromContract(Contract? contract) {
+    if (contract == null) return 'Sem contrato';
+    switch (contract.documentStatus) {
+      case ContractDocumentStatus.approved:
         return 'Documentação OK';
-      case 'NEGOTIATING':
+      case ContractDocumentStatus.awaitingSignature:
         return 'Aguardando Assinatura';
-      case 'AVAILABLE':
-      default:
-        // Caso borderline: tenant vinculado mas property não-RENTED.
-        // Tratamos como inquilino incompleto pra o landlord notar.
+      case ContractDocumentStatus.pendingDocuments:
         return 'Pendente Documentos';
     }
+  }
+
+  /// `1234.56` → `R$ 1.234,56`.
+  static String _formatBrl(double value) {
+    final fixed = value.toStringAsFixed(2);
+    final parts = fixed.split('.');
+    final intPart = parts[0];
+    final decPart = parts.length > 1 ? parts[1] : '00';
+    final buf = StringBuffer();
+    for (var i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) buf.write('.');
+      buf.write(intPart[i]);
+    }
+    return 'R\$ $buf,$decPart';
   }
 
   /// Geração defensiva das iniciais do avatar (ex: "João Silva" → "JS").
@@ -404,10 +433,6 @@ class _TenantEntry {
     return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
-  /// Converte pro shape legado [_TenantData] consumido pelo sheet. O
-  /// sheet passa o `tenantId` + `propertyId` pras rotas que precisam
-  /// identificar tanto o inquilino quanto o imóvel (chat, histórico
-  /// financeiro, etc.).
   _TenantData toLegacyData() {
     return _TenantData(
       tenantId: tenantId,
@@ -418,7 +443,8 @@ class _TenantEntry {
       status: status,
       lastMessage: lastMessage.isEmpty ? 'Sem mensagens ainda.' : lastMessage,
       contractEnd: contractEnd,
-      isVerified: false,
+      monthlyRent: monthlyRent,
+      isVerified: isIdentityVerified,
     );
   }
 }
@@ -552,6 +578,8 @@ class _TenantCard extends StatelessWidget {
         return AppColors.success;
       case 'Aguardando Assinatura':
         return AppColors.warning;
+      case 'Sem contrato':
+        return AppColors.warning;
       default:
         return AppColors.error;
     }
@@ -607,6 +635,7 @@ class _TenantData {
     required this.status,
     required this.lastMessage,
     required this.contractEnd,
+    required this.monthlyRent,
     required this.isVerified,
   });
   final String tenantId;
@@ -617,5 +646,6 @@ class _TenantData {
   final String status;
   final String lastMessage;
   final String contractEnd;
+  final String monthlyRent;
   final bool isVerified;
 }

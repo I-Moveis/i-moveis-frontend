@@ -11,62 +11,6 @@ import '../providers/moderation_queue_notifier.dart';
 // Alias local para não poluir o escopo público
 typedef _ModerationTab = AdminModerationTab;
 
-// ─── Mock pending properties (fila de moderação local/demo) ──────────────────────────────
-
-final _mockPendingProperties = [
-  const _PendingProperty(
-    id: 'pend-1',
-    title: 'Apartamento Vila Madalena',
-    address: 'Rua Harmonia, 400 — Vila Madalena, SP',
-    price: r'R$ 3.800/mês',
-    type: 'Apartamento · 2 quartos',
-    imageUrls: [
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
-    ],
-    latitude: -23.5558,
-    longitude: -46.6896,
-  ),
-  const _PendingProperty(
-    id: 'pend-2',
-    title: 'Studio Consolação',
-    address: 'Av. Paulista, 900 — Bela Vista, SP',
-    price: r'R$ 2.100/mês',
-    type: 'Studio · 1 dormitório',
-    imageUrls: [
-      'https://images.unsplash.com/photo-1536376074432-bf12177d4f4f?auto=format&fit=crop&w=800&q=80',
-    ],
-    latitude: -23.5489,
-    longitude: -46.6388,
-  ),
-  const _PendingProperty(
-    id: 'pend-3',
-    title: 'Casa Butantã',
-    address: 'Rua Araguaia, 200 — Butantã, SP',
-    price: r'R$ 5.500/mês',
-    type: 'Casa · 3 quartos',
-    imageUrls: [
-      'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
-    ],
-    latitude: -23.5672,
-    longitude: -46.7321,
-  ),
-  const _PendingProperty(
-    id: 'pend-4',
-    title: 'Cobertura Moema',
-    address: 'Al. dos Nhambiquaras, 50 — Moema, SP',
-    price: r'R$ 9.000/mês',
-    type: 'Cobertura · 3 suítes',
-    imageUrls: [
-      'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=800&q=80',
-    ],
-    latitude: -23.6013,
-    longitude: -46.6661,
-  ),
-];
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 class AdminListingsPage extends ConsumerWidget {
@@ -143,7 +87,7 @@ class AdminListingsPage extends ConsumerWidget {
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
-                            child: Text('${_mockPendingProperties.length}',
+                            child: Text('${async.value?.length ?? 0}',
                                 style: AppTypography.tagBadge.copyWith(
                                     color: AppColors.warning, fontSize: 8)),
                           ),
@@ -157,9 +101,7 @@ class AdminListingsPage extends ConsumerWidget {
           ),
 
           Expanded(
-            child: activeTab == AdminModerationTab.pending && _mockPendingProperties.isNotEmpty
-                ? _PendingQueueList(isDark: isDark)
-                : async.when(
+            child: async.when(
                     loading: () => const Center(
                         child: CircularProgressIndicator(strokeWidth: 2)),
                     error: (e, _) => Center(
@@ -754,254 +696,6 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
   }
 }
 
-class _PendingQueueList extends StatelessWidget {
-  const _PendingQueueList({required this.isDark});
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.screenHorizontal, vertical: AppSpacing.lg),
-      children: [
-        // Info banner
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.08),
-            borderRadius: AppRadius.borderLg,
-            border: Border.all(
-                color: AppColors.warning.withValues(alpha: 0.2)),
-          ),
-          child: Row(children: [
-            const Icon(Icons.info_outline,
-                size: 14, color: AppColors.warning),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                'Fila mockada para demonstração. O campo moderationStatus no backend destrava a fila real.',
-                style: AppTypography.bodySmall
-                    .copyWith(color: AppColors.warning, fontSize: 10),
-              ),
-            ),
-          ]),
-        ),
-
-        ..._mockPendingProperties.map((p) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _PendingPropertyCard(pending: p, isDark: isDark),
-            )),
-        const SizedBox(height: AppSpacing.massive),
-      ],
-    );
-  }
-}
-
-class _PendingPropertyCard extends StatefulWidget {
-  const _PendingPropertyCard(
-      {required this.pending, required this.isDark});
-  final _PendingProperty pending;
-  final bool isDark;
-
-  @override
-  State<_PendingPropertyCard> createState() =>
-      _PendingPropertyCardState();
-}
-
-class _PendingPropertyCardState extends State<_PendingPropertyCard> {
-  bool _approved = false;
-  bool _rejected = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = widget.pending;
-    final isDark = widget.isDark;
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final cardBg = BrutalistPalette.surfaceBg(isDark);
-    final borderColor = BrutalistPalette.surfaceBorder(isDark);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: AppRadius.borderLg,
-        border: Border.all(
-          color: _approved
-              ? AppColors.success.withValues(alpha: 0.4)
-              : _rejected
-                  ? AppColors.error.withValues(alpha: 0.4)
-                  : borderColor,
-        ),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Image preview
-        if (p.imageUrls.isNotEmpty)
-          ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(12)),
-            child: AspectRatio(
-              aspectRatio: 16 / 7,
-              child: Image.network(
-                p.imageUrls.first,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => ColoredBox(
-                  color: BrutalistPalette.imagePlaceholderBg(isDark),
-                  child: Icon(Icons.home_outlined, color: mutedColor),
-                ),
-              ),
-            ),
-          ),
-
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Status chip
-                Row(children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _approved
-                          ? AppColors.success.withValues(alpha: 0.12)
-                          : _rejected
-                              ? AppColors.error.withValues(alpha: 0.12)
-                              : AppColors.warning.withValues(alpha: 0.12),
-                      borderRadius: AppRadius.borderFull,
-                    ),
-                    child: Text(
-                      _approved
-                          ? 'Aprovado'
-                          : _rejected
-                              ? 'Reprovado'
-                              : 'Aguardando',
-                      style: AppTypography.tagBadge.copyWith(
-                        color: _approved
-                            ? AppColors.success
-                            : _rejected
-                                ? AppColors.error
-                                : AppColors.warning,
-                        fontSize: 9,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text('${p.imageUrls.length} foto(s)',
-                      style: AppTypography.bodySmall
-                          .copyWith(color: mutedColor, fontSize: 10)),
-                ]),
-                const SizedBox(height: AppSpacing.sm),
-
-                Text(p.title,
-                    style: AppTypography.titleSmallBold
-                        .copyWith(color: titleColor)),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(p.type,
-                    style: AppTypography.bodySmall
-                        .copyWith(color: mutedColor)),
-                const SizedBox(height: AppSpacing.xxs),
-                Row(children: [
-                  Icon(Icons.location_on_outlined,
-                      size: 11, color: mutedColor),
-                  const SizedBox(width: 3),
-                  Expanded(
-                    child: Text(p.address,
-                        style: AppTypography.bodySmall
-                            .copyWith(color: mutedColor, fontSize: 11)),
-                  ),
-                ]),
-                Text(p.price,
-                    style: AppTypography.titleSmallBold.copyWith(
-                        color: BrutalistPalette.accentOrange(isDark),
-                        fontSize: 13)),
-
-                const SizedBox(height: AppSpacing.md),
-
-                if (!_approved && !_rejected)
-                  Row(children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          _showRejectSheet(context, p.title, isDark);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color:
-                                AppColors.error.withValues(alpha: 0.08),
-                            borderRadius: AppRadius.borderFull,
-                            border: Border.all(
-                                color: AppColors.error
-                                    .withValues(alpha: 0.2)),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text('Reprovar',
-                              style: AppTypography.titleSmallBold
-                                  .copyWith(
-                                      color: AppColors.error,
-                                      fontSize: 12)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _approved = true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: AppColors.success
-                                .withValues(alpha: 0.1),
-                            borderRadius: AppRadius.borderFull,
-                            border: Border.all(
-                                color: AppColors.success
-                                    .withValues(alpha: 0.3)),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text('Aprovar',
-                              style: AppTypography.titleSmallBold
-                                  .copyWith(
-                                      color: AppColors.success,
-                                      fontSize: 12)),
-                        ),
-                      ),
-                    ),
-                  ])
-                else
-                  Text(
-                    _approved
-                        ? '✓ Anúncio aprovado na fila local'
-                        : '✗ Anúncio reprovado na fila local',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: _approved
-                          ? AppColors.success
-                          : AppColors.error,
-                      fontSize: 11,
-                    ),
-                  ),
-              ]),
-        ),
-      ]),
-    );
-  }
-
-  Future<void> _showRejectSheet(
-      BuildContext context, String title, bool isDark) async {
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _RejectSheet(title: title, isDark: isDark, returnResult: true),
-    );
-    if ((confirmed ?? false) && mounted) {
-      setState(() => _rejected = true);
-    }
-  }
-}
 
 class _RejectSheet extends StatefulWidget {
   const _RejectSheet({
@@ -1093,35 +787,12 @@ class _RejectSheetState extends State<_RejectSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(children: [
-              const Icon(Icons.info_outline, size: 12, color: AppColors.warning),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  'O motivo será enviado ao proprietário quando o backend suportar moderação.',
-                  style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.warning, fontSize: 10),
-                ),
-              ),
-            ]),
             const SizedBox(height: AppSpacing.lg),
 
             SizedBox(
               width: double.infinity,
               child: GestureDetector(
-                onTap: () {
-                  if (widget.returnResult) {
-                    Navigator.of(context).pop(true);
-                  } else {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'Reprovação registrada (demo). Conecte ao backend para persistir.')),
-                    );
-                  }
-                },
+                onTap: () => Navigator.of(context).pop(true),
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -1144,24 +815,3 @@ class _RejectSheetState extends State<_RejectSheet> {
   }
 }
 
-class _PendingProperty {
-  const _PendingProperty({
-    required this.id,
-    required this.title,
-    required this.address,
-    required this.price,
-    required this.type,
-    required this.imageUrls,
-    required this.latitude,
-    required this.longitude,
-  });
-
-  final String id;
-  final String title;
-  final String address;
-  final String price;
-  final String type;
-  final List<String> imageUrls;
-  final double latitude;
-  final double longitude;
-}

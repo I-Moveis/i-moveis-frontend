@@ -71,7 +71,6 @@ class _AdminSupportTicketDetailPageState
         return Column(children: [
           BrutalistAppBar(
             title: ticket?.code ?? 'Ticket',
-            leading: const BackButton(),
           ),
 
           Expanded(

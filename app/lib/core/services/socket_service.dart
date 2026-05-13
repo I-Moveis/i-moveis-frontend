@@ -39,18 +39,18 @@ class SocketService {
   String get _wsUrl {
     final baseUri = Uri.tryParse(kApiBaseUrl);
     if (baseUri == null) return kApiBaseUrl;
-    final host = baseUri.host;
     final port = baseUri.hasPort ? baseUri.port : (baseUri.scheme == 'https' ? 443 : 80);
-    return '${baseUri.scheme}://$host:$port';
+    return Uri(scheme: baseUri.scheme, host: baseUri.host, port: port).toString();
   }
 
   String get _wsPath {
     final baseUri = Uri.tryParse(kApiBaseUrl);
     if (baseUri == null) return '/socket.io';
-    // Remove trailing /api (and anything after) to get the base path
-    final segments = baseUri.pathSegments.where((s) => s != 'api').toList();
-    final basePath = '/${segments.join('/')}';
-    return '${basePath.isEmpty || basePath == '/' ? '' : basePath}/socket.io';
+    final segments = baseUri.pathSegments
+        .where((s) => s.isNotEmpty && s != 'api')
+        .toList();
+    if (segments.isEmpty) return '/socket.io';
+    return '/${segments.join('/')}/socket.io';
   }
 
   Future<void> connect() async {
@@ -76,7 +76,7 @@ class SocketService {
       uri,
       io.OptionBuilder()
           .setPath(path)
-          .setTransports(['websocket'])
+          .setTransports(['polling'])
           .disableAutoConnect()
           .setAuth({'token': 'Bearer $token'})
           .build(),

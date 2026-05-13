@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/services/socket_service.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/support_ticket.dart';
+import '../../../admin/presentation/providers/admin_support_tickets_notifier.dart';
 import '../providers/support_ticket_messages_notifier.dart';
 import '../providers/support_tickets_notifier.dart';
 
@@ -22,6 +23,12 @@ class _SupportTicketChatPageState
   final _msgController = TextEditingController();
   final _scrollController = ScrollController();
   bool _sending = false;
+
+  SupportTicket? _findTicket(List<SupportTicket> userTickets,
+      List<SupportTicket> adminTickets) {
+    return userTickets.where((t) => t.id == widget.ticketId).firstOrNull ??
+        adminTickets.where((t) => t.id == widget.ticketId).firstOrNull;
+  }
 
   @override
   void dispose() {
@@ -56,12 +63,12 @@ class _SupportTicketChatPageState
   Widget build(BuildContext context) {
     final isConnected =
         ref.watch(socketServiceProvider.select((s) => s.isConnected));
-    final ticketAsync = ref.watch(supportTicketsProvider);
-    final ticket = ticketAsync.maybeWhen(
-      data: (tickets) =>
-          tickets.where((t) => t.id == widget.ticketId).firstOrNull,
-      orElse: () => null,
-    );
+    final userTicketsAsync = ref.watch(supportTicketsProvider);
+    final adminTicketsAsync = ref.watch(adminSupportTicketsProvider);
+
+    final userTickets = userTicketsAsync.asData?.value ?? [];
+    final adminTickets = adminTicketsAsync.asData?.value ?? [];
+    final ticket = _findTicket(userTickets, adminTickets);
 
     final isResolved = ticket?.status == SupportTicketStatus.resolved;
     final messagesAsync =

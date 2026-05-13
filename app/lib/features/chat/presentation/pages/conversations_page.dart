@@ -148,7 +148,7 @@ class _ConversationCard extends StatelessWidget {
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
 
     return GestureDetector(
-      onTap: () => context.push('/conversation/${conversation.id}'),
+      onTap: () => context.push('/conversation/${conversation.id}', extra: conversation.counterpartName),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(

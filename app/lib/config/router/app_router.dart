@@ -372,6 +372,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/conversation/:conversationId',
         builder: (_, state) => ConversationChatPage(
           conversationId: state.pathParameters['conversationId']!,
+          counterpartName: state.extra as String?,
         ),
       ),
 

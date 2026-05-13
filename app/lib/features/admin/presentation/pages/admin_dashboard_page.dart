@@ -228,6 +228,11 @@ class AdminDashboardPage extends ConsumerWidget {
                         onTap: () => context.push('/admin/reports'),
                       ),
                       AppMenuGroupItem(
+                        icon: Icons.support_agent_outlined,
+                        label: 'Tickets de suporte',
+                        onTap: () => context.push('/admin/support'),
+                      ),
+                      AppMenuGroupItem(
                         icon: Icons.campaign_outlined,
                         label: 'Notificação Global',
                         onTap: () => _showBroadcastDialog(context, ref),

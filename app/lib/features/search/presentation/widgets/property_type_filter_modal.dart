@@ -15,6 +15,7 @@ class PropertyTypeFilterModal extends ConsumerWidget {
       'Apartamento',
       'Casa',
       'Studio',
+      'Condomínio',
       'Kitnet',
       'Cobertura',
       'Terreno',

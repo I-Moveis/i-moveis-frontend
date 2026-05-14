@@ -31,6 +31,8 @@ class Property {
     this.moderationStatus,
     this.status,
     this.currentTenant,
+    this.hasWifi = false,
+    this.hasPool = false,
   });
 
   final String id;
@@ -87,8 +89,14 @@ class Property {
 
   /// Inquilino atualmente associado ao imóvel (só faz sentido quando
   /// [status] == `RENTED` ou `NEGOTIATING`). Null caso contrário.
-  /// Hoje o backend não devolve esse shape ainda — ver docs/BACKEND_*.md.
   final PropertyTenant? currentTenant;
+
+  /// Imóvel anuncia Wi-Fi como amenidade. Vai como `hasWifi` no
+  /// `GET /properties/search` e nos POST/PUT.
+  final bool hasWifi;
+
+  /// Imóvel anuncia piscina como amenidade. Vai como `hasPool`.
+  final bool hasPool;
 
   double get totalPrice => priceValue + condoFee + taxes;
 
@@ -120,6 +128,8 @@ class Property {
     String? moderationStatus,
     String? status,
     PropertyTenant? currentTenant,
+    bool? hasWifi,
+    bool? hasPool,
   }) {
     return Property(
       id: id ?? this.id,
@@ -149,6 +159,8 @@ class Property {
       moderationStatus: moderationStatus ?? this.moderationStatus,
       status: status ?? this.status,
       currentTenant: currentTenant ?? this.currentTenant,
+      hasWifi: hasWifi ?? this.hasWifi,
+      hasPool: hasPool ?? this.hasPool,
     );
   }
 
@@ -164,12 +176,20 @@ class Property {
   int get hashCode => id.hashCode ^ isFavorite.hashCode;
 }
 
-/// Shape mínimo pra linkar um inquilino a um imóvel — só o que a UI
-/// do landlord precisa pra mostrar o nome e abrir chat. Expandir quando
-/// o backend definir o shape real do relacionamento property↔tenant.
+/// Shape do inquilino atualmente vinculado a um imóvel. Inclui o flag
+/// de identidade verificada para a UI exibir o checkmark ao lado do
+/// nome ("Meus Inquilinos"). `identityVerifiedAt` ajuda a diferenciar
+/// verificações recentes vs antigas, se a UI precisar.
 @immutable
 class PropertyTenant {
-  const PropertyTenant({required this.id, required this.name});
+  const PropertyTenant({
+    required this.id,
+    required this.name,
+    this.isIdentityVerified = false,
+    this.identityVerifiedAt,
+  });
   final String id;
   final String name;
+  final bool isIdentityVerified;
+  final DateTime? identityVerifiedAt;
 }

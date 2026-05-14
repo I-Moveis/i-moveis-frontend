@@ -7,6 +7,36 @@ import 'package:flutter/foundation.dart';
 /// O backend espelha o enum Prisma `ContractStatus` mas para este
 /// endpoint só ACTIVE retorna — TERMINATED/COMPLETED caem em 404
 /// CONTRACT_NOT_FOUND.
+/// Status documental do contrato — vem do backend (`Contract.documentStatus`)
+/// e dirige a chip de status na tela "Meus Inquilinos".
+enum ContractDocumentStatus {
+  /// Inquilino ainda precisa enviar documentos pendentes (RG, comprovante,
+  /// fiador, etc.). Estado inicial após criação do contrato.
+  pendingDocuments,
+
+  /// Documentação OK, aguardando assinatura digital (PDF do contrato).
+  awaitingSignature,
+
+  /// Documentação completa e contrato assinado — fluxo concluído.
+  approved;
+
+  /// Mapeia o valor literal do enum Prisma `ContractDocumentStatus` no
+  /// backend (`PENDING_DOCUMENTS | AWAITING_SIGNATURE | APPROVED`). Default
+  /// seguro: `pendingDocuments` quando o backend não devolveu — ainda é
+  /// o estado inicial mais provável.
+  static ContractDocumentStatus fromApi(String? raw) {
+    switch (raw) {
+      case 'APPROVED':
+        return ContractDocumentStatus.approved;
+      case 'AWAITING_SIGNATURE':
+        return ContractDocumentStatus.awaitingSignature;
+      case 'PENDING_DOCUMENTS':
+      default:
+        return ContractDocumentStatus.pendingDocuments;
+    }
+  }
+}
+
 @immutable
 class Contract {
   const Contract({
@@ -18,6 +48,7 @@ class Contract {
     required this.monthlyRent,
     this.pdfUrl,
     this.signedAt,
+    this.documentStatus = ContractDocumentStatus.pendingDocuments,
   });
 
   final String id;
@@ -43,6 +74,10 @@ class Contract {
   /// antes disso.
   final DateTime? signedAt;
 
+  /// Status documental — guia a chip "Pendente Documentos /
+  /// Aguardando Assinatura / Documentação OK" na tela "Meus Inquilinos".
+  final ContractDocumentStatus documentStatus;
+
   factory Contract.fromJson(Map<String, dynamic> json) {
     return Contract(
       id: (json['id'] ?? '').toString(),
@@ -56,6 +91,8 @@ class Contract {
       pdfUrl: json['pdfUrl'] as String?,
       signedAt:
           DateTime.tryParse((json['signedAt'] ?? '').toString())?.toLocal(),
+      documentStatus:
+          ContractDocumentStatus.fromApi(json['documentStatus'] as String?),
     );
   }
 }

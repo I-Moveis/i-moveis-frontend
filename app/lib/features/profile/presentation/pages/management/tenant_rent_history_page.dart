@@ -1,26 +1,15 @@
 import 'package:app/design_system/design_system.dart';
-import 'package:app/features/rentals/data/contract_repository.dart';
-import 'package:app/features/rentals/data/current_payment_repository.dart';
 import 'package:app/features/rentals/data/rent_payment_repository.dart';
 import 'package:app/features/rentals/domain/entities/rent_payment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Histórico financeiro de um inquilino num imóvel específico. Abre
-/// pelo sheet "Ações de Gestão" da tela "Meus Inquilinos" e recebe:
-/// - `tenantName`: só pra mostrar o nome em logs ou no título no futuro
-/// - `tenantId` + `propertyId`: chaves pra buscar o histórico real
+/// pelo sheet "Ações de Gestão" da tela "Meus Inquilinos".
 ///
-/// **Estratégia de dados (estado atual do backend):**
-/// 1. Tenta `GET /properties/:id/payments?tenantId=` (histórico multi-mês).
-///    Esse endpoint AINDA não foi entregue pelo backend — US-009/US-010
-///    só expõem `/current` (single-month). Quando o backend publicar o
-///    multi-month, a lista aparece sem outras mudanças.
-/// 2. Se o histórico vier vazio, faz fallback pra
-///    `GET /properties/:id/payments/current` (US-009) + contrato ativo
-///    (US-014) pra montar UMA linha única com o mês corrente. O valor
-///    vem do `Contract.monthlyRent`, o status do `CurrentPayment.status`.
-/// 3. Se tudo falhar, estado vazio amigável.
+/// Consome `GET /api/properties/:id/payments?tenantId=` (histórico
+/// multi-mês). Quando o array vem vazio (raro — sem nenhuma cobrança
+/// gerada ainda), mostra estado vazio direto.
 class TenantRentHistoryPage extends ConsumerWidget {
   const TenantRentHistoryPage({
     required this.tenantName,
@@ -46,7 +35,7 @@ class TenantRentHistoryPage extends ConsumerWidget {
         propertyId != null &&
         propertyId!.isNotEmpty;
 
-    final history = hasIds
+    final payments = hasIds
         ? ref
                 .watch(rentPaymentHistoryProvider(
                   RentPaymentQuery(
@@ -56,12 +45,6 @@ class TenantRentHistoryPage extends ConsumerWidget {
                 ?.value ??
             const <RentPayment>[]
         : const <RentPayment>[];
-
-    // Fallback pro mês atual enquanto o endpoint multi-mês não chega.
-    final fallback = hasIds && history.isEmpty
-        ? _fallbackFromCurrent(ref)
-        : const <RentPayment>[];
-    final payments = history.isNotEmpty ? history : fallback;
 
     final openBalance = payments
         .where((p) => p.status != RentPaymentStatus.paid)
@@ -121,32 +104,6 @@ class TenantRentHistoryPage extends ConsumerWidget {
     );
   }
 
-  /// Combina `currentPaymentProvider` (US-009) + `activeContractProvider`
-  /// (US-014) para sintetizar uma linha única quando o histórico real
-  /// ainda não existe. Devolve vazio se qualquer provider falhar.
-  List<RentPayment> _fallbackFromCurrent(WidgetRef ref) {
-    final current =
-        ref.watch(currentPaymentProvider(propertyId!)).asData?.value;
-    if (current == null || current.period.isEmpty) return const [];
-    final contract = ref
-        .watch(activeContractProvider(ContractQuery(
-          propertyId: propertyId!,
-          tenantId: tenantId!,
-        )))
-        .asData
-        ?.value;
-    final amount = contract?.monthlyRent ?? 0;
-    return [
-      RentPayment(
-        period: current.period,
-        amount: amount,
-        status: current.status,
-        paidAt: current.status == RentPaymentStatus.paid
-            ? current.updatedAt
-            : null,
-      ),
-    ];
-  }
 }
 
 /// Header card com o saldo em aberto — soma dos pagamentos com status

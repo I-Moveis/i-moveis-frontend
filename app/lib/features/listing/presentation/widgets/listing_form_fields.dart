@@ -137,14 +137,10 @@ class ListingChoiceRow<T> extends StatelessWidget {
   }
 }
 
-/// Linha scrollável com todos os tipos de imóvel — os 4 suportados pelo
-/// backend hoje e mais 4 (Kitnet/Cobertura/Terreno/Comercial) que são
-/// UI-only até o enum `PropertyType` expandir no backend (ver
-/// BACKEND_HANDOFF.md §9). Tipos UI-only ganham um tooltip explicativo;
-/// visualmente o chip parece igual pra não dar segundo padrão visual.
-///
-/// Compartilhado entre create e edit — sempre que a busca do usuário
-/// ganhar mais opções, só adicionar aqui.
+/// Linha scrollável com todos os 8 tipos de imóvel suportados pelo
+/// backend (`PropertyType` enum: APARTMENT, HOUSE, STUDIO, CONDO_HOUSE,
+/// KITNET, PENTHOUSE, LAND, COMMERCIAL). Compartilhado entre as telas
+/// de criar e editar listing.
 class ListingTypeChipsRow extends StatelessWidget {
   const ListingTypeChipsRow({
     required this.selected,
@@ -154,14 +150,6 @@ class ListingTypeChipsRow extends StatelessWidget {
 
   final String? selected;
   final ValueChanged<String> onSelect;
-
-  /// Tipos aceitos pelo backend — seguros de mandar no POST/PUT.
-  static const realTypes = <String>{
-    'APARTMENT',
-    'HOUSE',
-    'STUDIO',
-    'CONDO_HOUSE',
-  };
 
   static const _all = <(String, String)>[
     ('APARTMENT', 'Apartamento'),
@@ -184,61 +172,13 @@ class ListingTypeChipsRow extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) {
           final entry = _all[i];
-          final isReal = realTypes.contains(entry.$1);
-          final chip = AppChip(
+          return AppChip(
             label: entry.$2,
             isSelected: selected == entry.$1,
             onTap: () => onSelect(entry.$1),
           );
-          if (isReal) return chip;
-          return Tooltip(
-            message: 'Tipo ainda não filtra na busca — backend em expansão',
-            child: chip,
-          );
         },
       ),
-    );
-  }
-}
-
-/// Toggle idêntico ao `ListingToggle` visualmente, mas com indicador
-/// sutil de "ainda não filtra" pro landlord saber que a marcação é
-/// cosmética enquanto o backend não suporta o campo. Usado para
-/// Wi-Fi, Piscina e outros campos da busca sem contraparte no schema.
-class ListingUiOnlyToggle extends StatelessWidget {
-  const ListingUiOnlyToggle({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
-
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Stack(
-      children: [
-        ListingToggle(label: label, value: value, onChanged: onChanged),
-        Positioned(
-          right: AppSpacing.lg + 40,
-          top: 0,
-          bottom: 0,
-          child: Center(
-            child: Tooltip(
-              message: 'Ainda não filtra na busca — backend em expansão',
-              child: Icon(
-                Icons.info_outline_rounded,
-                size: 14,
-                color: BrutalistPalette.muted(isDark),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

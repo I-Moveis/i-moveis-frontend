@@ -3,10 +3,10 @@ import 'notifications_remote_datasource.dart';
 
 class NotificationsRemoteMockDataSource implements NotificationsRemoteDataSource {
   @override
-  Future<List<AppNotification>> getNotifications() async {
+  Future<List<AppNotification>> getNotifications({bool? unreadOnly}) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final now = DateTime.now();
-    return [
+    final all = <AppNotification>[
       AppNotification(
         id: 'mock-1',
         title: 'Manutenção programada',
@@ -32,10 +32,23 @@ class NotificationsRemoteMockDataSource implements NotificationsRemoteDataSource
         category: 'update',
       ),
     ];
+    if (unreadOnly == true) return all.where((n) => !n.read).toList();
+    return all;
   }
 
   @override
   Future<void> markAllAsRead() async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
+
+  @override
+  Future<void> markAsRead(String id) async {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+  }
+
+  @override
+  Future<int> unreadCount() async {
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    return 2;
   }
 }

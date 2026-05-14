@@ -1,15 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-/// Notificação recebida pelo usuário (tenant ou landlord). Hoje a fonte
-/// principal é o **broadcast do admin** (`POST /api/admin/broadcast` no
-/// backend — FCM dispara push pra todos os devices com `fcmToken` ativo).
-///
-/// Enquanto o app não tem listener FCM integrado, a tela lê o cache
-/// local (SharedPreferences) que pode ser populado: (a) por um listener
-/// `onMessage` quando o Firebase Messaging for ligado; (b) manualmente
-/// em dev pra testar a UI; ou (c) por um endpoint
-/// `GET /api/notifications` quando o backend existir (ver
-/// `BACKEND_PENDENCIAS_LANDLORD.md §11`).
+/// Notificação recebida pelo usuário (tenant ou landlord). A fonte
+/// principal é `GET /api/notifications` (cross-device); pushes via FCM
+/// recebidos com o app aberto também atualizam a lista localmente.
 @immutable
 class AppNotification {
   const AppNotification({

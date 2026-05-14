@@ -7,8 +7,9 @@ import '../../domain/entities/conversation_message.dart';
 import '../providers/conversation_chat_providers.dart';
 
 class ConversationChatPage extends ConsumerStatefulWidget {
-  const ConversationChatPage({required this.conversationId, super.key});
+  const ConversationChatPage({required this.conversationId, this.counterpartName, super.key});
   final String conversationId;
+  final String? counterpartName;
 
   @override
   ConsumerState<ConversationChatPage> createState() =>
@@ -80,7 +81,7 @@ class _ConversationChatPageState
 
         return Column(children: [
           BrutalistAppBar(
-            title: 'Conversa',
+            title: widget.counterpartName ?? 'Conversa',
             onBack: () => context.pop(),
           ),
           Expanded(

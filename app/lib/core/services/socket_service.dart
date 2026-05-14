@@ -39,7 +39,18 @@ class SocketService {
   String get _wsUrl {
     final baseUri = Uri.tryParse(kApiBaseUrl);
     if (baseUri == null) return kApiBaseUrl;
-    return '${baseUri.scheme}://${baseUri.authority}';
+    final port = baseUri.hasPort ? baseUri.port : (baseUri.scheme == 'https' ? 443 : 80);
+    return Uri(scheme: baseUri.scheme, host: baseUri.host, port: port).toString();
+  }
+
+  String get _wsPath {
+    final baseUri = Uri.tryParse(kApiBaseUrl);
+    if (baseUri == null) return '/socket.io';
+    final segments = baseUri.pathSegments
+        .where((s) => s.isNotEmpty && s != 'api')
+        .toList();
+    if (segments.isEmpty) return '/socket.io';
+    return '/${segments.join('/')}/socket.io';
   }
 
   /// Caminho público do socket.io. O backend monta o socket.io no root
@@ -76,11 +87,15 @@ class SocketService {
       return;
     }
 
+    final uri = _wsUrl;
+    final path = _wsPath;
+    debugPrint('[Socket] conectando a $uri (path: $path)');
+
     _socket = io.io(
-      _wsUrl,
+      uri,
       io.OptionBuilder()
-          .setTransports(['websocket'])
-          .setPath(_socketPath)
+          .setPath(path)
+          .setTransports(['polling'])
           .disableAutoConnect()
           .setAuth({'token': 'Bearer $token'})
           .build(),

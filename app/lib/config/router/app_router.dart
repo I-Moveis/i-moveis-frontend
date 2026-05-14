@@ -55,6 +55,7 @@ import '../../features/support/presentation/pages/support_ticket_detail_page.dar
 import '../../features/support/presentation/pages/support_ticket_page.dart';
 import '../../features/support/presentation/pages/support_tickets_list_page.dart';
 import '../../features/support/presentation/providers/support_tickets_notifier.dart';
+import '../../features/admin/presentation/providers/admin_support_tickets_notifier.dart';
 import '../../features/visits/presentation/pages/edit_visit_page.dart';
 import '../../features/visits/presentation/pages/landlord_visits_page.dart';
 import '../../features/visits/presentation/pages/my_visits_page.dart';
@@ -371,6 +372,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/conversation/:conversationId',
         builder: (_, state) => ConversationChatPage(
           conversationId: state.pathParameters['conversationId']!,
+          counterpartName: state.extra as String?,
         ),
       ),
 
@@ -492,38 +494,41 @@ class _HomeBranch extends ConsumerWidget {
   }
 }
 
-/// Converte o code do ticket (SUP-...) em ticketId (UUID) via provider
-/// e renderiza a SupportTicketChatPage.
+/// Converte o code do ticket (SUP-...) em ticketId (UUID) via providers
+/// e renderiza a SupportTicketChatPage. Busca no provider do usuário e
+/// no admin provider para funcionar tanto pelo Perfil quanto pelo painel.
 class _SupportChatRoute extends ConsumerWidget {
   const _SupportChatRoute({required this.code});
   final String code;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ticketsAsync = ref.watch(supportTicketsProvider);
-    return ticketsAsync.when(
-      loading: () => const Scaffold(
+    final userAsync = ref.watch(supportTicketsProvider);
+    final adminAsync = ref.watch(adminSupportTicketsProvider);
+
+    final isLoading = userAsync.isLoading || adminAsync.isLoading;
+
+    if (isLoading) {
+      return const Scaffold(
         body: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      ),
-      error: (_, __) => Scaffold(
+      );
+    }
+
+    final userTickets = userAsync.asData?.value ?? [];
+    final adminTickets = adminAsync.asData?.value ?? [];
+    final ticket = userTickets.where((t) => t.code == code).firstOrNull ??
+        adminTickets.where((t) => t.code == code).firstOrNull;
+
+    if (ticket == null) {
+      return Scaffold(
         body: Center(
-          child: Text('Erro ao carregar ticket',
+          child: Text('Ticket não encontrado',
               style: TextStyle(color: BrutalistPalette.muted(false))),
         ),
-      ),
-      data: (tickets) {
-        final ticket = tickets.where((t) => t.code == code).firstOrNull;
-        if (ticket == null) {
-          return Scaffold(
-            body: Center(
-              child: Text('Ticket não encontrado',
-                  style: TextStyle(color: BrutalistPalette.muted(false))),
-            ),
-          );
-        }
-        return SupportTicketChatPage(ticketId: ticket.id);
-      },
-    );
+      );
+    }
+
+    return SupportTicketChatPage(ticketId: ticket.id);
   }
 }
 

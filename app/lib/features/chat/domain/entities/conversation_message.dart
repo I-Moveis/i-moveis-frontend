@@ -23,11 +23,14 @@ class ConversationMessage {
   factory ConversationMessage.fromJson(Map<String, dynamic> json) =>
       ConversationMessage(
         id: json['id'] as String,
-        conversationId: json['conversationId'] as String,
+        conversationId: json['conversationId'] as String? ?? '',
         authorId: json['authorId'] as String? ?? '',
         authorName: json['authorName'] as String? ?? 'Usuário',
         content: json['content'] as String,
-        timestamp: DateTime.parse(json['timestamp'] as String),
+        timestamp: DateTime.parse(
+          (json['createdAt'] ?? json['timestamp']) as String,
+        ),
+        isMine: json['isMine'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {

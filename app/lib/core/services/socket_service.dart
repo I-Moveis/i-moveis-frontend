@@ -53,6 +53,25 @@ class SocketService {
     return '/${segments.join('/')}/socket.io';
   }
 
+  /// Caminho público do socket.io. O backend monta o socket.io no root
+  /// (`/socket.io`), mas em produção o reverse-proxy expõe a API sob um
+  /// prefixo (ex.: `/server01/api/...`). Derivamos esse prefixo do
+  /// `kApiBaseUrl` removendo o sufixo `/api` para que o cliente bata em
+  /// `/<prefixo>/socket.io`, que o proxy reescreve para `/socket.io`
+  /// antes de encaminhar ao backend.
+  String get _socketPath {
+    final baseUri = Uri.tryParse(kApiBaseUrl);
+    if (baseUri == null) return '/socket.io';
+    var prefix = baseUri.path;
+    if (prefix.endsWith('/')) {
+      prefix = prefix.substring(0, prefix.length - 1);
+    }
+    if (prefix.endsWith('/api')) {
+      prefix = prefix.substring(0, prefix.length - 4);
+    }
+    return '$prefix/socket.io';
+  }
+
   Future<void> connect() async {
     if (_socket != null && _socket!.connected) return;
 

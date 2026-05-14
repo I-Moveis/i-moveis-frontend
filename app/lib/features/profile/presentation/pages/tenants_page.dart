@@ -128,16 +128,34 @@ class TenantsPage extends ConsumerWidget {
       titleColor: titleColor,
       mutedColor: mutedColor,
       accentColor: accentColor,
-      onTap: () => _showTenantDetails(context, data, index, isDark),
+      onTap: () => _showTenantDetails(
+          context, data, index, isDark, titleColor, mutedColor, accentColor,
+        ),
     );
   }
 
-  void _showTenantDetails(BuildContext context, _TenantData tenant, int index, bool isDark) {
+  void _showTenantDetails(
+    BuildContext context,
+    _TenantData tenant,
+    int index,
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+    Color accentColor,
+  ) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _TenantDetailsSheet(tenant: tenant, index: index, isDark: isDark),
+      builder: (context) => _TenantDetailsSheet(
+        tenant: tenant,
+        index: index,
+        isDark: isDark,
+        titleColor: titleColor,
+        mutedColor: mutedColor,
+        accentColor: accentColor,
+        onTap: () => Navigator.of(context).pop(),
+      ),
     );
   }
 }
@@ -368,6 +386,17 @@ class _TenantEntry {
     required List<ConversationSummary> conversations,
     required Contract? contract,
   }) {
+    final matched = conversations.cast<ConversationSummary?>().firstWhere(
+      (c) => c?.linkedTenantId == property.currentTenant!.id,
+      orElse: () => null,
+    );
+    return _TenantEntry(property: property, conversation: matched);
+  }
+
+  final Property property;
+  final ConversationSummary? conversation;
+
+  _TenantData toLegacyData() {
     final tenant = property.currentTenant!;
     ConversationSummary? match;
     for (final c in conversations) {
@@ -376,7 +405,20 @@ class _TenantEntry {
         break;
       }
     }
-    return _TenantEntry(
+
+    final String status;
+    switch (property.status) {
+      case 'RENTED':
+        status = 'Documentação OK';
+        break;
+      case 'NEGOTIATING':
+        status = 'Aguardando Assinatura';
+        break;
+      default:
+        status = 'Pendente';
+    }
+
+    return _TenantData(
       tenantId: tenant.id,
       propertyId: property.id,
       tenantName: tenant.name,
@@ -439,7 +481,7 @@ class _TenantEntry {
       propertyId: propertyId,
       name: tenantName,
       initials: initials,
-      property: propertyTitle,
+      property: property.title,
       status: status,
       lastMessage: lastMessage.isEmpty ? 'Sem mensagens ainda.' : lastMessage,
       contractEnd: contractEnd,
@@ -467,6 +509,138 @@ class _TenantCard extends StatelessWidget {
   final Color mutedColor;
   final Color accentColor;
   final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaceBg = BrutalistPalette.surfaceBg(isDark);
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
+    final statusColor = _statusColor(tenant.status);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: surfaceBg,
+          borderRadius: AppRadius.borderLg,
+          border: Border.all(color: borderColor),
+          boxShadow: BrutalistPalette.subtleShadow(isDark),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: accentColor.withValues(alpha: 0.1),
+              ),
+              child: Center(
+                child: Text(
+                  tenant.initials,
+                  style: AppTypography.titleSmallBold
+                      .copyWith(color: accentColor),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          tenant.name,
+                          style: AppTypography.titleMediumBold
+                              .copyWith(color: titleColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (tenant.isVerified) ...[
+                        const SizedBox(width: 4),
+                        Icon(Icons.verified_rounded,
+                            size: 14, color: accentColor),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tenant.property,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: mutedColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: AppRadius.borderFull,
+                  ),
+                  child: Text(
+                    tenant.status,
+                    style: AppTypography.propertyTag
+                        .copyWith(color: statusColor, fontSize: 10),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tenant.lastMessage,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: mutedColor,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _statusColor(String label) {
+    switch (label) {
+      case 'Documentação OK':
+        return AppColors.success;
+      case 'Aguardando Assinatura':
+        return AppColors.warning;
+      default:
+        return AppColors.error;
+    }
+  }
+}
+
+class _TenantDetailsSheet extends StatelessWidget {
+  const _TenantDetailsSheet({
+    required this.tenant,
+    required this.index,
+    required this.isDark,
+    required this.titleColor,
+    required this.mutedColor,
+    required this.accentColor,
+    this.onTap,
+  });
+  final _TenantData tenant;
+  final int index;
+  final bool isDark;
+  final Color titleColor;
+  final Color mutedColor;
+  final Color accentColor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

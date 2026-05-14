@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
+import '../../../chat/data/conversation_repository.dart';
 import '../../../rentals/data/current_payment_repository.dart';
 import '../../../rentals/domain/entities/rent_payment.dart';
 import '../../../search/domain/entities/property.dart';
@@ -337,13 +338,25 @@ class _ManagementCardState extends ConsumerState<_ManagementCard> {
   /// `/chat/:conversationId` aceita tanto id de conversa quanto composite
   /// `property-<pid>-tenant-<tid>` — quando o backend expor o shape real
   /// de conversation, trocar aqui pela resolução da conversa existente.
-  void _openChatWithTenant(
+  Future<void> _openChatWithTenant(
     BuildContext context,
     PropertyTenant tenant,
     Property property,
-  ) {
-    final conversationId = 'property-${property.id}-tenant-${tenant.id}';
-    context.push('/chat/$conversationId');
+  ) async {
+    try {
+      final conversationId = await ref
+          .read(conversationRepositoryProvider)
+          .resolve(property.id, tenant.id);
+      if (context.mounted) {
+        context.push('/conversation/$conversationId');
+      }
+    } on Exception {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao abrir conversa.')),
+        );
+      }
+    }
   }
 
   /// Rótulo da seção "Inquilino" quando não existe tenant vinculado.

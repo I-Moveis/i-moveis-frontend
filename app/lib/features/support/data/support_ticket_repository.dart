@@ -166,6 +166,39 @@ class SupportTicketRepository {
     return SupportTicketMessage.fromJson(response.data!);
   }
 
+  Future<List<SupportTicket>> listForAdmin({
+    String? status,
+    String? role,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize,
+    };
+    if (status != null && status.isNotEmpty) params['status'] = status;
+    if (role != null && role.isNotEmpty) params['role'] = role;
+
+    final response = await _dio.get<dynamic>(
+      '/admin/support/tickets',
+      queryParameters: params,
+    );
+    final data = response.data;
+    if (data is Map && data['data'] is List) {
+      return (data['data'] as List)
+          .whereType<Map<dynamic, dynamic>>()
+          .map((m) => SupportTicket.fromJson(Map<String, dynamic>.from(m)))
+          .toList();
+    }
+    if (data is List) {
+      return data
+          .whereType<Map<dynamic, dynamic>>()
+          .map((m) => SupportTicket.fromJson(Map<String, dynamic>.from(m)))
+          .toList();
+    }
+    return [];
+  }
+
   Future<SupportTicket?> find(String code) async {
     final all = await list();
     for (final t in all) {

@@ -1,14 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/providers/current_user_provider.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../chat/data/conversation_repository.dart';
 import '../../../search/domain/entities/property.dart';
 
-class OwnerCard extends StatelessWidget {
+class OwnerCard extends ConsumerWidget {
   const OwnerCard({required this.property, super.key});
 
   final Property property;
 
+  Future<void> _openChat(BuildContext context, WidgetRef ref) async {
+    final userId = await ref.read(currentUserIdProvider.future);
+    if (userId == null || userId.isEmpty) return;
+
+    final repo = ref.read(conversationRepositoryProvider);
+    try {
+      final conversationId =
+          await repo.resolve(property.id, userId);
+      if (context.mounted) {
+        context.push('/conversation/$conversationId');
+      }
+    } on Exception {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao abrir conversa.')),
+        );
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,7 +73,10 @@ class OwnerCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _MessageButton(ownerName: property.ownerName),
+              _MessageButton(
+                ownerName: property.ownerName,
+                onTap: () => _openChat(context, ref),
+              ),
             ],
           ),
         ),
@@ -122,14 +150,15 @@ class _StarRating extends StatelessWidget {
 }
 
 class _MessageButton extends StatelessWidget {
-  const _MessageButton({required this.ownerName});
+  const _MessageButton({required this.ownerName, required this.onTap});
 
   final String ownerName;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onTap,
       icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
       label: const Text('Mensagem'),
       style: OutlinedButton.styleFrom(

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/socket_service.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
 import '../../data/conversation_repository.dart';
 import '../../domain/entities/conversation_message.dart';
 
@@ -37,11 +39,14 @@ class ConversationMessagesNotifier
     final clientId =
         '${DateTime.now().millisecondsSinceEpoch}_${_conversationId.hashCode}';
 
+    final authState = ref.read(authNotifierProvider);
+    final userName = authState is Authenticated ? authState.user.name : 'Você';
+
     final optimistic = ConversationMessage(
       id: clientId,
       conversationId: _conversationId,
       authorId: 'self',
-      authorName: 'Você',
+      authorName: userName,
       content: content,
       timestamp: DateTime.now(),
       isMine: true,

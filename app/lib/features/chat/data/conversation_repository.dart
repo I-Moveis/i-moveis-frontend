@@ -49,6 +49,17 @@ class ConversationRepository {
     );
     return ConversationMessage.fromJson(response.data!);
   }
+
+  Future<String> resolve(String propertyId, String tenantId) async {
+    final response = await dio.get<dynamic>(
+      '/conversations/resolve',
+      queryParameters: {
+        'propertyId': propertyId,
+        'tenantId': tenantId,
+      },
+    );
+    return (response.data as Map<String, dynamic>)['id'] as String;
+  }
 }
 
 final conversationRepositoryProvider = Provider<ConversationRepository>((ref) {

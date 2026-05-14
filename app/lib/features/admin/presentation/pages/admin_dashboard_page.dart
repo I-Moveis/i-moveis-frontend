@@ -223,9 +223,19 @@ class AdminDashboardPage extends ConsumerWidget {
                         onTap: () => context.push('/admin/contracts'),
                       ),
                       AppMenuGroupItem(
+                        icon: Icons.support_agent_rounded,
+                        label: 'Chamados de Suporte',
+                        onTap: () => context.push('/admin/support'),
+                      ),
+                      AppMenuGroupItem(
                         icon: Icons.flag_outlined,
                         label: 'Central de denúncias',
                         onTap: () => context.push('/admin/reports'),
+                      ),
+                      AppMenuGroupItem(
+                        icon: Icons.support_agent_outlined,
+                        label: 'Tickets de suporte',
+                        onTap: () => context.push('/admin/support'),
                       ),
                       AppMenuGroupItem(
                         icon: Icons.campaign_outlined,

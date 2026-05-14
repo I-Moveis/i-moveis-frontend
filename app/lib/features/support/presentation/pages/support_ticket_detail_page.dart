@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/support_ticket.dart';
+import '../../../admin/presentation/providers/admin_support_tickets_notifier.dart';
 import '../providers/support_tickets_notifier.dart';
 
 /// Acompanhamento de um chamado específico. Mostra o título, descrição,
@@ -13,6 +14,9 @@ import '../providers/support_tickets_notifier.dart';
 /// Quando o painel do admin começar a responder, a API vai entregar um
 /// array de `messages`; é lá que esta tela vai crescer pra mostrar uma
 /// thread completa. Hoje exibe só a mensagem inicial do usuário.
+///
+/// Busca o ticket tanto na lista do usuário quanto na lista admin,
+/// para funcionar tanto pelo Perfil → Suporte quanto pelo painel admin.
 class SupportTicketDetailPage extends ConsumerWidget {
   const SupportTicketDetailPage({required this.code, super.key});
 
@@ -20,27 +24,48 @@ class SupportTicketDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(supportTicketsProvider);
+    final userTickets = ref.watch(supportTicketsProvider);
+    final adminTickets = ref.watch(adminSupportTicketsProvider);
 
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
         return Column(children: [
           const BrutalistAppBar(title: 'Chamado'),
           Expanded(
-            child: async.when(
-              loading: () => const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2)),
-              error: (_, _) => _NotFound(isDark: isDark),
-              data: (tickets) {
-                final ticket = tickets.where((t) => t.code == code).firstOrNull;
-                if (ticket == null) return _NotFound(isDark: isDark);
-                return _Detail(ticket: ticket, isDark: isDark);
-              },
+            child: _buildContent(
+              userTickets: userTickets,
+              adminTickets: adminTickets,
+              isDark: isDark,
             ),
           ),
         ]);
       },
     );
+  }
+
+  Widget _buildContent({
+    required AsyncValue<List<SupportTicket>> userTickets,
+    required AsyncValue<List<SupportTicket>> adminTickets,
+    required bool isDark,
+  }) {
+    // Busca no provider do usuário primeiro
+    final userList = userTickets.asData?.value ?? [];
+    final ticket = userList.where((t) => t.code == code).firstOrNull;
+    if (ticket != null) return _Detail(ticket: ticket, isDark: isDark);
+
+    // Busca no provider admin
+    final adminList = adminTickets.asData?.value ?? [];
+    final adminTicket = adminList.where((t) => t.code == code).firstOrNull;
+    if (adminTicket != null) return _Detail(ticket: adminTicket, isDark: isDark);
+
+    // Ambos ainda carregando
+    if (userTickets.isLoading || adminTickets.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
+    return _NotFound(isDark: isDark);
   }
 }
 
@@ -91,15 +116,34 @@ class _Detail extends StatelessWidget {
                 'Aberto em ${_formatDate(ticket.createdAt)}',
                 style: AppTypography.bodySmall.copyWith(color: muted),
               ),
+              if (ticket.userName != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Icon(Icons.person_outline,
+                        size: 14, color: muted.withValues(alpha: 0.6)),
+                    const SizedBox(width: AppSpacing.xxs),
+                    Text(
+                      ticket.userName!,
+                      style: AppTypography.bodySmall.copyWith(
+                          color: titleColor, fontWeight: FontWeight.w600),
+                    ),
+                    if (ticket.userRole != null) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      _RoleBadge(role: ticket.userRole!, isDark: isDark),
+                    ],
+                  ],
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
         _MessageBubble(
-          author: 'Você',
+          author: ticket.userName ?? 'Você',
           body: ticket.description,
           time: _formatTime(ticket.createdAt),
-          isUser: true,
+          isUser: ticket.userRole != 'ADMIN',
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.xl),
@@ -109,7 +153,7 @@ class _Detail extends StatelessWidget {
             child: BrutalistGradientButton(
               label: 'ABRIR CONVERSA',
               icon: Icons.chat_bubble_outline_rounded,
-              onTap: () => context.push('/support/${ticket.id}/chat'),
+              onTap: () => context.push('/support/${ticket.code}/chat'),
             ),
           )
         else
@@ -118,7 +162,7 @@ class _Detail extends StatelessWidget {
             child: BrutalistGradientButton(
               label: 'VER CONVERSA',
               icon: Icons.chat_bubble_outline_rounded,
-              onTap: () => context.push('/support/${ticket.id}/chat'),
+              onTap: () => context.push('/support/${ticket.code}/chat'),
             ),
           ),
         const SizedBox(height: AppSpacing.massive),
@@ -272,6 +316,38 @@ class _NotFound extends StatelessWidget {
               style: AppTypography.bodyMedium.copyWith(color: muted),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({required this.role, required this.isDark});
+  final String role;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (role) {
+      'TENANT' => ('Inquilino', BrutalistPalette.accentPeach(isDark)),
+      'LANDLORD' => ('Locador', AppColors.info),
+      'ADMIN' => ('Admin', AppColors.warning),
+      _ => (role, BrutalistPalette.muted(isDark)),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
         ),
       ),
     );

@@ -120,10 +120,14 @@ class _AppButtonState extends State<AppButton> with SingleTickerProviderStateMix
                   Icon(widget.icon, size: _getIconSize(), color: colors.fg),
                   const SizedBox(width: AppSpacing.sm),
                 ],
-                Text(
-                  widget.label,
-                  style: textStyle.copyWith(
-                    color: _isDisabled ? colors.fg.withValues(alpha: 0.5) : colors.fg,
+                Flexible(
+                  child: Text(
+                    widget.label,
+                    style: textStyle.copyWith(
+                      color: _isDisabled ? colors.fg.withValues(alpha: 0.5) : colors.fg,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (widget.trailingIcon != null && !widget.isLoading) ...[

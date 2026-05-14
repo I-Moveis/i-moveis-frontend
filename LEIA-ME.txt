@@ -1,0 +1,53 @@
+﻿# i-Móveis — Configuração Firebase/Maps local
+
+Este zip contém 5 arquivos que ficam fora do git (`.gitignore`) porque
+misturam configuração por máquina e não devem ser commitados.
+
+## Como instalar
+
+1. Extrair este zip dentro da pasta `app/` do repo `i-moveis-frontend`.
+   A estrutura após extração deve ficar assim:
+
+     app/
+     ├── .env                              (Maps API key Android)
+     ├── lib/firebase_options.dart         (Firebase config Dart)
+     ├── web/env.js                        (Maps API key Web)
+     ├── web/firebase-messaging-sw.js      (FCM service worker Web)
+     └── android/app/google-services.json  (Firebase config Android)
+
+2. Rodar:
+     cd app
+     flutter pub get
+     flutter run
+
+## ATENÇÃO — Google Sign-In no Android
+
+O `google-services.json` deste zip está registrado com o SHA-1 da máquina
+do Pablo (debug.keystore do device atual). Para Google Sign-In funcionar
+na SUA máquina, cada dev precisa:
+
+1. Gerar o SHA-1 do próprio debug.keystore:
+     keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android -J-Duser.language=en -J-Duser.country=US
+
+   (No Windows: %USERPROFILE%\.android\debug.keystore)
+
+2. Copiar a linha `SHA1:` e adicionar em:
+   Firebase Console (https://console.firebase.google.com/) →
+   projeto `alphatoca-a4b61` → ⚙ Project settings → aba General →
+   scroll até "Your apps" → app Android `com.imoveis.app` →
+   "Add fingerprint" → colar → Save
+
+3. Re-baixar o google-services.json atualizado (ou rodar
+   `flutterfire configure` pra regenerar).
+
+Login por email/senha e Google Sign-In no **web** funcionam imediatamente
+sem esse passo. Só Google Sign-In **Android** exige o SHA-1 local.
+
+## NÃO commitar!
+
+Esses arquivos estão no `.gitignore` do projeto. Se commitá-los por engano:
+- Risco baixo: as chaves Firebase são "restringidas" (SHA-1 Android +
+  domain referrer Web), então tecnicamente públicas.
+- Risco real: mistura config de dev com prod e expõe SHA-1 em scanners.
+
+Se quiser regenerar sem este zip: `cd app && flutterfire configure --platforms=android,web`.

@@ -24,8 +24,10 @@ export 'app_section_header.dart';
 export 'app_stat_row.dart';
 export 'app_text_field.dart';
 export 'brutalist_app_bar.dart';
+export 'brutalist_chart.dart';
 // ─── Brutalist Elegance Shared ─────────────────────────────────
 export 'brutalist_page_scaffold.dart';
+export 'brutalist_section_header.dart';
 export 'brutalist_stepper.dart';
 export 'bullet_nav.dart';
 // ─── Creative Components ───────────────────────────────────────

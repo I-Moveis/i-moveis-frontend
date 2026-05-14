@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'config/router/app_router.dart';
+import 'core/services/socket_service.dart';
 import 'core/theme/seed_color_provider.dart';
 import 'core/theme/theme_provider.dart';
 import 'design_system/design_system.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/home/presentation/bloc/category_bloc.dart';
-import 'features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'features/auth/presentation/providers/auth_notifier.dart';
+import 'features/auth/presentation/providers/auth_state.dart';
 
 /// Root widget of the application.
 class MyApp extends ConsumerWidget {
@@ -24,47 +24,40 @@ class MyApp extends ConsumerWidget {
     final seedColor = ref.watch(seedColorProvider);
     final palette = ref.watch(brutalistPaletteProvider);
 
-    // Sync static bridge with dynamic provider
     BrutalistPalette.update(palette);
 
-    ref.listen(brutalistPaletteProvider, (previous, next) {
-      BrutalistPalette.update(next);
-    });
+    ref
+      ..listen(brutalistPaletteProvider, (previous, next) {
+        BrutalistPalette.update(next);
+      })
+      ..listen<AuthState>(authNotifierProvider, (previous, next) {
+        final socket = ref.read(socketServiceProvider);
+        next.maybeWhen(
+          authenticated: (_) => socket.connect(),
+          unauthenticated: () {
+            socket.disconnect();
+            goRouter.go('/login');
+          },
+          orElse: () {},
+        );
+      });
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthBloc>(create: (_) => AuthBloc()),
-        BlocProvider<CategoryBloc>(create: (_) => CategoryBloc()),
-        BlocProvider<OnboardingCubit>(
-          create: (_) => OnboardingCubit()..load(),
-        ),
-      ],
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          state.whenOrNull(
-            unauthenticated: () {
-              goRouter.go('/login');
-            },
-          );
-        },
-        child: MaterialApp.router(
-          title: 'i-Móveis',
-          theme: AppTheme.light.copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: seedColor,
-            ),
-          ),
-          darkTheme: AppTheme.dark.copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.dark,
-            ),
-          ),
-          themeMode: themeMode,
-          routerConfig: goRouter,
-          debugShowCheckedModeBanner: false,
+    return MaterialApp.router(
+      title: 'i-Móveis',
+      theme: AppTheme.light.copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seedColor,
         ),
       ),
+      darkTheme: AppTheme.dark.copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seedColor,
+          brightness: Brightness.dark,
+        ),
+      ),
+      themeMode: themeMode,
+      routerConfig: goRouter,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

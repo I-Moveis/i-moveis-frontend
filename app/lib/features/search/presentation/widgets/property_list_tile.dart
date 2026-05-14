@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../design_system/design_system.dart';
-import '../../domain/entities/property.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
+import '../../domain/entities/property.dart';
 
 /// A detailed list tile for property listings with integrated image carousel
 /// and domain-specific information (area, rooms, total price).
@@ -25,7 +26,7 @@ class PropertyListTile extends ConsumerWidget {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     
-    final isFavorite = ref.watch(favoritesProvider).contains(property.id);
+    final isFavorite = ref.watch(favoritedIdsProvider).contains(property.id);
 
     return GestureDetector(
       onTap: onTap,
@@ -176,19 +177,24 @@ class PropertyListTile extends ConsumerWidget {
                       borderRadius: AppRadius.borderMd,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Total (c/ taxas)',
                           style: AppTypography.labelMedium.copyWith(color: mutedColor),
                         ),
-                        Semantics(
-                          label: 'Preço total incluindo taxas',
-                          child: Text(
-                            'R\$ ${property.totalPrice.toInt()}',
-                            style: AppTypography.labelLarge.copyWith(
-                              color: titleColor,
-                              fontWeight: FontWeight.w800,
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Semantics(
+                            label: 'Preço total incluindo taxas',
+                            child: Text(
+                              'R\$ ${property.totalPrice.toInt()}',
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: titleColor,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),

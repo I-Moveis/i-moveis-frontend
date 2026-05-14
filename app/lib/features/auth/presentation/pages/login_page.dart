@@ -1,26 +1,31 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants.dart';
 import '../../../../design_system/design_system.dart';
-import '../bloc/auth_bloc.dart';
+import '../../domain/entities/demo_role.dart';
 import '../bloc/social_provider.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/auth_state.dart';
 
 /// Login page — Brutalist Elegance x Japanese Creative Web
 ///
 /// Ported from the reference design: Wave background (sunset),
 /// Space Mono index, Syne display, warm pastel accents,
 /// glass morphism inputs, gradient shimmer button.
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+class _LoginPageState extends ConsumerState<LoginPage>
+    with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailFocus = FocusNode();
@@ -136,7 +141,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   void _handleLogin() {
-    final email = _emailController.text;
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
@@ -146,8 +151,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
 
-    context.read<AuthBloc>().add(
-          AuthEvent.loginRequested(email: email, password: password),
+    ref.read(authNotifierProvider.notifier).login(
+          email: email,
+          password: password,
         );
   }
 
@@ -155,81 +161,91 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        state.whenOrNull(
-          authenticated: (user) {
-            setState(() => _loadingSocial = null);
-            context.go('/home');
-          },
-          unauthenticated: () {
-            setState(() {
-              _isLoading = false;
-              _loadingSocial = null;
-            });
-          },
-          error: (message) {
-            setState(() => _loadingSocial = null);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erro: $message')),
-            );
-          },
-        );
-      },
-      builder: (context, state) {
-        return Stack(
-          children: [
-            const Positioned.fill(
-              child: RepaintBoundary(
-                child: WaveBackground(
-                  speed: 0.4,
-                  amplitude: 0.8,
-                  waveCount: 7,
-                ),
-              ),
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      next.whenOrNull(
+        authenticated: (user) {
+          setState(() => _loadingSocial = null);
+          final String destination;
+          if (user.needsRoleOnboarding) {
+            destination = '/onboarding/role';
+          } else if (user.isAdmin) {
+            destination = '/admin';
+          } else {
+            // Tanto TENANT quanto LANDLORD aterrissam em /home — o builder
+            // do /home escolhe HomePage (tenant) ou LandlordDashboardPage
+            // (landlord) com base em user.isOwner.
+            destination = '/home';
+          }
+          context.go(destination);
+        },
+        unauthenticated: () {
+          setState(() {
+            _isLoading = false;
+            _loadingSocial = null;
+          });
+        },
+        error: (message) {
+          setState(() => _loadingSocial = null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro: $message')),
+          );
+        },
+      );
+    });
+
+    final state = ref.watch(authNotifierProvider);
+
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: RepaintBoundary(
+            child: WaveBackground(
+              speed: 0.4,
+              amplitude: 0.8,
+              waveCount: 7,
             ),
-            Scaffold(
-              backgroundColor: Colors.transparent,
-              resizeToAvoidBottomInset: true,
-              body: SafeArea(
-                child: AnimatedBuilder(
-                  animation: _entranceController,
-                  builder: (context, _) {
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.screenHorizontal,
-                              ),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: AppSpacing.xl),
-                                  _buildHeader(isDark),
-                                  const SizedBox(height: AppSpacing.gigantic),
-                                  _buildForm(isDark, state),
-                                  const SizedBox(height: AppSpacing.xxxl),
-                                  _buildFooter(isDark),
-                                  const SizedBox(height: AppSpacing.xxl),
-                                ],
-                              ),
-                            ),
+          ),
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: true,
+          body: SafeArea(
+            child: AnimatedBuilder(
+              animation: _entranceController,
+              builder: (context, _) {
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenHorizontal,
                           ),
-                        );
-                      },
+                          child: Column(
+                            children: [
+                              const SizedBox(height: AppSpacing.xl),
+                              _buildHeader(isDark),
+                              const SizedBox(height: AppSpacing.gigantic),
+                              _buildForm(isDark, state),
+                              const SizedBox(height: AppSpacing.xxxl),
+                              _buildFooter(isDark),
+                              const SizedBox(height: AppSpacing.xxl),
+                            ],
+                          ),
+                        ),
+                      ),
                     );
                   },
-                ),
-              ),
+                );
+              },
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
@@ -247,20 +263,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         scale: _logoScale.value,
         child: Column(
           children: [
-            // System index number
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final glow = _pulseController.value;
-                return Text(
-                  '01',
-                  style: AppTypography.monoHero.copyWith(
-                    color: isDark
-                        ? BrutalistPalette.warmYellow.withValues(alpha: 0.15 + glow * 0.08)
-                        : BrutalistPalette.deepAmber.withValues(alpha: 0.10 + glow * 0.06),
-                  ),
-                );
-              },
+            Image.asset(
+              'assets/images/logo.png',
+              width: 80,
+              height: 80,
             ),
 
             const SizedBox(height: AppSpacing.xs),
@@ -299,7 +305,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // LOGIN',
+                    'LOGIN',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -323,13 +329,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   //  FORM — inputs, forgot password, login button, socials
   // ═══════════════════════════════════════════════════════════════
   Widget _buildForm(bool isDark, AuthState state) {
-    state.whenOrNull(
-      loading: () => _isLoading = true,
-    );
+    // Derivado do state do Bloc — garante que o botão sai de loading
+    // quando a request falha (state=error) ou sucede (state=authenticated).
+    _isLoading = state is Loading;
 
-    if (_isLoading == false && state is! Loading) {
-      _isLoading = false;
-    }
     return Opacity(
       opacity: _formFade.value,
       child: Transform.translate(
@@ -386,13 +389,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               child: FadeSlideIn(
                 delay: const Duration(milliseconds: 1600),
                 offsetDistance: 10,
-                child: GestureDetector(
-                  onTap: () => context.push('/forgot-password'),
-                  child: Text(
-                    'ESQUECI MINHA SENHA',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: BrutalistPalette.accentPeach(isDark).withValues(
-                          alpha: isDark ? 0.7 : 0.8),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => context.push('/forgot-password'),
+                    child: Text(
+                      'ESQUECI MINHA SENHA',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: BrutalistPalette.accentPeach(isDark).withValues(
+                            alpha: isDark ? 0.7 : 0.8),
+                      ),
                     ),
                   ),
                 ),
@@ -442,6 +448,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ],
               ),
             ),
+
+            if (kDebugMode && kUseMockAuth) ...[
+              const SizedBox(height: AppSpacing.xxl),
+              FadeSlideIn(
+                delay: const Duration(milliseconds: 2000),
+                offsetDistance: 10,
+                child: _buildDemoRoleSection(isDark),
+              ),
+            ],
           ],
         ),
       ),
@@ -469,12 +484,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final restBorder = isDark ? AppColors.blackLightest : AppColors.lightBorder;
 
     final fieldBg = isDark
-        ? (isFocused
-            ? AppColors.blackLight.withValues(alpha: 0.8)
-            : AppColors.blackLight.withValues(alpha: 0.4))
-        : (isFocused
-            ? AppColors.white.withValues(alpha: 0.95)
-            : AppColors.white.withValues(alpha: 0.9));
+        ? (isFocused ? AppColors.blackLighter : AppColors.blackLight)
+        : (isFocused ? AppColors.white : AppColors.white);
 
     final labelColor = isFocused
         ? BrutalistPalette.accentPeach(isDark)
@@ -600,57 +611,59 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         final glowColor = BrutalistPalette.accentOrange(isDark)
             .withValues(alpha: isDark ? 0.2 : 0.15);
 
-        return GestureDetector(
-          onTap: _isLoading ? null : _handleLogin,
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-                stops: [
-                  0.0,
-                  (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
-                  1.0,
-                ],
+        return MouseRegion(
+          cursor: _isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: _isLoading ? null : _handleLogin,
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                  stops: [
+                    0.0,
+                    (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                borderRadius: AppRadius.borderSm,
+                boxShadow: AppShadows.buttonGlow(glowColor),
               ),
-              borderRadius: AppRadius.borderSm,
-              boxShadow: AppShadows.buttonGlow(glowColor),
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.borderSm,
-              child: Material(
-                color: Colors.transparent,
-                child: Center(
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: loadingColor,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'ENTRAR',
-                              style: AppTypography.buttonLabel.copyWith(
-                                color: buttonTextColor,
+              child: ClipRRect(
+                borderRadius: AppRadius.borderSm,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: loadingColor,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'ENTRAR',
+                                style: AppTypography.buttonLabel.copyWith(
+                                  color: buttonTextColor,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color:
-                                  buttonTextColor.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: buttonTextColor.withValues(alpha: 0.7),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -698,12 +711,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final isLoadingThis = _loadingSocial == provider;
     final isLoadingOther = _loadingSocial != null && _loadingSocial != provider;
 
-    final bgColor = isDark
-        ? AppColors.blackLight.withValues(alpha: 0.5)
-        : AppColors.lightSurface.withValues(alpha: 0.9);
-    final borderColor = isDark
-        ? AppColors.blackLightest.withValues(alpha: 0.6)
-        : AppColors.lightBorder;
+    final bgColor = isDark ? AppColors.blackLight : AppColors.lightSurface;
+    final borderColor =
+        isDark ? AppColors.blackLightest : AppColors.lightBorder;
     final contentColor = isLoadingOther
         ? (isDark ? AppColors.whiteDim : AppColors.lightTextSecondary)
             .withValues(alpha: 0.4)
@@ -715,10 +725,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         onTap: _loadingSocial != null
             ? null
             : () {
+                if (provider == SocialProvider.apple) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Login Apple em breve')),
+                  );
+                  return;
+                }
                 setState(() => _loadingSocial = provider);
-                context.read<AuthBloc>().add(
-                      AuthEvent.socialLoginRequested(provider: provider),
-                    );
+                ref
+                    .read(authNotifierProvider.notifier)
+                    .socialLogin(provider);
               },
         borderRadius: AppRadius.borderSm,
         child: AnimatedContainer(
@@ -782,12 +798,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () => context.push('/register'),
-                child: Text(
-                  'CRIAR CONTA',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: accentColor,
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => context.push('/register'),
+                  child: Text(
+                    'CRIAR CONTA',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: accentColor,
+                    ),
                   ),
                 ),
               ),
@@ -800,7 +819,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             animation: _pulseController,
             builder: (context, _) {
               return Text(
-                'v1.0.0 // DATA-SYSTEM',
+                'v1.0.0',
                 style: AppTypography.monoSmallWide.copyWith(
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,
@@ -810,6 +829,104 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  DEMO ROLES — dev-only quick login buttons
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildDemoRoleSection(bool isDark) {
+    final mutedColor = isDark
+        ? AppColors.whiteDim.withValues(alpha: 0.5)
+        : AppColors.lightTextSecondary.withValues(alpha: 0.7);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'DEV // ENTRAR COMO',
+          style: AppTypography.monoSmallWide.copyWith(color: mutedColor),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDemoRoleButton(
+                'CLIENTE',
+                Icons.person_outline_rounded,
+                isDark,
+                DemoRole.client,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildDemoRoleButton(
+                'PROPRIETÁRIO',
+                Icons.home_work_outlined,
+                isDark,
+                DemoRole.owner,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildDemoRoleButton(
+                'ADMIN',
+                Icons.shield_outlined,
+                isDark,
+                DemoRole.admin,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDemoRoleButton(
+    String label,
+    IconData icon,
+    bool isDark,
+    DemoRole role,
+  ) {
+    final bgColor = isDark ? AppColors.blackLight : AppColors.lightSurface;
+    final borderColor =
+        isDark ? AppColors.blackLightest : AppColors.lightBorder;
+    final contentColor =
+        isDark ? AppColors.whiteDim : AppColors.lightTextSecondary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _isLoading || _loadingSocial != null
+            ? null
+            : () => ref
+                .read(authNotifierProvider.notifier)
+                .demoLogin(role),
+        borderRadius: AppRadius.borderSm,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: AppRadius.borderSm,
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: contentColor, size: 18),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: AppTypography.monoSmallWide.copyWith(
+                  color: contentColor,
+                  fontSize: 9,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

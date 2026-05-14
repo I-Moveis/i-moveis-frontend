@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../design_system/design_system.dart';
-import '../widgets/search_bar_widget.dart';
-import '../widgets/filter_chip_bar.dart';
-import '../widgets/property_list_tile.dart';
-import '../providers/search_notifier.dart';
-import '../providers/search_view_provider.dart';
-import '../providers/search_filters_provider.dart';
-import '../widgets/brutalist_shimmer.dart';
-import 'map_search_page.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
+import '../../../profile/presentation/pages/tenants_page.dart';
+import '../../presentation/providers/search_filters_provider.dart';
+import '../../presentation/providers/search_notifier.dart';
+import '../../presentation/widgets/filter_chip_bar.dart';
+import '../../presentation/widgets/property_list_tile.dart';
+import '../../presentation/widgets/search_bar_widget.dart';
 
 /// Search tab — cozy search with rounded inputs and warm filter chips.
+/// Switches to TenantsPage if the user is an owner.
 class SearchPage extends ConsumerStatefulWidget {
-  const SearchPage({super.key});
+  const SearchPage({super.key, this.initialFilters});
+
+  /// Filtros pré-aplicados (ex: vindos de um deep link do bot WhatsApp).
+  /// Quando não nulo, substitui os filtros persistidos e re-dispara a busca.
+  final SearchFilters? initialFilters;
 
   @override
   ConsumerState<SearchPage> createState() => _SearchPageState();
@@ -27,6 +33,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    final incoming = widget.initialFilters;
+    if (incoming != null) {
+      // Aplica depois do primeiro frame para garantir que os providers já
+      // foram construídos — `build()` do Notifier roda antes do `initState`
+      // do widget que o consome, mas mutar state aqui mesmo ainda dispararia
+      // rebuild durante o próprio initState.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(searchFiltersProvider.notifier).applyAll(incoming);
+      });
+    }
   }
 
   @override
@@ -59,188 +77,101 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isOwner = ref.watch(authNotifierProvider).maybeWhen(
+      authenticated: (user) => user.isOwner,
+      orElse: () => false,
+    );
 
-    // Listen for scroll to top triggers from bottom nav bar
-    ref.listen<int>(searchScrollTriggerProvider, (previous, next) {
-      if (next > 0) {
-        _scrollToTop();
-      }
-    });
+    if (isOwner) {
+      return const TenantsPage();
+    }
 
-    final viewMode = ref.watch(searchViewProvider);
-    final titleColor = BrutalistPalette.title(isDark);
-    final searchState = ref.watch(searchNotifierProvider);
+    return _buildTenantSearch(context);
+  }
+
+  Widget _buildTenantSearch(BuildContext context) {
+    final searchStateAsync = ref.watch(searchNotifierProvider);
 
     return BrutalistPageScaffold(
-      builder: (context, _, entrance, pulse) {
-        if (viewMode == SearchViewMode.map) {
-          return const MapSearchPage();
-        }
-
+      builder: (context, isDark, entrance, pulse) {
         final fade = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(parent: entrance, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
         );
 
-        return Opacity(
-          opacity: fade.value,
-          child: CustomScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppSpacing.xl),
-                      // Header
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Buscar',
-                              style: AppTypography.headlineLarge.copyWith(color: titleColor),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => ref.read(searchViewProvider.notifier).toggle(),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: BrutalistPalette.subtleBg(isDark),
-                                borderRadius: AppRadius.borderMd,
-                              ),
-                              child: Icon(
-                                viewMode == SearchViewMode.list ? Icons.map_outlined : Icons.list_outlined,
-                                size: 20,
-                                color: BrutalistPalette.muted(isDark),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-
-                      // Search bar
-                      const SearchBarWidget(),
-
-                      const SizedBox(height: AppSpacing.xl),
-                    ],
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          floatingActionButton: _showScrollToTop
+              ? FloatingActionButton(
+                  onPressed: _scrollToTop,
+                  backgroundColor: BrutalistPalette.accentOrange(isDark),
+                  child: const Icon(Icons.arrow_upward_rounded, color: Colors.white),
+                )
+              : null,
+          body: Opacity(
+            opacity: fade.value,
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(
+                  child: BrutalistPageHeader(
+                    title: 'Buscar',
+                    subtitle: 'Encontre o imóvel ideal pra você',
                   ),
                 ),
-              ),
-
-              // Filter chips
-              const SliverToBoxAdapter(
-                child: FilterChipBar(),
-              ),
-
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.xxxl),
-              ),
-
-              // Property list or Error/Loading
-              searchState.when(
-                data: (properties) {
-                  if (properties.isEmpty) {
-                    return SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Nenhum resultado encontrado',
-                              style: AppTypography.titleMedium.copyWith(color: titleColor),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            AppButton(
-                              label: 'Limpar Filtros',
-                              onPressed: () => ref.read(searchFiltersProvider.notifier).clearFilters(),
-                            ),
-                          ],
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenHorizontal),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: AppSpacing.md),
+                        SearchBarWidget(),
+                        SizedBox(height: AppSpacing.xxl),
+                        FilterChipBar(),
+                        SizedBox(height: AppSpacing.xl),
+                      ],
+                    ),
+                  ),
+                ),
+                searchStateAsync.when(
+                  data: (state) {
+                    if (state.properties.isEmpty) {
+                      return const SliverFillRemaining(
+                        child: Center(child: Text('Nenhum imóvel encontrado.')),
+                      );
+                    }
+                    return SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final property = state.properties[index];
+                            return PropertyListTile(
+                              property: property,
+                              onTap: () =>
+                                  context.push('/property/${property.id}'),
+                            );
+                          },
+                          childCount: state.properties.length,
                         ),
                       ),
                     );
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenHorizontal),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          if (index < properties.length) {
-                            final property = properties[index];
-                            return PropertyListTile(
-                              property: property,
-                              onTap: () => context.push('/property/${property.id}'),
-                            );
-                          } else {
-                            // Pagination loading indicator
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        childCount: properties.length + (searchState.isLoading ? 1 : 0),
-                      ),
-                    ),
-                  );
-                },
-                loading: () => const SliverToBoxAdapter(
-                  child: BrutalistShimmer(),
-                ),
-                error: (error, stack) => SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'Erro ao carregar imóveis.',
-                            style: AppTypography.titleMedium,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          AppButton(
-                            label: 'Tentar novamente',
-                            onPressed: () => ref.read(searchNotifierProvider.notifier).search(),
-                          ),
-                        ],
-                      ),
-                    ),
+                  },
+                  loading: () => const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (err, stack) => SliverFillRemaining(
+                    child: Center(child: Text('Erro ao carregar imóveis: $err')),
                   ),
                 ),
-              ),
-
-            ],
+                const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.massive)),
+              ],
+            ),
           ),
         );
       },
-      floatingActionButton: _showScrollToTop
-          ? FloatingActionButton(
-              onPressed: _scrollToTop,
-              backgroundColor: BrutalistPalette.warmBrown.withValues(alpha: 0.9),
-              elevation: 4,
-              shape: const CircleBorder(),
-              child: Icon(
-                Icons.keyboard_arrow_up_rounded,
-                color: BrutalistPalette.accentAmber(isDark),
-                size: 32,
-              ),
-            )
-          : null,
     );
   }
 }

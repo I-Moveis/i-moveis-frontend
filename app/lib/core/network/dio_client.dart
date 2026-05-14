@@ -1,27 +1,30 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-/// HTTP client configuration using Dio.
-/// This file centralizes API configuration and interceptors.
-class DioClient {
-  static const String _baseUrl = 'https://api.imoveis.local'; // TODO: Update with actual API URL
+import '../constants.dart';
+import '../storage/secure_token_storage.dart';
+import 'interceptors/auth_interceptor.dart';
+import 'interceptors/error_mapper_interceptor.dart';
+import 'interceptors/logging_interceptor.dart';
 
-  static final Dio _instance = _initDio();
+/// Builds the Dio instance with base options and the standard interceptor
+/// stack used by the app. Intended to be called from a Riverpod provider.
+Dio buildDioClient({
+  required SecureTokenStorage tokenStorage,
+  FirebaseAuth? firebaseAuth,
+}) {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: kApiBaseUrl,
+      connectTimeout: kApiConnectTimeout,
+      receiveTimeout: kApiReceiveTimeout,
+      contentType: Headers.jsonContentType,
+    ),
+  )..interceptors.addAll([
+      AuthInterceptor(storage: tokenStorage, firebaseAuth: firebaseAuth),
+      LoggingInterceptor(),
+      ErrorMapperInterceptor(),
+    ]);
 
-  static Dio _initDio() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        contentType: Headers.jsonContentType,
-      ),
-    );
-
-    // Add interceptors here
-    // dio.interceptors.add(AuthInterceptor());
-
-    return dio;
-  }
-
-  static Dio get httpClient => _instance;
+  return dio;
 }

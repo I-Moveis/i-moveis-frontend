@@ -1,12 +1,37 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
+
 import '../../domain/entities/property.dart';
 import '../../domain/usecases/search_properties_usecase.dart';
 import 'search_filters_provider.dart';
 
+class SearchState {
+
+  const SearchState({
+    required this.properties,
+    this.isOffline = false,
+    this.hasReachedMax = false,
+  });
+  final List<Property> properties;
+  final bool isOffline;
+  final bool hasReachedMax;
+
+  SearchState copyWith({
+    List<Property>? properties,
+    bool? isOffline,
+    bool? hasReachedMax,
+  }) {
+    return SearchState(
+      properties: properties ?? this.properties,
+      isOffline: isOffline ?? this.isOffline,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+    );
+  }
+}
+
 // Provider for SearchNotifier.
-final searchNotifierProvider = AsyncNotifierProvider<SearchNotifier, List<Property>>(
+final searchNotifierProvider = AsyncNotifierProvider<SearchNotifier, SearchState>(
   SearchNotifier.new,
 );
 
@@ -17,65 +42,120 @@ class ScrollTriggerNotifier extends Notifier<int> {
   void trigger() => state++;
 }
 
-final searchScrollTriggerProvider = NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
+final searchScrollTriggerProvider =
+    NotifierProvider<ScrollTriggerNotifier, int>(ScrollTriggerNotifier.new);
 
-class SearchNotifier extends AsyncNotifier<List<Property>> {
+class SearchNotifier extends AsyncNotifier<SearchState> {
   int _currentPage = 1;
-  bool _hasReachedMax = false;
+
+  /// Sequência monotônica que identifica a "geração" da busca vigente.
+  /// Incrementada antes de cada fetch; ao resolver, comparamos o seq local
+  /// com este valor — se divergir, outra request foi disparada e este
+  /// resultado está obsoleto (stale) e deve ser descartado. Evita que uma
+  /// resposta lenta sobrescreva uma resposta recente (race condition).
+  int _requestSeq = 0;
+
+  /// Guard explícito para `loadNextPage`. `state.isLoading` não funciona
+  /// porque a paginação não muda o AsyncValue para loading (mantém os
+  /// itens visíveis enquanto carrega a próxima página). Sem este flag,
+  /// cada frame do scroll que atingir o limite dispara uma nova request.
+  bool _isLoadingNextPage = false;
 
   @override
-  FutureOr<List<Property>> build() async {
+  FutureOr<SearchState> build() async {
     // Watch filter changes to trigger rebuild
     ref.watch(searchFiltersProvider);
 
     _currentPage = 1;
-    _hasReachedMax = false;
-    return _fetchPage(1);
+    final seq = ++_requestSeq;
+    final result = await _fetchPage(1);
+    if (seq != _requestSeq) {
+      // Resposta obsoleta; devolve estado neutro e deixa a build mais
+      // recente preencher o state.
+      return const SearchState(properties: []);
+    }
+    return SearchState(
+      properties: result.properties,
+      isOffline: result.isOffline,
+      hasReachedMax: result.properties.isEmpty,
+    );
   }
 
   /// Initial search or search reset
   Future<void> search() async {
     _currentPage = 1;
-    _hasReachedMax = false;
+    final seq = ++_requestSeq;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchPage(1));
+    state = await AsyncValue.guard(() async {
+      final result = await _fetchPage(1);
+      if (seq != _requestSeq) {
+        throw const _StaleResponseException();
+      }
+      return SearchState(
+        properties: result.properties,
+        isOffline: result.isOffline,
+        hasReachedMax: result.properties.isEmpty,
+      );
+    });
   }
 
   /// Loads the next page and appends to existing state
   Future<void> loadNextPage() async {
-    if (_hasReachedMax || state.isLoading) return;
+    if (_isLoadingNextPage ||
+        (state.value?.hasReachedMax ?? false) ||
+        state.isLoading) {
+      return;
+    }
 
-    final currentProperties = state.value ?? [];
-    
-    // Set loading state but keep previous data to allow "retry" or show previous items
-    // Riverpod 2.0 AsyncValue.guard with data is a bit tricky, 
-    // we can use state = AsyncValue.loading() but it will lose data in UI if not handled.
-    // Better to just fetch and update state.
-    
-    final nextPage = _currentPage + 1;
-    
-    final result = await AsyncValue.guard(() => _fetchPage(nextPage));
-    
-    result.when(
-      data: (newProperties) {
-        if (newProperties.isEmpty) {
-          _hasReachedMax = true;
-        } else {
-          _currentPage = nextPage;
-          state = AsyncValue.data([...currentProperties, ...newProperties]);
-        }
-      },
-      error: (err, stack) {
-        // Keep previous data but set error
-        state = AsyncError<List<Property>>(err, stack).copyWithPrevious(state);
-      },
-      loading: () {},
-    );
+    final currentState = state.value;
+    if (currentState == null) return;
+
+    _isLoadingNextPage = true;
+    try {
+      final nextPage = _currentPage + 1;
+      final seq = ++_requestSeq;
+
+      final result = await AsyncValue.guard(() => _fetchPage(nextPage));
+
+      // Descarte silencioso se outra request já foi disparada no meio-tempo.
+      if (seq != _requestSeq) return;
+
+      result.when(
+        data: (searchResult) {
+          if (searchResult.properties.isEmpty) {
+            state = AsyncValue.data(currentState.copyWith(hasReachedMax: true));
+          } else {
+            _currentPage = nextPage;
+            state = AsyncValue.data(currentState.copyWith(
+              properties: [
+                ...currentState.properties,
+                ...searchResult.properties,
+              ],
+              isOffline: searchResult.isOffline, // Update offline status
+            ));
+          }
+        },
+        error: (err, stack) {
+          // Keep previous data visible while surfacing the error for pagination failures.
+          state = AsyncValue<SearchState>.error(err, stack);
+        },
+        loading: () {},
+      );
+    } finally {
+      _isLoadingNextPage = false;
+    }
   }
 
-  Future<List<Property>> _fetchPage(int page) async {
+  Future<SearchResult> _fetchPage(int page) async {
     final useCase = ref.read(searchPropertiesUseCaseProvider);
     final filters = ref.read(searchFiltersProvider);
     return useCase.execute(filters, page: page);
   }
+}
+
+/// Exceção interna: marca uma resposta como obsoleta (nova request foi
+/// disparada antes desta resolver). Não é exposta ao usuário — é
+/// capturada pelo `AsyncValue.guard` e convertida em erro silencioso.
+class _StaleResponseException implements Exception {
+  const _StaleResponseException();
 }

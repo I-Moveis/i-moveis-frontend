@@ -243,7 +243,7 @@ class BrutalistVersionFooter extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'v1.0.0 // DATA-SYSTEM',
+            'v1.0.0',
             style: AppTypography.monoSmall.copyWith(
               color: mutedColor.withValues(alpha: 0.4),
               letterSpacing: 2,

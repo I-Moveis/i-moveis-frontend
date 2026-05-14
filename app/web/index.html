@@ -32,8 +32,18 @@
   <title>app</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Maps JavaScript API. Replace YOUR_API_KEY_HERE before building. See app/MAPS_SETUP.md -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi5LFf9seZQHubygkoSWdwO8aeGZycIig&loading=async" async></script>
+  <!-- OAuth client ID do Firebase → Authentication → Google → Web SDK configuration.
+       Requerido pelo google_sign_in_web (Google Identity Services). -->
+  <meta name="google-signin-client_id" content="282908859566-r8sjrgst4nvk58itdggu64rfeacslrk4.apps.googleusercontent.com">
+
+  <!-- Google Maps JavaScript API. Locally reads from env.js -->
+  <script src="env.js"></script>
+  <script>
+    var script = document.createElement('script');
+    script.src = "https://maps.googleapis.com/maps/api/js?key=" + (window.MAPS_API_KEY || "YOUR_API_KEY_HERE") + "&loading=async";
+    script.async = true;
+    document.head.appendChild(script);
+  </script>
 
   <!-- Hide Google Maps chrome (logo, attribution, fullscreen, keyboard shortcuts).
        NOTE: hiding the Google logo and attribution technically violates the

@@ -1,25 +1,27 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
-import '../bloc/auth_bloc.dart';
+import '../../domain/entities/auth_user.dart';
+import '../providers/auth_notifier.dart';
+import '../providers/auth_state.dart';
 
 /// Register page — Brutalist Elegance x Japanese Creative Web
 ///
 /// Same visual language as login: WaveBackground sunset,
 /// warm pastel accents, glass inputs, gradient shimmer button,
 /// section marker "DATA-SYSTEM // REGISTRO".
-class RegisterPage extends StatefulWidget {
+class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage>
+class _RegisterPageState extends ConsumerState<RegisterPage>
     with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -35,7 +37,10 @@ class _RegisterPageState extends State<RegisterPage>
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isOwner = false;
+  // O switch "SOU PROPRIETÁRIO" alterna entre TENANT e LANDLORD. O backend é a
+  // fonte de verdade — depois do POST /auth/register + /users/me, o cache é
+  // reescrito com o role autoritativo (ver AuthRepositoryImpl._buildSyncedSession).
+  UserRole _role = UserRole.tenant;
   bool _acceptedTerms = false;
   bool _isLoading = false;
 
@@ -162,10 +167,12 @@ class _RegisterPageState extends State<RegisterPage>
     super.dispose();
   }
 
+  static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   void _handleRegister() {
-    final name = _nameController.text;
-    final email = _emailController.text;
-    final phone = _phoneController.text;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
@@ -176,6 +183,13 @@ class _RegisterPageState extends State<RegisterPage>
         confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
+
+    if (!_emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('E-mail inválido')),
       );
       return;
     }
@@ -194,13 +208,12 @@ class _RegisterPageState extends State<RegisterPage>
       return;
     }
 
-    context.read<AuthBloc>().add(
-          AuthEvent.registerRequested(
-            name: name,
-            email: email,
-            phone: phone,
-            password: password,
-          ),
+    ref.read(authNotifierProvider.notifier).register(
+          name: name,
+          email: email,
+          phone: phone,
+          password: password,
+          role: _role,
         );
   }
 
@@ -208,27 +221,30 @@ class _RegisterPageState extends State<RegisterPage>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        state.whenOrNull(
-          authenticated: (user) {
-            context.go('/home');
-          },
-          error: (message) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erro: $message')),
-            );
-          },
-        );
-      },
-      builder: (context, state) {
-        state.whenOrNull(
-          loading: () => _isLoading = true,
-        );
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      next.whenOrNull(
+        authenticated: (user) {
+          final String destination;
+          if (user.needsRoleOnboarding) {
+            destination = '/onboarding/role';
+          } else if (user.isAdmin) {
+            destination = '/admin';
+          } else {
+            destination = '/home';
+          }
+          context.go(destination);
+        },
+        error: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro: $message')),
+          );
+        },
+      );
+    });
 
-        return _buildRegisterStack(isDark);
-      },
-    );
+    final state = ref.watch(authNotifierProvider);
+    _isLoading = state is Loading;
+    return _buildRegisterStack(isDark);
   }
 
   Widget _buildRegisterStack(bool isDark) {
@@ -296,37 +312,40 @@ class _RegisterPageState extends State<RegisterPage>
       opacity: _headerFade.value,
       child: Align(
         alignment: Alignment.centerLeft,
-        child: GestureDetector(
-          onTap: () => context.pop(),
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: BrutalistPalette.glassBg(isDark),
-              borderRadius: AppRadius.borderSm,
-              border: Border.all(
-                color: BrutalistPalette.glassBorderColor(isDark),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => context.pop(),
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_back_rounded,
-                  size: 16,
-                  color: BrutalistPalette.muted(isDark),
+              decoration: BoxDecoration(
+                color: BrutalistPalette.glassBg(isDark),
+                borderRadius: AppRadius.borderSm,
+                border: Border.all(
+                  color: BrutalistPalette.glassBorderColor(isDark),
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'VOLTAR',
-                  style: AppTypography.labelSmall.copyWith(
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_back_rounded,
+                    size: 16,
                     color: BrutalistPalette.muted(isDark),
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'VOLTAR',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: BrutalistPalette.muted(isDark),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -397,7 +416,7 @@ class _RegisterPageState extends State<RegisterPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // REGISTRO',
+                    'REGISTRO',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -588,12 +607,8 @@ class _RegisterPageState extends State<RegisterPage>
     final restBorder = isDark ? AppColors.blackLightest : AppColors.lightBorder;
 
     final fieldBg = isDark
-        ? (isFocused
-            ? AppColors.blackLight.withValues(alpha: 0.8)
-            : AppColors.blackLight.withValues(alpha: 0.4))
-        : (isFocused
-            ? AppColors.white.withValues(alpha: 0.95)
-            : AppColors.white.withValues(alpha: 0.9));
+        ? (isFocused ? AppColors.blackLighter : AppColors.blackLight)
+        : (isFocused ? AppColors.white : AppColors.white);
 
     final labelColor = isFocused
         ? BrutalistPalette.accentPeach(isDark)
@@ -694,7 +709,8 @@ class _RegisterPageState extends State<RegisterPage>
   // ═══════════════════════════════════════════════════════════════
   Widget _buildOwnerToggle(bool isDark) {
     final bgColor = BrutalistPalette.cardBg(isDark);
-    final borderColor = _isOwner
+    final isOwner = _role == UserRole.landlord;
+    final borderColor = isOwner
         ? BrutalistPalette.accentOrange(isDark).withValues(alpha: isDark ? 0.4 : 0.3)
         : BrutalistPalette.cardBorder(isDark);
 
@@ -729,8 +745,10 @@ class _RegisterPageState extends State<RegisterPage>
             ),
           ),
           Switch(
-            value: _isOwner,
-            onChanged: (v) => setState(() => _isOwner = v),
+            value: isOwner,
+            onChanged: (v) => setState(
+              () => _role = v ? UserRole.landlord : UserRole.tenant,
+            ),
             activeThumbColor: BrutalistPalette.accentAmber(isDark),
             activeTrackColor: isDark
                 ? BrutalistPalette.warmBrown.withValues(alpha: 0.4)
@@ -753,40 +771,43 @@ class _RegisterPageState extends State<RegisterPage>
   Widget _buildTermsCheckbox(bool isDark) {
     final accentColor = BrutalistPalette.accentPeach(isDark);
 
-    return GestureDetector(
-      onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
-      child: Row(
-        children: [
-          AnimatedContainer(
-            duration: AppDurations.normal,
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: _acceptedTerms
-                  ? accentColor.withValues(alpha: 0.2)
-                  : Colors.transparent,
-              borderRadius: AppRadius.borderXs,
-              border: Border.all(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: AppDurations.normal,
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
                 color: _acceptedTerms
-                    ? accentColor
-                    : (isDark
-                        ? AppColors.blackLightest
-                        : AppColors.lightBorder),
-                width: 1.5,
+                    ? accentColor.withValues(alpha: 0.2)
+                    : Colors.transparent,
+                borderRadius: AppRadius.borderXs,
+                border: Border.all(
+                  color: _acceptedTerms
+                      ? accentColor
+                      : (isDark
+                          ? AppColors.blackLightest
+                          : AppColors.lightBorder),
+                  width: 1.5,
+                ),
+              ),
+              child: _acceptedTerms
+                  ? Icon(Icons.check_rounded, size: 14, color: accentColor)
+                  : null,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              'ACEITO OS TERMOS DE USO',
+              style: AppTypography.labelSmall.copyWith(
+                color: BrutalistPalette.muted(isDark),
               ),
             ),
-            child: _acceptedTerms
-                ? Icon(Icons.check_rounded, size: 14, color: accentColor)
-                : null,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Text(
-            'ACEITO OS TERMOS DE USO',
-            style: AppTypography.labelSmall.copyWith(
-              color: BrutalistPalette.muted(isDark),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -817,57 +838,59 @@ class _RegisterPageState extends State<RegisterPage>
         final glowColor = BrutalistPalette.accentOrange(isDark)
             .withValues(alpha: isDark ? 0.2 : 0.15);
 
-        return GestureDetector(
-          onTap: _isLoading ? null : _handleRegister,
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-                stops: [
-                  0.0,
-                  (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
-                  1.0,
-                ],
+        return MouseRegion(
+          cursor: _isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: _isLoading ? null : _handleRegister,
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                  stops: [
+                    0.0,
+                    (0.5 + sin(shimmerValue * 2 * pi) * 0.2).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                borderRadius: AppRadius.borderSm,
+                boxShadow: AppShadows.buttonGlow(glowColor),
               ),
-              borderRadius: AppRadius.borderSm,
-              boxShadow: AppShadows.buttonGlow(glowColor),
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.borderSm,
-              child: Material(
-                color: Colors.transparent,
-                child: Center(
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: loadingColor,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'CRIAR CONTA',
-                              style: AppTypography.buttonLabel.copyWith(
-                                color: buttonTextColor,
+              child: ClipRRect(
+                borderRadius: AppRadius.borderSm,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: loadingColor,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'CRIAR CONTA',
+                                style: AppTypography.buttonLabel.copyWith(
+                                  color: buttonTextColor,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color:
-                                  buttonTextColor.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 18,
+                                color: buttonTextColor.withValues(alpha: 0.7),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -898,12 +921,15 @@ class _RegisterPageState extends State<RegisterPage>
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Text(
-                  'ENTRAR',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: accentColor,
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => context.pop(),
+                  child: Text(
+                    'ENTRAR',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: accentColor,
+                    ),
                   ),
                 ),
               ),
@@ -914,7 +940,7 @@ class _RegisterPageState extends State<RegisterPage>
             animation: _pulseController,
             builder: (context, _) {
               return Text(
-                'v1.0.0 // DATA-SYSTEM',
+                'v1.0.0',
                 style: AppTypography.monoSmall.copyWith(
                   color: mutedColor.withValues(
                     alpha: 0.3 + _pulseController.value * 0.15,

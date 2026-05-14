@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../design_system/design_system.dart';
+import '../providers/auth_notifier.dart';
 
 /// Forgot password page — Brutalist Elegance x Japanese Creative Web
 ///
 /// Same visual language: WaveBackground sunset, warm pastels,
 /// glass input, section marker "DATA-SYSTEM // RECOVERY",
 /// index "03", gradient button.
-class ForgotPasswordPage extends StatefulWidget {
+class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage>
+class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
     with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
@@ -106,15 +108,37 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
     super.dispose();
   }
 
-  void _handleSendLink() {
+  Future<void> _handleSendLink() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showError('Informe seu e-mail.');
+      return;
+    }
+
     setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _linkSent = true;
-      });
-    });
+
+    final error = await ref
+        .read(authNotifierProvider.notifier)
+        .resetPassword(email);
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (error != null) {
+      _showError(error);
+    } else {
+      setState(() => _linkSent = true);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -183,37 +207,40 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
       opacity: _headerFade.value,
       child: Align(
         alignment: Alignment.centerLeft,
-        child: GestureDetector(
-          onTap: () => context.pop(),
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: BrutalistPalette.glassBg(isDark),
-              borderRadius: AppRadius.borderSm,
-              border: Border.all(
-                color: BrutalistPalette.glassBorderColor(isDark),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => context.pop(),
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_back_rounded,
-                  size: 16,
-                  color: BrutalistPalette.muted(isDark),
+              decoration: BoxDecoration(
+                color: BrutalistPalette.glassBg(isDark),
+                borderRadius: AppRadius.borderSm,
+                border: Border.all(
+                  color: BrutalistPalette.glassBorderColor(isDark),
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'VOLTAR',
-                  style: AppTypography.labelSmall.copyWith(
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_back_rounded,
+                    size: 16,
                     color: BrutalistPalette.muted(isDark),
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'VOLTAR',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: BrutalistPalette.muted(isDark),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -284,7 +311,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // RECOVERY',
+                    'RECUPERAÇÃO',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -360,9 +387,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
     final restBorder = BrutalistPalette.cardBorder(isDark);
 
     final fieldBg = isFocused
-        ? (isDark
-            ? AppColors.blackLight.withValues(alpha: 0.8)
-            : AppColors.white.withValues(alpha: 0.95))
+        ? (isDark ? AppColors.blackLighter : AppColors.white)
         : BrutalistPalette.surfaceBg(isDark);
 
     final labelColor = isFocused
@@ -488,58 +513,59 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
             ? BrutalistPalette.warmOrange.withValues(alpha: 0.2)
             : BrutalistPalette.deepOrange.withValues(alpha: 0.15);
 
-        return GestureDetector(
-          onTap: _isLoading ? null : _handleSendLink,
-          child: AnimatedContainer(
-            duration: AppDurations.normal,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-                stops: [
-                  0.0,
-                  (0.5 + _sinApprox(shimmerValue * pi2) * 0.2)
-                      .clamp(0.0, 1.0),
-                  1.0,
-                ],
+        return MouseRegion(
+          cursor: _isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: _isLoading ? null : _handleSendLink,
+            child: AnimatedContainer(
+              duration: AppDurations.normal,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                  stops: [
+                    0.0,
+                    (0.5 + _sinApprox(shimmerValue * pi2) * 0.2).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ),
+                borderRadius: AppRadius.borderSm,
+                boxShadow: AppShadows.buttonGlow(glowColor),
               ),
-              borderRadius: AppRadius.borderSm,
-              boxShadow: AppShadows.buttonGlow(glowColor),
-            ),
-            child: ClipRRect(
-              borderRadius: AppRadius.borderSm,
-              child: Material(
-                color: Colors.transparent,
-                child: Center(
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: loadingColor,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'ENVIAR LINK',
-                              style: AppTypography.buttonLabel.copyWith(
-                                color: buttonTextColor,
+              child: ClipRRect(
+                borderRadius: AppRadius.borderSm,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: loadingColor,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'ENVIAR LINK',
+                                style: AppTypography.buttonLabel.copyWith(
+                                  color: buttonTextColor,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.send_rounded,
-                              size: 18,
-                              color:
-                                  buttonTextColor.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Icon(
+                                Icons.send_rounded,
+                                size: 18,
+                                color: buttonTextColor.withValues(alpha: 0.7),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -606,25 +632,28 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
             ),
           ),
           const SizedBox(height: AppSpacing.huge),
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Container(
-              width: double.infinity,
-              height: 48,
-              decoration: BoxDecoration(
-                color: BrutalistPalette.glassBg(isDark),
-                borderRadius: AppRadius.borderSm,
-                border: Border.all(
-                  color: BrutalistPalette.glassBorderColor(isDark),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => context.pop(),
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: BrutalistPalette.glassBg(isDark),
+                  borderRadius: AppRadius.borderSm,
+                  border: Border.all(
+                    color: BrutalistPalette.glassBorderColor(isDark),
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Text(
-                  'VOLTAR AO LOGIN',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: isDark
-                        ? AppColors.whiteDim
-                        : AppColors.lightTextSecondary,
+                child: Center(
+                  child: Text(
+                    'VOLTAR AO LOGIN',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: isDark
+                          ? AppColors.whiteDim
+                          : AppColors.lightTextSecondary,
+                    ),
                   ),
                 ),
               ),

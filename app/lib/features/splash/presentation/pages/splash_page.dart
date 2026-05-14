@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../design_system/design_system.dart';
+import '../../../auth/presentation/providers/auth_notifier.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
+import '../../../auth/presentation/providers/auth_status_provider.dart';
+import '../../../onboarding/presentation/providers/onboarding_provider.dart';
 
 /// Splash screen — Brutalist Elegance x Japanese Creative Web
 ///
 /// Cinematic entrance: WaveBackground sunset, pulsing index "00",
 /// RevealText brand name, section marker, loading indicator,
 /// then CurtainTransition to onboarding.
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with TickerProviderStateMixin {
   late final AnimationController _entranceController;
   late final AnimationController _pulseController;
@@ -77,6 +83,13 @@ class _SplashPageState extends State<SplashPage>
       }
     });
 
+    // Fire the session check in parallel with the splash animation so that
+    // by the time the curtain drops, authStatus is already resolved.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(authNotifierProvider.notifier).checkSession();
+    });
+
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) _entranceController.forward();
     });
@@ -88,7 +101,7 @@ class _SplashPageState extends State<SplashPage>
       final isDark = Theme.of(context).brightness == Brightness.dark;
       Navigator.of(context).pushReplacement(
         CurtainTransition(
-          page: const _OnboardingRedirect(),
+          page: const _PostSplashRouter(),
           direction: CurtainDirection.bottom,
           curtainColor: BrutalistPalette.warmScrimBg(isDark),
         ),
@@ -221,7 +234,7 @@ class _SplashPageState extends State<SplashPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'DATA-SYSTEM // INITIALIZING',
+                    'INICIALIZANDO',
                     style: AppTypography.sectionMarker.copyWith(
                       color: accentAmber.withValues(alpha: 0.6),
                     ),
@@ -298,7 +311,7 @@ class _SplashPageState extends State<SplashPage>
         animation: _pulseController,
         builder: (context, _) {
           return Text(
-            'v1.0.0 // LOADING SYSTEM',
+            'v1.0.0',
             style: AppTypography.monoSmallWide.copyWith(
               color: mutedColor.withValues(
                 alpha: 0.3 + _pulseController.value * 0.15,
@@ -311,25 +324,73 @@ class _SplashPageState extends State<SplashPage>
   }
 }
 
-/// Helper widget to redirect via GoRouter after CurtainTransition.
-class _OnboardingRedirect extends StatefulWidget {
-  const _OnboardingRedirect();
+/// Picks the first route shown after the splash, based on auth + onboarding.
+///
+/// Priority:
+/// 1. Authenticated → `/home`
+/// 2. Onboarding pending → `/onboarding`
+/// 3. Onboarding completed (unauth) → `/login`
+/// If [AuthStatus] is still `unknown` when this widget mounts, it waits for a
+/// resolved status via a Riverpod listener.
+class _PostSplashRouter extends ConsumerStatefulWidget {
+  const _PostSplashRouter();
 
   @override
-  State<_OnboardingRedirect> createState() => _OnboardingRedirectState();
+  ConsumerState<_PostSplashRouter> createState() => _PostSplashRouterState();
 }
 
-class _OnboardingRedirectState extends State<_OnboardingRedirect> {
+class _PostSplashRouterState extends ConsumerState<_PostSplashRouter> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.go('/onboarding');
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeNavigate());
+  }
+
+  void _maybeNavigate() {
+    if (!mounted || _navigated) return;
+    final status = ref.read(authStatusProvider);
+    if (status == AuthStatus.unknown) return;
+
+    final onboarding = ref.read(onboardingProvider);
+    if (onboarding.isLoading) return;
+
+    final destination = _resolveDestination(
+      status,
+      onboarding.value ?? OnboardingStatus.pending,
+    );
+    _navigated = true;
+    context.go(destination);
+  }
+
+  String _resolveDestination(AuthStatus status, OnboardingStatus onboarding) {
+    if (status == AuthStatus.authenticated) {
+      final authState = ref.read(authNotifierProvider);
+      return authState.maybeWhen(
+        authenticated: (user) {
+          if (user.needsRoleOnboarding) return '/onboarding/role';
+          if (user.isAdmin) return '/admin';
+          // LANDLORD e TENANT caem em /home; o builder da rota decide qual
+          // página mostrar (LandlordDashboardPage vs HomePage) pelo isOwner.
+          return '/home';
+        },
+        orElse: () => '/home',
+      );
+    }
+    if (onboarding == OnboardingStatus.completed) return '/login';
+    return '/onboarding';
   }
 
   @override
   Widget build(BuildContext context) {
+    ref
+      ..listen<AuthStatus>(authStatusProvider, (_, __) => _maybeNavigate())
+      ..listen<AsyncValue<OnboardingStatus>>(
+        onboardingProvider,
+        (_, __) => _maybeNavigate(),
+      );
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: BrutalistPalette.warmScrimBg(isDark),

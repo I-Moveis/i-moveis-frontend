@@ -65,7 +65,18 @@ class MakeProposalPage extends StatelessWidget {
   Widget _sectionLabel(String text, Color color) => Text(text, style: AppTypography.titleSmallBold.copyWith(color: color.withValues(alpha: 0.5)));
   Widget _input(String hint, IconData icon, bool isDark, Color title, Color muted, Color bg, Color border, Color accent) {
     return Container(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.mdLg), decoration: BoxDecoration(color: bg, borderRadius: AppRadius.borderLg, border: Border.all(color: border)),
-      child: Row(children: [Icon(icon, size: 18, color: muted), const SizedBox(width: AppSpacing.md), Text(hint, style: AppTypography.bodyLarge.copyWith(color: BrutalistPalette.faint(isDark)))]));
+      child: Row(children: [
+        Icon(icon, size: 18, color: muted),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            hint,
+            style: AppTypography.bodyLarge.copyWith(color: BrutalistPalette.faint(isDark)),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+      ]));
   }
   Widget _chip(String label, Color color, bool isDark) {
     return Container(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: AppRadius.borderFull),

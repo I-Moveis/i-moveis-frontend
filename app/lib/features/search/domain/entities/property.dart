@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+
 /// Pure domain entity for Property, independent of UI frameworks.
+@immutable
 class Property {
   const Property({
     required this.id,
@@ -17,7 +20,17 @@ class Property {
     this.taxes = 0,
     this.thumbnailIconCode = 0xe06a, // Default to apartment icon
     this.imageUrls = const [],
+    this.coverImageUrl,
     this.isFavorite = false,
+    this.address = '',
+    this.amenities = const [],
+    this.badges = const [],
+    this.ownerName = '',
+    this.ownerMemberSince = '',
+    this.landlordId,
+    this.moderationStatus,
+    this.status,
+    this.currentTenant,
   });
 
   final String id;
@@ -36,7 +49,46 @@ class Property {
   final double taxes;
   final int thumbnailIconCode;
   final List<String> imageUrls;
+
+  /// URL da foto explicitamente marcada como capa no backend. Se nenhuma
+  /// foto vier com `isCover=true`, cai pra primeira de [imageUrls]. Null
+  /// quando o imóvel não tem foto nenhuma — a UI decide o placeholder.
+  final String? coverImageUrl;
+
   final bool isFavorite;
+
+  /// Display address (e.g. "Vila Madalena, São Paulo - SP")
+  final String address;
+
+  /// Amenities list (e.g. ["Piscina", "Academia", "Portaria 24h"])
+  final List<String> amenities;
+
+  /// Highlight badges shown in the header (e.g. ["Exclusivo", "Novo"])
+  final List<String> badges;
+
+  /// Owner display name
+  final String ownerName;
+
+  /// Owner membership info (e.g. "Membro desde 2023")
+  final String ownerMemberSince;
+
+  /// UUID do proprietário (LANDLORD). Só é preenchido quando o endpoint
+  /// retorna o campo (ex: /properties/:id, /admin/properties).
+  /// GET /properties/search historicamente não devolve.
+  final String? landlordId;
+
+  /// `PENDING` | `APPROVED` | `REJECTED`. Null para fontes públicas que
+  /// filtram internamente para APPROVED.
+  final String? moderationStatus;
+
+  /// Status operacional: `AVAILABLE` | `NEGOTIATING` | `RENTED`. Null
+  /// quando o endpoint não devolve (usar default `AVAILABLE` na UI).
+  final String? status;
+
+  /// Inquilino atualmente associado ao imóvel (só faz sentido quando
+  /// [status] == `RENTED` ou `NEGOTIATING`). Null caso contrário.
+  /// Hoje o backend não devolve esse shape ainda — ver docs/BACKEND_*.md.
+  final PropertyTenant? currentTenant;
 
   double get totalPrice => priceValue + condoFee + taxes;
 
@@ -57,7 +109,17 @@ class Property {
     double? taxes,
     int? thumbnailIconCode,
     List<String>? imageUrls,
+    String? coverImageUrl,
     bool? isFavorite,
+    String? address,
+    List<String>? amenities,
+    List<String>? badges,
+    String? ownerName,
+    String? ownerMemberSince,
+    String? landlordId,
+    String? moderationStatus,
+    String? status,
+    PropertyTenant? currentTenant,
   }) {
     return Property(
       id: id ?? this.id,
@@ -76,7 +138,17 @@ class Property {
       taxes: taxes ?? this.taxes,
       thumbnailIconCode: thumbnailIconCode ?? this.thumbnailIconCode,
       imageUrls: imageUrls ?? this.imageUrls,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       isFavorite: isFavorite ?? this.isFavorite,
+      address: address ?? this.address,
+      amenities: amenities ?? this.amenities,
+      badges: badges ?? this.badges,
+      ownerName: ownerName ?? this.ownerName,
+      ownerMemberSince: ownerMemberSince ?? this.ownerMemberSince,
+      landlordId: landlordId ?? this.landlordId,
+      moderationStatus: moderationStatus ?? this.moderationStatus,
+      status: status ?? this.status,
+      currentTenant: currentTenant ?? this.currentTenant,
     );
   }
 
@@ -90,4 +162,14 @@ class Property {
 
   @override
   int get hashCode => id.hashCode ^ isFavorite.hashCode;
+}
+
+/// Shape mínimo pra linkar um inquilino a um imóvel — só o que a UI
+/// do landlord precisa pra mostrar o nome e abrir chat. Expandir quando
+/// o backend definir o shape real do relacionamento property↔tenant.
+@immutable
+class PropertyTenant {
+  const PropertyTenant({required this.id, required this.name});
+  final String id;
+  final String name;
 }

@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+
+import '../../../../core/utils/location_service.dart';
 import '../../../../design_system/design_system.dart';
 import '../providers/search_filters_provider.dart';
 
@@ -39,15 +44,93 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
   final ScrollController _transactionScrollController = ScrollController();
   final ScrollController _propertyTypeScrollController = ScrollController();
   final ScrollController _bedroomsScrollController = ScrollController();
+  final ScrollController _bathroomsScrollController = ScrollController();
   final ScrollController _amenitiesScrollController = ScrollController();
+  final ScrollController _specialScrollController = ScrollController();
+  final ScrollController _orderByScrollController = ScrollController();
+
+  bool _locatingUser = false;
+
+  late final TextEditingController _stateController;
+
+  /// Debounce para o campo UF — evita disparar busca por tecla digitada.
+  Timer? _stateDebounce;
+  static const Duration _kStateDebounce = Duration(milliseconds: 400);
+
+  /// Valores locais dos sliders enquanto o usuário arrasta. Só são
+  /// propagados para o provider no `onChangeEnd` — caso contrário cada
+  /// frame do arrasto dispararia uma nova request no backend.
+  RangeValues? _localPriceRange;
+  RangeValues? _localAreaRange;
+
+  @override
+  void initState() {
+    super.initState();
+    _stateController = TextEditingController(
+      text: ref.read(searchFiltersProvider).state,
+    );
+  }
 
   @override
   void dispose() {
+    _stateDebounce?.cancel();
+    _stateController.dispose();
     _transactionScrollController.dispose();
     _propertyTypeScrollController.dispose();
     _bedroomsScrollController.dispose();
+    _bathroomsScrollController.dispose();
     _amenitiesScrollController.dispose();
+    _specialScrollController.dispose();
+    _orderByScrollController.dispose();
     super.dispose();
+  }
+
+  void _onStateChanged(String value) {
+    _stateDebounce?.cancel();
+    _stateDebounce = Timer(_kStateDebounce, () {
+      if (!mounted) return;
+      ref.read(searchFiltersProvider.notifier).updateState(value);
+    });
+  }
+
+  Future<void> _toggleNearbySearch(
+      SearchFilters filters, SearchFiltersNotifier notifier) async {
+    if (filters.latitude != null && filters.longitude != null) {
+      notifier.clearNearbySearch();
+      return;
+    }
+    setState(() => _locatingUser = true);
+    try {
+      final pos = await LocationService.getCurrentPosition();
+      notifier.setNearbySearch(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Buscando num raio de 5 km da sua localização.'),
+        ),
+      );
+    } on LocationServiceDisabledException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ative o GPS para usar esta busca.')),
+      );
+    } on PermissionDeniedException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Permissão de localização negada.')),
+      );
+    } on Object catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível obter a localização.')),
+      );
+    } finally {
+      if (mounted) setState(() => _locatingUser = false);
+    }
   }
 
   @override
@@ -146,25 +229,51 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                   }).toList(),
                 ),
 
-                // --- Price Range ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSectionLabel('Preço', titleColor),
-                    Text(
-                      'R\$ ${filters.priceRange.start.toInt()} - R\$ ${filters.priceRange.end.toInt()}',
-                      style: AppTypography.labelLarge.copyWith(color: accentColor),
-                    ),
-                  ],
+                // --- Bathrooms ---
+                _buildHorizontalFilter(
+                  label: 'Banheiros',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _bathroomsScrollController,
+                  children: [1, 2, 3, 4].map((count) {
+                    final isSelected = filters.bathrooms.contains(count);
+                    return AppChip(
+                      label: '$count+',
+                      isSelected: isSelected,
+                      onTap: () => ref
+                          .read<SearchFiltersNotifier>(
+                              searchFiltersProvider.notifier)
+                          .toggleBathroom(count),
+                    );
+                  }).toList(),
                 ),
+
+                // --- Price Range ---
+                _buildPriceSection(
+                  filters: filters,
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // --- Area ---
+                _buildAreaSection(
+                  filters: filters,
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // --- State (UF) ---
+                _buildSectionLabel('Estado (UF)', titleColor),
                 const SizedBox(height: AppSpacing.md),
-                RangeSlider(
-                  values: filters.priceRange,
-                  max: 50000,
-                  divisions: 50,
-                  activeColor: accentColor,
-                  inactiveColor: isDark ? AppColors.blackLightest : AppColors.lightBorder,
-                  onChanged: (values) => ref.read<SearchFiltersNotifier>(searchFiltersProvider.notifier).updatePriceRange(values),
+                AppTextField(
+                  hint: 'Ex: SP, RJ, MG',
+                  prefixIcon: Icons.map_outlined,
+                  controller: _stateController,
+                  onChanged: _onStateChanged,
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -196,6 +305,81 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
                     isSelected: data.isSelected,
                     onTap: data.onTap,
                   )).toList(),
+                ),
+
+                // --- Special filters (mobiliado / metrô / destaque) ---
+                _buildHorizontalFilter(
+                  label: 'Extras',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _specialScrollController,
+                  children: [
+                    _AmenityData(
+                      label: 'Mobiliado',
+                      isSelected: filters.isFurnished,
+                      onTap: () => ref
+                          .read<SearchFiltersNotifier>(
+                              searchFiltersProvider.notifier)
+                          .updateFurnished(!filters.isFurnished),
+                    ),
+                    _AmenityData(
+                      label: 'Perto do metrô',
+                      isSelected: filters.nearSubway,
+                      onTap: () => ref
+                          .read<SearchFiltersNotifier>(
+                              searchFiltersProvider.notifier)
+                          .updateNearSubway(!filters.nearSubway),
+                    ),
+                    _AmenityData(
+                      label: 'Destaques',
+                      isSelected: filters.isFeatured,
+                      onTap: () => ref
+                          .read<SearchFiltersNotifier>(
+                              searchFiltersProvider.notifier)
+                          .updateFeatured(!filters.isFeatured),
+                    ),
+                  ].map((data) => AppChip(
+                        label: data.label,
+                        isSelected: data.isSelected,
+                        onTap: data.onTap,
+                      )).toList(),
+                ),
+
+                // --- Near me ---
+                _buildSectionLabel('Localização atual', titleColor),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: filters.latitude != null && filters.longitude != null
+                      ? 'Desligar busca por proximidade'
+                      : 'Buscar perto de mim (5 km)',
+                  variant: AppButtonVariant.outline,
+                  isLoading: _locatingUser,
+                  onPressed: () => _toggleNearbySearch(
+                    filters,
+                    ref.read<SearchFiltersNotifier>(
+                        searchFiltersProvider.notifier),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // --- Order by ---
+                _buildHorizontalFilter(
+                  label: 'Ordenar por',
+                  titleColor: titleColor,
+                  accentColor: accentColor,
+                  controller: _orderByScrollController,
+                  children: _orderByOptions.map((opt) {
+                    final isSelected = (filters.orderBy ?? 'isFeatured') ==
+                        opt.apiValue;
+                    return AppChip(
+                      label: opt.label,
+                      isSelected: isSelected,
+                      onTap: () => ref
+                          .read<SearchFiltersNotifier>(
+                              searchFiltersProvider.notifier)
+                          .updateOrderBy(opt.apiValue),
+                    );
+                  }).toList(),
                 ),
 
                 const SizedBox(height: AppSpacing.lg),
@@ -230,6 +414,102 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
     );
   }
 
+  Widget _buildPriceSection({
+    required SearchFilters filters,
+    required Color titleColor,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    final displayRange = _localPriceRange ?? filters.priceRange;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionLabel('Preço', titleColor),
+            Text(
+              'R\$ ${displayRange.start.toInt()} - R\$ ${displayRange.end.toInt()}',
+              style: AppTypography.labelLarge.copyWith(color: accentColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        RangeSlider(
+          values: displayRange,
+          max: 50000,
+          divisions: 50,
+          activeColor: accentColor,
+          inactiveColor:
+              isDark ? AppColors.blackLightest : AppColors.lightBorder,
+          onChanged: (values) => setState(() => _localPriceRange = values),
+          onChangeEnd: (values) {
+            setState(() => _localPriceRange = values);
+            ref
+                .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+                .updatePriceRange(values);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAreaSection({
+    required SearchFilters filters,
+    required Color titleColor,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    final providerRange = filters.areaRange ?? const RangeValues(0, 500);
+    final displayRange = _localAreaRange ?? providerRange;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionLabel('Área (m²)', titleColor),
+            Text(
+              filters.areaRange == null && _localAreaRange == null
+                  ? 'Qualquer'
+                  : '${displayRange.start.toInt()} - ${displayRange.end.toInt()} m²',
+              style: AppTypography.labelLarge.copyWith(color: accentColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        RangeSlider(
+          values: displayRange,
+          max: 1000,
+          divisions: 50,
+          activeColor: accentColor,
+          inactiveColor:
+              isDark ? AppColors.blackLightest : AppColors.lightBorder,
+          onChanged: (values) => setState(() => _localAreaRange = values),
+          onChangeEnd: (values) {
+            setState(() => _localAreaRange = values);
+            ref
+                .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+                .updateAreaRange(values);
+          },
+        ),
+        if (filters.areaRange != null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                setState(() => _localAreaRange = null);
+                ref
+                    .read<SearchFiltersNotifier>(searchFiltersProvider.notifier)
+                    .updateAreaRange(null);
+              },
+              child: const Text('Limpar área'),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildHorizontalFilter({
     required String label,
     required List<Widget> children,
@@ -247,7 +527,7 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
             scrollbarTheme: ScrollbarThemeData(
               thumbColor: WidgetStateProperty.all(accentColor),
               trackColor: WidgetStateProperty.all(Colors.transparent),
-              thickness: WidgetStateProperty.all(4.0),
+              thickness: WidgetStateProperty.all(4),
               radius: const Radius.circular(10),
               interactive: true,
             ),
@@ -313,13 +593,28 @@ class _SearchFilterModalState extends ConsumerState<SearchFilterModal> {
 }
 
 class _AmenityData {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
   _AmenityData({
     required this.label,
     required this.isSelected,
     required this.onTap,
   });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
 }
+
+class _OrderByOption {
+  const _OrderByOption(this.label, this.apiValue);
+  final String label;
+  final String apiValue;
+}
+
+const List<_OrderByOption> _orderByOptions = [
+  _OrderByOption('Destaques', 'isFeatured'),
+  _OrderByOption('Mais recentes', 'createdAt'),
+  _OrderByOption('Mais vistos', 'views'),
+  _OrderByOption('Menor preço', 'priceAsc'),
+  _OrderByOption('Maior preço', 'priceDesc'),
+  _OrderByOption('Mais próximos', 'nearest'),
+];

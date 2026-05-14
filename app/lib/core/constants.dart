@@ -39,10 +39,14 @@ String absoluteImageUrl(String raw) {
   final base = kApiBaseUrl;
   final baseUri = Uri.tryParse(base);
   if (baseUri == null) return trimmed;
-  // Usa o path base até /api para montar URLs de uploads (/api/uploads/...)
-  final basePath = baseUri.path.endsWith('/')
-      ? baseUri.path.substring(0, baseUri.path.length - 1)
-      : baseUri.path;
+  // Uploads são servidos pelo express-static na raiz do servidor, FORA do
+  // prefixo /api. Removemos o segmento final /api (e variantes /api/vN) do
+  // path base para que /uploads/... resolva corretamente.
+  var basePath = baseUri.path;
+  if (basePath.endsWith('/')) {
+    basePath = basePath.substring(0, basePath.length - 1);
+  }
+  basePath = basePath.replaceFirst(RegExp(r'/api(/v\d+)?$'), '');
   final origin = '${baseUri.scheme}://${baseUri.authority}$basePath';
   final normalizedPath = trimmed.startsWith('/') ? trimmed : '/$trimmed';
   return '$origin$normalizedPath';

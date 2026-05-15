@@ -350,7 +350,7 @@ class _ListingRow extends StatelessWidget {
           // Thumbnail
           if (property.imageUrls.isNotEmpty)
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.borderXl,
               child: Image.network(
                 property.imageUrls.first,
                 width: 52,
@@ -371,7 +371,7 @@ class _ListingRow extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                 color: BrutalistPalette.imagePlaceholderBg(isDark),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.borderXl,
               ),
               child:
                   Icon(Icons.home_outlined, size: 20, color: mutedColor),
@@ -460,7 +460,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
     final isDark = widget.isDark;
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
-    final bg = isDark ? const Color(0xFF1C1C1C) : Colors.white;
+    final bg = isDark ? AppColors.darkCard : AppColors.white;
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final accentColor =
         isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
@@ -476,7 +476,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
         decoration: BoxDecoration(
           color: bg,
           borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
+              AppRadius.sheetTop,
         ),
         child: ListView(
           controller: controller,
@@ -491,7 +491,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: borderColor,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: AppRadius.borderSm,
                   ),
                 ),
               ),
@@ -725,7 +725,7 @@ class _RejectSheetState extends State<_RejectSheet> {
     final isDark = widget.isDark;
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
-    final bg = isDark ? const Color(0xFF1C1C1C) : Colors.white;
+    final bg = isDark ? AppColors.darkCard : AppColors.white;
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
 
     return Padding(
@@ -735,7 +735,7 @@ class _RejectSheetState extends State<_RejectSheet> {
         decoration: BoxDecoration(
           color: bg,
           borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
+              AppRadius.sheetTop,
         ),
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
@@ -803,7 +803,7 @@ class _RejectSheetState extends State<_RejectSheet> {
                   alignment: Alignment.center,
                   child: Text('Confirmar reprovação',
                       style: AppTypography.titleSmallBold
-                          .copyWith(color: Colors.white)),
+                          .copyWith(color: AppColors.white)),
                 ),
               ),
             ),

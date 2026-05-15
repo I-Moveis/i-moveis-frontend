@@ -37,17 +37,16 @@ class DynamicBrutalistPalette {
   /// Faint text color (even more muted).
   Color faint(bool isDark) => isDark ? AppColors.whiteFaint : AppColors.lightTextDisabled;
 
-  /// Glass background. Dark mode ficou sólido (era translúcido o suficiente
-  /// pro WaveBackground passar) — mantém o "glass feel" via cor levemente
-  /// mais clara que o card padrão. Light permanece com leve alpha preto.
+  /// Glass background. Sólido em ambos os modos para não vazar o fundo.
+  /// Dark: um degrau acima do card. Light: branco puro.
   Color glassBg(bool isDark) => isDark
       ? AppColors.blackLighter
-      : const Color(0x14000000);
+      : AppColors.white;
 
   /// Glass border color.
   Color glassBorderColor(bool isDark) => isDark
       ? AppColors.blackLightest
-      : const Color(0x22000000);
+      : AppColors.lightBorder;
 
   /// Card background color. Solid em ambos os modos — antes o dark tinha
   /// alpha 0.5, deixando o fundo (WaveBackground) atravessar os cards.
@@ -75,7 +74,7 @@ class DynamicBrutalistPalette {
   /// Um degrau acima do card pra criar contraste sem vazar o fundo.
   Color subtleBg(bool isDark) => isDark
       ? AppColors.blackLighter
-      : Colors.black.withValues(alpha: 0.08);
+      : AppColors.lightElevated;
 
   /// Image placeholder background (warm beige in light).
   Color imagePlaceholderBg(bool isDark) => isDark

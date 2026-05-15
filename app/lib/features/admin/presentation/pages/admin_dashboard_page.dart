@@ -607,24 +607,20 @@ class _BroadcastDialogState extends State<_BroadcastDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  AppButton(
+                    label: 'Cancelar',
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.small,
                     onPressed:
                         _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
+                  AppButton(
+                    label: 'Enviar',
+                    variant: AppButtonVariant.primary,
+                    size: AppButtonSize.small,
+                    isLoading: _isLoading,
                     onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Enviar'),
                   ),
                 ],
               ),

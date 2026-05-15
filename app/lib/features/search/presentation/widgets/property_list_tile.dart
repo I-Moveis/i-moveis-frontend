@@ -173,7 +173,7 @@ class PropertyListTile extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                      color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
                       borderRadius: AppRadius.borderMd,
                     ),
                     child: Row(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/theme_provider.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
@@ -137,24 +138,33 @@ class _SplashPageState extends ConsumerState<SplashPage>
             child: AnimatedBuilder(
               animation: _entranceController,
               builder: (context, _) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenHorizontal,
+                return Stack(
+                  children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenHorizontal,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Spacer(flex: 3),
+                            _buildLogo(isDark),
+                            const SizedBox(height: AppSpacing.gigantic),
+                            _buildLoadingIndicator(isDark),
+                            const Spacer(flex: 2),
+                            _buildFooter(isDark),
+                            const SizedBox(height: AppSpacing.xxl),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(flex: 3),
-                        _buildLogo(isDark),
-                        const SizedBox(height: AppSpacing.gigantic),
-                        _buildLoadingIndicator(isDark),
-                        const Spacer(flex: 2),
-                        _buildFooter(isDark),
-                        const SizedBox(height: AppSpacing.xxl),
-                      ],
+                    Positioned(
+                      top: AppSpacing.md,
+                      right: AppSpacing.md,
+                      child: _buildThemeToggle(isDark),
                     ),
-                  ),
+                  ],
                 );
               },
             ),
@@ -297,6 +307,38 @@ class _SplashPageState extends ConsumerState<SplashPage>
     // Simple sine approximation for 0..1 range
     final x = t * 3.14159265 * 2;
     return (x - x * x * x / 6 + x * x * x * x * x / 120).clamp(-1.0, 1.0);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  THEME TOGGLE — light/dark switcher
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildThemeToggle(bool isDark) {
+    final accentAmber = BrutalistPalette.accentAmber(isDark);
+    final borderColor = accentAmber.withValues(alpha: 0.35);
+    final bgColor = isDark
+        ? Colors.black.withValues(alpha: 0.35)
+        : Colors.white.withValues(alpha: 0.55);
+
+    return Opacity(
+      opacity: _footerFade.value,
+      child: GestureDetector(
+        onTap: () => ref.read(themeProvider.notifier).toggle(),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            color: accentAmber,
+            size: 20,
+          ),
+        ),
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════

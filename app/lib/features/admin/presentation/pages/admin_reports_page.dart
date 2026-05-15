@@ -568,7 +568,7 @@ class _ReportDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
-    final bg = isDark ? const Color(0xFF1C1C1C) : Colors.white;
+    final bg = isDark ? AppColors.darkCard : AppColors.white;
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final statusColor = _ReportCard._statusColor(report.status);
     final statusLabel = _ReportCard._statusLabel(report.status);
@@ -580,7 +580,7 @@ class _ReportDetailSheet extends StatelessWidget {
       builder: (_, controller) => Container(
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: AppRadius.sheetTop,
         ),
         child: ListView(
           controller: controller,
@@ -593,7 +593,7 @@ class _ReportDetailSheet extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: borderColor,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.borderSm,
                 ),
               ),
             ),

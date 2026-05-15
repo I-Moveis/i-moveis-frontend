@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../design_system/design_system.dart';
+
 class MapPriceMarker extends StatelessWidget {
   const MapPriceMarker({
     required this.formattedPrice,
@@ -14,40 +16,30 @@ class MapPriceMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pegando as cores do tema ou padronizando caso não tenha
-    final primaryColor = Theme.of(context).primaryColor;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final backgroundColor = isSelected ? colorScheme.secondary : primaryColor;
-    final textColor = isSelected ? colorScheme.onSecondary : colorScheme.onPrimary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isSelected
+        ? BrutalistPalette.accentAmber(isDark)
+        : BrutalistPalette.accentPeach(isDark);
+    final textColor = isDark ? AppColors.black : AppColors.white;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xsSm,
+        ),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(50),
-              offset: const Offset(0, 2),
-              blurRadius: 4,
-            ),
-          ],
+          borderRadius: AppRadius.borderPill,
+          boxShadow: AppShadows.lightSm,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              formattedPrice,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ],
+        child: Text(
+          formattedPrice,
+          style: AppTypography.labelMedium.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

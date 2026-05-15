@@ -21,10 +21,21 @@ class ConversationSummary {
   });
 
   factory ConversationSummary.fromJson(Map<String, dynamic> json) {
+    // Alguns usuários demo foram criados com `name='landlord'` ou
+    // `'tenant'` (igual ao role) — mostrar isso como nome do contato fica
+    // confuso. Quando bater, caímos pro email ou pra um placeholder
+    // genérico em vez de exibir o role literal.
+    final rawName = (json['counterpartName'] ?? json['name'] ?? '').toString().trim();
+    final isRoleLabel = const {'landlord', 'tenant', 'admin'}
+        .contains(rawName.toLowerCase());
+    final cleaned = (rawName.isEmpty || isRoleLabel)
+        ? (json['counterpartEmail'] as String? ??
+            json['email'] as String? ??
+            'Conversa')
+        : rawName;
     return ConversationSummary(
       id: (json['id'] ?? '').toString(),
-      counterpartName:
-          (json['counterpartName'] ?? json['name'] ?? 'Conversa').toString(),
+      counterpartName: cleaned,
       lastMessage:
           (json['lastMessage'] ?? json['preview'] ?? '').toString(),
       lastMessageAt: DateTime.tryParse(

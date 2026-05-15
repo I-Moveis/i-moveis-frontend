@@ -6,12 +6,9 @@ import '../../../../core/providers/dio_provider.dart';
 import '../../domain/entities/landlord_monthly_metrics.dart';
 
 /// Busca as métricas mensais do landlord para os 3 gráficos da
-/// dashboard. Tenta `GET /api/properties/analytics/monthly`; se falhar
-/// (endpoint ausente, erro transitório), devolve um payload com 6
-/// meses zerados — a UI renderiza os gráficos vazios mas com a
-/// estrutura visual intacta.
-///
-/// Ver `BACKEND_HANDOFF.md §11` para o shape esperado.
+/// dashboard via `GET /api/properties/analytics/monthly`. Em falha
+/// transitória, devolve 6 meses zerados — a UI renderiza os gráficos
+/// vazios mas com a estrutura visual intacta.
 final landlordMonthlyMetricsProvider =
     FutureProvider<LandlordMonthlyMetrics>((ref) async {
   final dio = ref.read(dioProvider);

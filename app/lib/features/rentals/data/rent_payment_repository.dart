@@ -6,13 +6,10 @@ import '../../../core/providers/dio_provider.dart';
 import '../domain/entities/rent_payment.dart';
 
 /// Carrega o histórico MULTI-MÊS de pagamentos de aluguel de um imóvel
-/// para um inquilino específico. **Endpoint ainda não entregue.** O
-/// backend entregou só `/payments/current` (US-009/US-010 — single
-/// month); a versão multi-mês está marcada como pendente em
-/// `BACKEND_HANDOFF.md §3`. Enquanto isso, qualquer erro (inclusive 404
-/// esperado) devolve lista vazia e a UI faz fallback para o mês
-/// corrente via `currentPaymentProvider` (ver
-/// `tenant_rent_history_page.dart`).
+/// para um inquilino específico. Bate em
+/// `GET /api/properties/:id/payments?tenantId=` — backend devolve array
+/// em ordem DESC. Em qualquer erro de rede devolvemos lista vazia
+/// (fail-soft) e a tela mostra estado vazio.
 class RentPaymentRepository {
   RentPaymentRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;

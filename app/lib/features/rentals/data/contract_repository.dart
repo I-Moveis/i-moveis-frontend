@@ -55,6 +55,34 @@ class ContractRepository {
     return '$normalized/contracts/$contractId/pdf';
   }
 
+  /// Lista TODOS os contratos do tenant (qualquer status). Backend
+  /// retorna shape `{ ..., property: {id,title,address}, landlord:
+  /// {id,name} }` — usamos os campos do include diretamente.
+  Future<List<Map<String, dynamic>>> listForTenant(String tenantId) async {
+    try {
+      final response = await _dio.get<dynamic>(
+        '/tenants/$tenantId/contracts',
+      );
+      final data = response.data;
+      if (data is! List) return const [];
+      return data
+          .whereType<Map<dynamic, dynamic>>()
+          .map((m) => Map<String, dynamic>.from(m))
+          .toList();
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[contracts] GET /tenants/$tenantId/contracts falhou '
+          '(${e.response?.statusCode ?? '---'}): ${e.message}',
+        );
+      }
+      return const [];
+    } on Object catch (e) {
+      if (kDebugMode) debugPrint('[contracts] listForTenant falha: $e');
+      return const [];
+    }
+  }
+
   /// Sobe o PDF assinado via multipart/form-data (campo `signedPdf`).
   /// Propaga [DioException] pro caller tratar snackbar/retry.
   Future<Contract> uploadSignedPdf({
@@ -111,3 +139,13 @@ final activeContractProvider =
       .read(contractRepositoryProvider)
       .findActive(propertyId: q.propertyId, tenantId: q.tenantId);
 });
+
+/// Lista bruta dos contratos do tenant (com `property.title`,
+/// `property.address`, `landlord.name`). Mantemos como Map cru aqui
+/// porque a entidade `Contract` é focada no contrato ativo individual e
+/// não cobre os relacionamentos do include.
+final tenantContractsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+  (ref, tenantId) =>
+      ref.read(contractRepositoryProvider).listForTenant(tenantId),
+);

@@ -262,23 +262,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
         scale: _headerScale.value,
         child: Column(
           children: [
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final glow = _pulseController.value;
-                return Text(
-                  '03',
-                  style: AppTypography.monoHero.copyWith(
-                    color: isDark
-                        ? BrutalistPalette.warmYellow.withValues(
-                            alpha: 0.15 + glow * 0.08,
-                          )
-                        : BrutalistPalette.deepAmber.withValues(
-                            alpha: 0.10 + glow * 0.06,
-                          ),
-                  ),
-                );
-              },
+            Image.asset(
+              'assets/images/logo.png',
+              width: 80,
+              height: 80,
             ),
             const SizedBox(height: AppSpacing.xs),
             RevealText(

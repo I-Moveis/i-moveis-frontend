@@ -9,6 +9,7 @@ import '../../../notifications/presentation/providers/notifications_notifier.dar
 import '../../../search/domain/entities/property.dart';
 import '../../../visits/presentation/providers/landlord_visits_notifier.dart';
 import '../../domain/entities/landlord_monthly_metrics.dart';
+import '../providers/landlord_metrics_provider.dart';
 import '../providers/landlord_monthly_metrics_provider.dart';
 
 class LandlordDashboardPage extends ConsumerWidget {
@@ -109,10 +110,9 @@ class _NotificationBell extends ConsumerWidget {
 }
 
 /// Métricas do topo da dashboard. **Inquilinos** e **Visitas hoje** são
-/// derivados dos providers que já existem (`myPropertiesNotifier` +
-/// `landlordVisitsNotifier`). **Visitas ao perfil** e **Propostas** ainda
-/// não têm endpoint no backend — renderizam `—` com tooltip explicando.
-/// Ver `BACKEND_HANDOFF.md §11`.
+/// derivados dos providers locais (`myPropertiesNotifier` +
+/// `landlordVisitsNotifier`). **Visitas ao perfil** e **Propostas
+/// pendentes** vêm de `GET /api/landlord/metrics`.
 class _StatsSection extends ConsumerWidget {
   const _StatsSection();
 
@@ -123,14 +123,17 @@ class _StatsSection extends ConsumerWidget {
             const <Property>[];
     final visits =
         ref.watch(landlordVisitsNotifierProvider).asData?.value ?? const [];
+    final metrics = ref.watch(landlordMetricsProvider).asData?.value;
 
-    // Conta inquilinos com contrato ativo — 1 por property.currentTenant
-    // não-nulo. Se o mesmo tenant aluga 2 imóveis, conta 2 (cada imóvel
-    // é uma unidade de gestão pro landlord).
+    // 1 imóvel RENTED conta como 1 inquilino. Aproximação: ainda não
+    // temos Contract.ACTIVE persistido no backend depois do PATCH de
+    // proposta (ver BACKEND_GAPS.md §14), então `currentTenant` fica
+    // null e a contagem por contrato sai sempre zero. `status` é
+    // atualizado pelo backend no aceite, então usamos ele como proxy
+    // até o Contract ser criado de fato.
     final tenantCount =
-        properties.where((p) => p.currentTenant != null).length;
+        properties.where((p) => p.status == 'RENTED').length;
 
-    // Visitas agendadas pra hoje (00:00–23:59 no timezone local).
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final tomorrowStart = todayStart.add(const Duration(days: 1));
@@ -145,11 +148,10 @@ class _StatsSection extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const _PendingMetricCard(
+              AppMetricCard(
                 icon: Icons.visibility_outlined,
+                value: metrics?.profileViews ?? 0,
                 label: 'Visitas ao perfil',
-                tooltip:
-                    'Métrica ainda não disponível — backend em expansão.',
               ),
               const SizedBox(width: 12),
               AppMetricCard(
@@ -162,11 +164,10 @@ class _StatsSection extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const _PendingMetricCard(
+              AppMetricCard(
                 icon: Icons.description_outlined,
+                value: metrics?.proposalsPending ?? 0,
                 label: 'Propostas',
-                tooltip:
-                    'Métrica ainda não disponível — backend em expansão.',
               ),
               const SizedBox(width: 12),
               AppMetricCard(
@@ -182,66 +183,10 @@ class _StatsSection extends ConsumerWidget {
   }
 }
 
-/// Card visualmente idêntico ao [AppMetricCard] mas exibe `—` no lugar
-/// do número. Usado quando a métrica depende de endpoint que ainda não
-/// existe no backend. Hover mostra tooltip explicativo.
-class _PendingMetricCard extends StatelessWidget {
-  const _PendingMetricCard({
-    required this.icon,
-    required this.label,
-    required this.tooltip,
-  });
-
-  final IconData icon;
-  final String label;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final accentColor = BrutalistPalette.accentOrange(isDark);
-
-    return Expanded(
-      child: Tooltip(
-        message: tooltip,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          decoration: BoxDecoration(
-            color: BrutalistPalette.surfaceBg(isDark),
-            borderRadius: AppRadius.borderLg,
-            border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 20, color: accentColor.withValues(alpha: 0.5)),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                '—',
-                style: AppTypography.headlineLarge.copyWith(
-                  color: titleColor.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                style: AppTypography.bodySmall.copyWith(color: mutedColor),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Seção de análise de performance — 3 gráficos lado a lado + abaixo.
-/// Consome `landlordMonthlyMetricsProvider`, que tenta o endpoint do
-/// backend e cai em 6 meses zerados quando ele não existe ainda (ver
-/// BACKEND_HANDOFF.md §11). Assim a estrutura visual fica no lugar,
-/// os eixos ficam visíveis, e quando o endpoint subir, os valores
-/// populam sozinhos.
+/// Consome `landlordMonthlyMetricsProvider` (`GET /api/properties/analytics/monthly`).
+/// Em falha de rede, cai em 6 meses zerados pra estrutura visual ficar
+/// no lugar.
 class _ChartsSection extends ConsumerWidget {
   const _ChartsSection();
 
@@ -656,14 +601,10 @@ class _PropertyTile extends StatelessWidget {
 }
 
 /// Inquilinos que atualmente moram nos imóveis do landlord. Derivado
-/// de `myPropertiesNotifier` — um item por property que tem
-/// `currentTenant != null`. Sem inquilinos reais cadastrados (estado
-/// inicial ou backend ainda sem devolver `currentTenant`), renderiza
-/// um estado vazio.
-///
-/// Status textual (Aluguel em dia / Em negociação / etc.) é **derivado**
-/// de `property.status` — não é o status real de pagamento mensal,
-/// que depende de endpoint que ainda não existe (`BACKEND_HANDOFF.md §3`).
+/// de `myPropertiesNotifier` — um item por property com
+/// `currentTenant != null`. Status textual derivado de `property.status`
+/// (operacional do imóvel, não do pagamento mensal — ver
+/// "Histórico Financeiro" para isso).
 class _RecentTenantsSection extends ConsumerWidget {
   const _RecentTenantsSection();
 

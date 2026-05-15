@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../chat/presentation/providers/conversations_notifier.dart';
+import '../../../listing/presentation/providers/my_properties_notifier.dart';
+import '../../../search/domain/entities/property.dart';
 import '../../domain/entities/visit.dart';
 import '../providers/landlord_visits_notifier.dart';
 import '../widgets/visit_calendar_view.dart';
@@ -18,6 +21,32 @@ class LandlordVisitsPage extends ConsumerWidget {
     return BrutalistPageScaffold(
       builder: (context, isDark, entrance, pulse) {
         final async = ref.watch(landlordVisitsNotifierProvider);
+        final properties =
+            ref.watch(myPropertiesNotifierProvider).asData?.value ??
+                const <Property>[];
+        final conversations =
+            ref.watch(conversationsProvider).asData?.value ?? const [];
+
+        // Mapa tenantId → nome do inquilino. Cobertura: inquilinos atuais
+        // (PropertyTenant) + qualquer pessoa que já conversou (counterpart
+        // de uma ConversationSummary linkada). Cobre o caso de quem só
+        // agendou visita sem ainda virar inquilino.
+        final tenantNames = <String, String>{};
+        for (final p in properties) {
+          final t = p.currentTenant;
+          if (t != null) tenantNames[t.id] = t.name;
+        }
+        for (final c in conversations) {
+          final id = c.linkedTenantId;
+          if (id != null && !tenantNames.containsKey(id)) {
+            tenantNames[id] = c.counterpartName;
+          }
+        }
+
+        final propertyTitles = {
+          for (final p in properties) p.id: p.title,
+        };
+
         return Column(children: [
           const BrutalistAppBar(title: 'Visitas dos meus imóveis'),
           Expanded(
@@ -53,11 +82,16 @@ class LandlordVisitsPage extends ConsumerWidget {
                   Expanded(
                     child: VisitCalendarView(
                       visits: visits,
+                      scrollWholePage: true,
                       onRefresh: () => ref
                           .read(landlordVisitsNotifierProvider.notifier)
                           .refresh(),
-                      tileBuilder: (_, visit) =>
-                          _LandlordVisitTile(visit: visit, isDark: isDark),
+                      tileBuilder: (_, visit) => _LandlordVisitTile(
+                        visit: visit,
+                        isDark: isDark,
+                        tenantName: tenantNames[visit.tenantId],
+                        propertyTitle: propertyTitles[visit.propertyId],
+                      ),
                     ),
                   ),
                 ],
@@ -71,9 +105,16 @@ class LandlordVisitsPage extends ConsumerWidget {
 }
 
 class _LandlordVisitTile extends StatelessWidget {
-  const _LandlordVisitTile({required this.visit, required this.isDark});
+  const _LandlordVisitTile({
+    required this.visit,
+    required this.isDark,
+    this.tenantName,
+    this.propertyTitle,
+  });
   final Visit visit;
   final bool isDark;
+  final String? tenantName;
+  final String? propertyTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +122,16 @@ class _LandlordVisitTile extends StatelessWidget {
     final mutedColor = BrutalistPalette.muted(isDark);
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
+
+    // Fallback amigável: enquanto nome/título não chegam (cache frio),
+    // mostra rótulo genérico em vez de "Inquilino #<uuid>".
+    final tenantLabel = (tenantName != null && tenantName!.isNotEmpty)
+        ? tenantName!
+        : 'Inquilino';
+    final propertyLabel =
+        (propertyTitle != null && propertyTitle!.isNotEmpty)
+            ? propertyTitle!
+            : 'Imóvel';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -104,15 +155,17 @@ class _LandlordVisitTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  'Inquilino #${visit.tenantId} · ${visit.status.label}',
-                  style:
-                      AppTypography.bodySmall.copyWith(color: mutedColor),
+                  '$tenantLabel · ${visit.status.label}',
+                  style: AppTypography.bodyMedium.copyWith(color: titleColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  'Imóvel #${visit.propertyId}',
-                  style:
-                      AppTypography.bodySmall.copyWith(color: mutedColor),
+                  propertyLabel,
+                  style: AppTypography.bodySmall.copyWith(color: mutedColor),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

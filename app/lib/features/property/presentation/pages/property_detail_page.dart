@@ -194,8 +194,8 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage>
                                       context.push('/property/${p.id}'),
                                 ),
 
-                                // Space for bottom bar
-                                const SizedBox(height: 120),
+                                // Space for bottom action bar (button 48 + padding 16*2 + safe area ~40)
+                                const SizedBox(height: AppSpacing.massive + AppSpacing.xxxl + AppSpacing.xxl),
                               ],
                             ),
                           ),
@@ -225,24 +225,13 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage>
                           child: Row(
                             children: [
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: () => context.push(
+                                child: AppButton(
+                                  label: 'Agendar visita',
+                                  variant: AppButtonVariant.outline,
+                                  size: AppButtonSize.large,
+                                  isExpanded: true,
+                                  onPressed: () => context.push(
                                     '/property/${widget.propertyId}/schedule',
-                                  ),
-                                  child: Container(
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      borderRadius: AppRadius.borderLg,
-                                      border: Border.all(color: borderColor),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Agendar visita',
-                                        style: AppTypography.titleSmallBold.copyWith(
-                                          color: BrutalistPalette.title(isDark),
-                                        ),
-                                      ),
-                                    ),
                                   ),
                                 ),
                               ),

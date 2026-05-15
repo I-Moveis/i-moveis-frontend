@@ -52,7 +52,8 @@ class PropertyInput {
   final String? state;
   final String? zipCode;
 
-  /// API enum: `APARTMENT`, `HOUSE`, `STUDIO`, `CONDO_HOUSE`.
+  /// API enum: `APARTMENT`, `HOUSE`, `STUDIO`, `CONDO_HOUSE`, `KITNET`,
+  /// `PENTHOUSE`, `LAND`, `COMMERCIAL`.
   final String? type;
   final int? bedrooms;
   final int? bathrooms;
@@ -70,17 +71,15 @@ class PropertyInput {
   final double? condoFee;
   final double? propertyTax;
 
-  /// Extended property types marcados na UI mas ainda não aceitos pelo
-  /// backend no enum `PropertyType`. Guardamos aqui pra manter o state do
-  /// form coeso enquanto o backend não expande. Quando expandir, basta
-  /// mapear esses valores em `type` e remover este campo.
-  /// Ver BACKEND_HANDOFF.md §9.
+  /// Campo legado mantido por compatibilidade — todos os 8 tipos da UI
+  /// agora vão direto em [type] (KITNET/PENTHOUSE/LAND/COMMERCIAL foram
+  /// adicionados ao enum `PropertyType` no backend). Pode ser removido
+  /// num próximo cleanup quando os notifiers pararem de setá-lo.
   final String? extendedType;
 
-  /// Amenities extras da UI de busca sem contraparte no schema de
-  /// Property hoje (`hasWifi`, `hasPool`). Mantidos no state pra o form
-  /// parecer consistente com a busca; não vão pro backend.
-  /// Ver BACKEND_HANDOFF.md §9.
+  /// Amenidades booleanas — backend aceita como query params em
+  /// `GET /properties/search?hasWifi=&hasPool=` e como campos do body
+  /// em POST/PUT `/properties`.
   final bool? hasWifi;
   final bool? hasPool;
   /// URLs de imagens já hospedadas (ex: vindo de um editor que mantém

@@ -9,6 +9,7 @@ import '../../../auth/presentation/providers/auth_notifier.dart';
 import '../../data/providers/admin_data_providers.dart';
 import '../providers/admin_metrics_notifier.dart';
 import '../providers/admin_shared_providers.dart';
+import '../providers/admin_support_tickets_notifier.dart';
 
 /// Admin dashboard — lê `GET /admin/metrics` via [adminMetricsNotifierProvider].
 /// Inclui métricas, alertas críticos e menu de acesso rápido.
@@ -31,18 +32,14 @@ class AdminDashboardPage extends ConsumerWidget {
         final userCount = metrics?.totalUsers ?? 0;
         final propertyCount = metrics?.totalProperties ?? 0;
         final pendingCount = metrics?.pendingModeration ?? 0;
+        final openTicketsCount =
+            ref.watch(adminOpenTicketsCountProvider).value ?? 0;
 
         final errorMessage = metricsAsync.hasError
             ? (metricsAsync.error is Failure
                 ? (metricsAsync.error! as Failure).message
                 : 'Erro ao carregar métricas.')
             : null;
-
-        // Ocupação: RENTED / totalProperties vindos direto do GET /admin/metrics.
-        final rentedCount = metrics?.propertiesByStatus['RENTED'] ?? 0;
-        final occupancyRate = propertyCount > 0
-            ? ((rentedCount / propertyCount) * 100).round()
-            : 0;
 
         // Novos usuários (últimos 7 dias): filtro client-side sobre GET /users.
         final usersAsync = ref.watch(adminUsersNotifierProvider);
@@ -68,9 +65,17 @@ class AdminDashboardPage extends ConsumerWidget {
                     // ── Header ──────────────────────────────────────
                     Row(children: [
                       Expanded(
-                        child: Text('Painel admin',
-                            style: AppTypography.headlineLarge
-                                .copyWith(color: titleColor)),
+                        child: Row(children: [
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 32,
+                            height: 32,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text('i-móveis',
+                              style: AppTypography.displayBrand
+                                  .copyWith(color: titleColor)),
+                        ]),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -108,7 +113,7 @@ class AdminDashboardPage extends ConsumerWidget {
                         ),
                       ),
 
-                    // Layout: coluna esquerda (3 cards) | coluna direita (2 cards)
+                    // Layout: coluna esquerda (2 cards) | coluna direita (2 cards)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -130,17 +135,6 @@ class AdminDashboardPage extends ConsumerWidget {
                               icon: Icons.home_outlined,
                               value: propertyCount,
                               label: 'Imóveis',
-                              accentColor: accentColor,
-                              cardBg: cardBg,
-                              borderColor: borderColor,
-                              titleColor: titleColor,
-                              mutedColor: mutedColor,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _TappableMetricCard(
-                              icon: Icons.donut_large_outlined,
-                              value: occupancyRate,
-                              label: 'Ocupação %',
                               accentColor: accentColor,
                               cardBg: cardBg,
                               borderColor: borderColor,
@@ -189,17 +183,24 @@ class AdminDashboardPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // ── Alertas Críticos ──────────────────────────────
-                    _AlertsSection(
+                    // ── Alertas ───────────────────────────────────────
+                    _RealAlertsSection(
+                      pendingCount: pendingCount,
+                      openTicketsCount: openTicketsCount,
                       isDark: isDark,
-                      accentColor: accentColor,
                       cardBg: cardBg,
                       borderColor: borderColor,
                       titleColor: titleColor,
                       mutedColor: mutedColor,
-                      onReportsTap: () => context.push('/admin/reports'),
-                      onContractsTap: () =>
-                          context.push('/admin/contracts?filter=avencer'),
+                      onModerationTap: () {
+                        try {
+                          ref
+                              .read(adminModerationTabProvider.notifier)
+                              .selectPending();
+                        } on Object {}
+                        context.push('/admin/listings');
+                      },
+                      onSupportTap: () => context.push('/admin/support'),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -218,24 +219,16 @@ class AdminDashboardPage extends ConsumerWidget {
                         onTap: () => context.push('/admin/listings'),
                       ),
                       AppMenuGroupItem(
-                        icon: Icons.article_outlined,
-                        label: 'Gerenciar contratos',
-                        onTap: () => context.push('/admin/contracts'),
-                      ),
-                      AppMenuGroupItem(
                         icon: Icons.support_agent_rounded,
-                        label: 'Chamados de Suporte',
+                        label: openTicketsCount > 0
+                            ? 'Chamados de Suporte  ($openTicketsCount abertos)'
+                            : 'Chamados de Suporte',
                         onTap: () => context.push('/admin/support'),
                       ),
                       AppMenuGroupItem(
-                        icon: Icons.flag_outlined,
-                        label: 'Central de denúncias',
-                        onTap: () => context.push('/admin/reports'),
-                      ),
-                      AppMenuGroupItem(
-                        icon: Icons.support_agent_outlined,
-                        label: 'Tickets de suporte',
-                        onTap: () => context.push('/admin/support'),
+                        icon: Icons.person_add_outlined,
+                        label: 'Novos usuários',
+                        onTap: () => context.push('/admin/new-users'),
                       ),
                       AppMenuGroupItem(
                         icon: Icons.campaign_outlined,
@@ -352,123 +345,133 @@ class _TappableMetricCard extends StatelessWidget {
   }
 }
 
-class _AlertsSection extends StatelessWidget {
-  const _AlertsSection({
+class _RealAlertsSection extends StatelessWidget {
+  const _RealAlertsSection({
+    required this.pendingCount,
+    required this.openTicketsCount,
     required this.isDark,
-    required this.accentColor,
     required this.cardBg,
     required this.borderColor,
     required this.titleColor,
     required this.mutedColor,
-    required this.onReportsTap,
-    required this.onContractsTap,
+    required this.onModerationTap,
+    required this.onSupportTap,
   });
 
+  final int pendingCount;
+  final int openTicketsCount;
   final bool isDark;
-  final Color accentColor;
   final Color cardBg;
   final Color borderColor;
   final Color titleColor;
   final Color mutedColor;
-  final VoidCallback onReportsTap;
-  final VoidCallback onContractsTap;
+  final VoidCallback onModerationTap;
+  final VoidCallback onSupportTap;
 
   @override
   Widget build(BuildContext context) {
-    final alerts = [
-      _Alert(
-        icon: Icons.person_off_outlined,
-        message: '1 usuário com relatos de comportamento inadequado',
-        color: AppColors.error,
-        onTap: onReportsTap,
-      ),
-      _Alert(
-        icon: Icons.article_outlined,
-        message: '2 contratos próximos ao vencimento',
-        color: AppColors.info,
-        onTap: onContractsTap,
-      ),
+    final alerts = <_AlertItem>[
+      if (pendingCount > 0)
+        _AlertItem(
+          icon: Icons.pending_outlined,
+          message: '$pendingCount anúncio${pendingCount != 1 ? 's' : ''} aguardando moderação',
+          color: AppColors.warning,
+          onTap: onModerationTap,
+        ),
+      if (openTicketsCount > 0)
+        _AlertItem(
+          icon: Icons.support_agent_rounded,
+          message: '$openTicketsCount ticket${openTicketsCount != 1 ? 's' : ''} de suporte aberto${openTicketsCount != 1 ? 's' : ''}',
+          color: AppColors.info,
+          onTap: onSupportTap,
+        ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          const AppSectionHeader(title: 'Alertas'),
-          const SizedBox(width: AppSpacing.sm),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.12),
-              borderRadius: AppRadius.borderFull,
-            ),
-            child: Text('demo',
-                style: AppTypography.tagBadge
-                    .copyWith(color: AppColors.warning, fontSize: 9)),
-          ),
-        ]),
+        const AppSectionHeader(title: 'Alertas'),
         const SizedBox(height: AppSpacing.md),
-        Container(
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: AppRadius.borderLg,
-            border: Border.all(color: borderColor),
-          ),
-          child: Column(
-            children: List.generate(alerts.length, (i) {
-              final a = alerts[i];
-              final isLast = i == alerts.length - 1;
-              return Column(children: [
-                InkWell(
-                  onTap: a.onTap,
-                  borderRadius: BorderRadius.vertical(
-                    top: i == 0 ? const Radius.circular(12) : Radius.zero,
-                    bottom:
-                        isLast ? const Radius.circular(12) : Radius.zero,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                    child: Row(children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: a.color.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+        if (alerts.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: AppRadius.borderLg,
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(children: [
+              Icon(Icons.check_circle_outline,
+                  size: 18, color: AppColors.success.withValues(alpha: 0.7)),
+              const SizedBox(width: AppSpacing.md),
+              Text('Nenhum alerta no momento.',
+                  style:
+                      AppTypography.bodySmall.copyWith(color: mutedColor)),
+            ]),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: AppRadius.borderLg,
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              children: List.generate(alerts.length, (i) {
+                final a = alerts[i];
+                final isLast = i == alerts.length - 1;
+                return Column(children: [
+                  InkWell(
+                    onTap: a.onTap,
+                    borderRadius: BorderRadius.vertical(
+                      top: i == 0 ? const Radius.circular(12) : Radius.zero,
+                      bottom:
+                          isLast ? const Radius.circular(12) : Radius.zero,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.md),
+                      child: Row(children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: a.color.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(a.icon, size: 16, color: a.color),
                         ),
-                        child: Icon(a.icon, size: 16, color: a.color),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(a.message,
-                            style: AppTypography.bodySmall
-                                .copyWith(color: titleColor)),
-                      ),
-                      Icon(Icons.chevron_right_rounded,
-                          size: 16,
-                          color: mutedColor.withValues(alpha: 0.5)),
-                    ]),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Text(a.message,
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: titleColor)),
+                        ),
+                        Icon(Icons.chevron_right_rounded,
+                            size: 16,
+                            color: mutedColor.withValues(alpha: 0.5)),
+                      ]),
+                    ),
                   ),
-                ),
-                if (!isLast)
-                  Divider(
-                      height: 1,
-                      color: borderColor,
-                      indent: AppSpacing.lg,
-                      endIndent: AppSpacing.lg),
-              ]);
-            }),
+                  if (!isLast)
+                    Divider(
+                        height: 1,
+                        color: borderColor,
+                        indent: AppSpacing.lg,
+                        endIndent: AppSpacing.lg),
+                ]);
+              }),
+            ),
           ),
-        ),
       ],
     );
   }
 }
 
-class _Alert {
-  const _Alert({
+class _AlertItem {
+  const _AlertItem({
     required this.icon,
     required this.message,
     required this.color,
@@ -607,24 +610,20 @@ class _BroadcastDialogState extends State<_BroadcastDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  AppButton(
+                    label: 'Cancelar',
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.small,
                     onPressed:
                         _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
+                  AppButton(
+                    label: 'Enviar',
+                    variant: AppButtonVariant.primary,
+                    size: AppButtonSize.small,
+                    isLoading: _isLoading,
                     onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Enviar'),
                   ),
                 ],
               ),

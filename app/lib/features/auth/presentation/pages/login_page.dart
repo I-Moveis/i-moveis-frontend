@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/demo_role.dart';
 import '../bloc/social_provider.dart';
@@ -215,29 +216,38 @@ class _LoginPageState extends ConsumerState<LoginPage>
               builder: (context, _) {
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.screenHorizontal,
+                    return Stack(
+                      children: [
+                        SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.screenHorizontal,
+                              ),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: AppSpacing.xl),
+                                  _buildHeader(isDark),
+                                  const SizedBox(height: AppSpacing.gigantic),
+                                  _buildForm(isDark, state),
+                                  const SizedBox(height: AppSpacing.xxxl),
+                                  _buildFooter(isDark),
+                                  const SizedBox(height: AppSpacing.xxl),
+                                ],
+                              ),
+                            ),
                           ),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: AppSpacing.xl),
-                              _buildHeader(isDark),
-                              const SizedBox(height: AppSpacing.gigantic),
-                              _buildForm(isDark, state),
-                              const SizedBox(height: AppSpacing.xxxl),
-                              _buildFooter(isDark),
-                              const SizedBox(height: AppSpacing.xxl),
-                            ],
-                          ),
                         ),
-                      ),
+                        Positioned(
+                          top: AppSpacing.md,
+                          right: AppSpacing.md,
+                          child: _buildThemeToggle(isDark),
+                        ),
+                      ],
                     );
                   },
                 );
@@ -246,6 +256,39 @@ class _LoginPageState extends ConsumerState<LoginPage>
           ),
         ),
       ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  THEME TOGGLE — light/dark switcher
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildThemeToggle(bool isDark) {
+    final accentAmber = BrutalistPalette.accentAmber(isDark);
+    final bgColor = isDark
+        ? Colors.black.withValues(alpha: 0.35)
+        : Colors.white.withValues(alpha: 0.55);
+
+    return Opacity(
+      opacity: _footerFade.value,
+      child: GestureDetector(
+        onTap: () => ref.read(themeProvider.notifier).toggle(),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(
+              color: accentAmber.withValues(alpha: 0.35),
+            ),
+            borderRadius: AppRadius.borderXl,
+          ),
+          child: Icon(
+            isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            color: accentAmber,
+            size: 20,
+          ),
+        ),
+      ),
     );
   }
 

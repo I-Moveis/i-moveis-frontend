@@ -9,14 +9,15 @@ class ThemeNotifier extends AsyncNotifier<ThemeMode> {
   Future<ThemeMode> build() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_kThemeKey);
-    return saved == 'light' ? ThemeMode.light : ThemeMode.dark;
+    if (saved == 'dark') return ThemeMode.dark;
+    return ThemeMode.light;
   }
 
   Future<void> toggle() async {
     final current = state.when(
       data: (v) => v,
-      loading: () => ThemeMode.dark,
-      error: (_, __) => ThemeMode.dark,
+      loading: () => ThemeMode.light,
+      error: (_, __) => ThemeMode.light,
     );
     await _persist(
       current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,

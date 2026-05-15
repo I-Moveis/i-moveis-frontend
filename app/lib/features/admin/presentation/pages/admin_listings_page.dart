@@ -224,15 +224,13 @@ class AdminListingsPage extends ConsumerWidget {
             autofocus: true,
             maxLines: 3,
             decoration: const InputDecoration(
-              labelText: 'Motivo (obrigatório)',
+              labelText: 'Motivo *',
               hintText: 'Explique brevemente para o proprietário.',
+              errorMaxLines: 2,
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Informe um motivo.';
-              }
-              return null;
-            },
+            validator: (value) => (value == null || value.trim().isEmpty)
+                ? 'O motivo é obrigatório para rejeitar um anúncio.'
+                : null,
           ),
         ),
         actions: [
@@ -241,6 +239,7 @@ class AdminListingsPage extends ConsumerWidget {
             child: const Text('Cancelar'),
           ),
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               if (formKey.currentState?.validate() ?? false) {
                 Navigator.of(ctx).pop(controller.text.trim());
@@ -350,7 +349,7 @@ class _ListingRow extends StatelessWidget {
           // Thumbnail
           if (property.imageUrls.isNotEmpty)
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.borderXl,
               child: Image.network(
                 property.imageUrls.first,
                 width: 52,
@@ -371,7 +370,7 @@ class _ListingRow extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                 color: BrutalistPalette.imagePlaceholderBg(isDark),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.borderXl,
               ),
               child:
                   Icon(Icons.home_outlined, size: 20, color: mutedColor),
@@ -460,7 +459,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
     final isDark = widget.isDark;
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
-    final bg = isDark ? const Color(0xFF1C1C1C) : Colors.white;
+    final bg = isDark ? AppColors.darkCard : AppColors.white;
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
     final accentColor =
         isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
@@ -476,7 +475,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
         decoration: BoxDecoration(
           color: bg,
           borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
+              AppRadius.sheetTop,
         ),
         child: ListView(
           controller: controller,
@@ -491,7 +490,7 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: borderColor,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: AppRadius.borderSm,
                   ),
                 ),
               ),
@@ -689,125 +688,6 @@ class _PropertyDetailSheetState extends State<_PropertyDetailSheet> {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-class _RejectSheet extends StatefulWidget {
-  const _RejectSheet({
-    required this.title,
-    required this.isDark,
-    this.returnResult = false,
-  });
-  final String title;
-  final bool isDark;
-  final bool returnResult;
-
-  @override
-  State<_RejectSheet> createState() => _RejectSheetState();
-}
-
-class _RejectSheetState extends State<_RejectSheet> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final bg = isDark ? const Color(0xFF1C1C1C) : Colors.white;
-    final borderColor = BrutalistPalette.surfaceBorder(isDark);
-
-    return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: borderColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            Text('Reprovar anúncio',
-                style: AppTypography.titleSmallBold
-                    .copyWith(color: AppColors.error)),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(widget.title,
-                style: AppTypography.bodySmall.copyWith(color: mutedColor)),
-            const SizedBox(height: AppSpacing.lg),
-
-            Text('Motivo da reprovação',
-                style: AppTypography.bodySmall.copyWith(
-                    color: titleColor, fontWeight: FontWeight.w600)),
-            const SizedBox(height: AppSpacing.sm),
-
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: AppRadius.borderLg,
-                border: Border.all(color: borderColor),
-              ),
-              child: TextField(
-                controller: _controller,
-                maxLines: 4,
-                style:
-                    AppTypography.bodyMedium.copyWith(color: titleColor),
-                decoration: InputDecoration(
-                  hintText:
-                      'Ex: Fotos de baixa qualidade, endereço incorreto, descrição enganosa...',
-                  hintStyle:
-                      AppTypography.bodySmall.copyWith(color: mutedColor),
-                  contentPadding: const EdgeInsets.all(AppSpacing.lg),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(true),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: AppColors.error,
-                    borderRadius: AppRadius.borderFull,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text('Confirmar reprovação',
-                      style: AppTypography.titleSmallBold
-                          .copyWith(color: Colors.white)),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
           ],
         ),
       ),

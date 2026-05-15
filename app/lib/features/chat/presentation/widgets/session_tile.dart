@@ -162,7 +162,7 @@ class SessionTile extends ConsumerWidget {
         break;
       case 'RESOLVED':
         label = '✅ Resolvido';
-        color = const Color(0xFF4CAF50);
+        color = AppColors.success;
         break;
       default:
         return const SizedBox.shrink(key: ValueKey('empty'));

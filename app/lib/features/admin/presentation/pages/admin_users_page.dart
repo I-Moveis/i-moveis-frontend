@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
@@ -176,8 +175,6 @@ class AdminUsersPage extends ConsumerWidget {
                                     context.push('/admin/users/${u.id}/edit'),
                                 onDelete: () =>
                                     _confirmDelete(context, ref, u),
-                                onNotes: () =>
-                                    _showNotesSheet(context, u, isDark),
                               ),
                             )),
                       const SizedBox(height: AppSpacing.massive),
@@ -223,15 +220,6 @@ class AdminUsersPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _showNotesSheet(
-      BuildContext context, AdminUser user, bool isDark) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _NotesSheet(user: user, isDark: isDark),
-    );
-  }
 }
 
 // ─── Role filter chips ────────────────────────────────────────────────────────
@@ -301,14 +289,12 @@ class _UserTile extends StatelessWidget {
     required this.isDark,
     required this.onEdit,
     required this.onDelete,
-    required this.onNotes,
   });
 
   final AdminUser user;
   final bool isDark;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback onNotes;
 
   @override
   Widget build(BuildContext context) {
@@ -373,12 +359,6 @@ class _UserTile extends StatelessWidget {
               ),
             ),
             // Actions
-            IconButton(
-              icon: Icon(Icons.edit_note_rounded, color: mutedColor),
-              tooltip: 'Notas internas',
-              onPressed: onNotes,
-              visualDensity: VisualDensity.compact,
-            ),
             IconButton(
               icon: Icon(Icons.edit_rounded, color: mutedColor),
               tooltip: 'Editar',
@@ -448,156 +428,3 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ─── Notes bottom sheet ───────────────────────────────────────────────────────
-
-class _NotesSheet extends StatefulWidget {
-  const _NotesSheet({required this.user, required this.isDark});
-  final AdminUser user;
-  final bool isDark;
-
-  @override
-  State<_NotesSheet> createState() => _NotesSheetState();
-}
-
-class _NotesSheetState extends State<_NotesSheet> {
-  late final TextEditingController _controller;
-  bool _saving = false;
-  late String _prefKey;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-    _prefKey = 'admin_note_${widget.user.id}';
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_prefKey) ?? '';
-    if (mounted) setState(() => _controller.text = saved);
-  }
-
-  Future<void> _save() async {
-    setState(() => _saving = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefKey, _controller.text.trim());
-    if (mounted) {
-      setState(() => _saving = false);
-      Navigator.of(context).pop();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final accentColor =
-        isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
-    final titleColor = BrutalistPalette.title(isDark);
-    final mutedColor = BrutalistPalette.muted(isDark);
-    final bg = isDark ? const Color(0xFF1C1C1C) : Colors.white;
-    final borderColor = BrutalistPalette.surfaceBorder(isDark);
-
-    return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: borderColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            Text('Notas — ${widget.user.name}',
-                style:
-                    AppTypography.titleSmallBold.copyWith(color: titleColor)),
-            const SizedBox(height: AppSpacing.xs),
-
-            // "local" warning
-            Row(children: [
-              const Icon(Icons.info_outline, size: 12, color: AppColors.warning),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  'Salvo localmente neste dispositivo',
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.warning, fontSize: 10),
-                ),
-              ),
-            ]),
-            const SizedBox(height: AppSpacing.lg),
-
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: AppRadius.borderLg,
-                border: Border.all(color: borderColor),
-              ),
-              child: TextField(
-                controller: _controller,
-                maxLines: 5,
-                style: AppTypography.bodyMedium.copyWith(color: titleColor),
-                decoration: InputDecoration(
-                  hintText:
-                      'Ex: Histórico de atraso no pagamento. Contato preferencial via WhatsApp.',
-                  hintStyle:
-                      AppTypography.bodySmall.copyWith(color: mutedColor),
-                  contentPadding: const EdgeInsets.all(AppSpacing.lg),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: _saving ? null : _save,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: AppRadius.borderFull,
-                  ),
-                  alignment: Alignment.center,
-                  child: _saving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text('Salvar nota',
-                          style: AppTypography.titleSmallBold
-                              .copyWith(color: Colors.white)),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -92,7 +92,10 @@ class AdminSupportTicketsPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              data: (tickets) => RefreshIndicator(
+              data: (tickets) {
+                final sorted = [...tickets]
+                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                return RefreshIndicator(
                 onRefresh: notifier.refresh,
                 child: ListView(
                   physics: const BouncingScrollPhysics(
@@ -107,22 +110,23 @@ class AdminSupportTicketsPage extends ConsumerWidget {
                       padding:
                           const EdgeInsets.only(bottom: AppSpacing.md),
                       child: Text(
-                        '${tickets.length} ticket${tickets.length != 1 ? 's' : ''}',
+                        '${sorted.length} ticket${sorted.length != 1 ? 's' : ''}',
                         style: AppTypography.bodySmall
                             .copyWith(color: mutedColor),
                       ),
                     ),
-                    if (tickets.isEmpty)
+                    if (sorted.isEmpty)
                       _EmptyState(isDark: isDark)
                     else
-                      for (final t in tickets) ...[
+                      for (final t in sorted) ...[
                         _TicketTile(ticket: t, isDark: isDark),
                         const SizedBox(height: AppSpacing.sm),
                       ],
                     const SizedBox(height: AppSpacing.massive),
                   ],
                 ),
-              ),
+              );
+              },
             ),
           ),
         ]);

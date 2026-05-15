@@ -50,3 +50,10 @@ final adminSupportTicketsProvider =
     AsyncNotifierProvider<AdminSupportTicketsNotifier, List<SupportTicket>>(
   AdminSupportTicketsNotifier.new,
 );
+
+/// Contagem de tickets OPEN — usado pelo Dashboard sem interferir no filtro da lista.
+final adminOpenTicketsCountProvider = FutureProvider<int>((ref) async {
+  final ds = AdminSupportRemoteDataSource(ref.read(dioProvider));
+  final result = await ds.listTickets(status: 'OPEN');
+  return result.total;
+});

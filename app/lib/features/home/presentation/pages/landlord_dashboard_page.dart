@@ -125,8 +125,14 @@ class _StatsSection extends ConsumerWidget {
         ref.watch(landlordVisitsNotifierProvider).asData?.value ?? const [];
     final metrics = ref.watch(landlordMetricsProvider).asData?.value;
 
+    // 1 imóvel RENTED conta como 1 inquilino. Aproximação: ainda não
+    // temos Contract.ACTIVE persistido no backend depois do PATCH de
+    // proposta (ver BACKEND_GAPS.md §14), então `currentTenant` fica
+    // null e a contagem por contrato sai sempre zero. `status` é
+    // atualizado pelo backend no aceite, então usamos ele como proxy
+    // até o Contract ser criado de fato.
     final tenantCount =
-        properties.where((p) => p.currentTenant != null).length;
+        properties.where((p) => p.status == 'RENTED').length;
 
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);

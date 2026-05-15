@@ -13,9 +13,18 @@ class ConversationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isOwner = ref.watch(authNotifierProvider).maybeWhen(
+    final auth = ref.watch(authNotifierProvider);
+    final isOwner = auth.maybeWhen(
           authenticated: (user) => user.isOwner,
           orElse: () => false,
+        );
+    final currentUserId = auth.maybeWhen(
+          authenticated: (user) => user.id,
+          orElse: () => null,
+        );
+    final currentUserName = auth.maybeWhen(
+          authenticated: (user) => user.name.trim().toLowerCase(),
+          orElse: () => '',
         );
 
     final async = ref.watch(conversationsProvider);
@@ -65,23 +74,37 @@ class ConversationsPage extends ConsumerWidget {
                         ),
                         error: (_, _) => _buildEmptyState(
                             isDark, titleColor, mutedColor, accentColor),
-                        data: (conversations) => conversations.isEmpty
-                            ? _buildEmptyState(
-                                isDark, titleColor, mutedColor, accentColor)
-                            : Column(
-                                children: [
-                                  for (final c in conversations) ...[
-                                    _ConversationCard(
-                                      conversation: c,
-                                      isDark: isDark,
-                                      titleColor: titleColor,
-                                      mutedColor: mutedColor,
-                                      accentColor: accentColor,
-                                    ),
-                                    const SizedBox(height: AppSpacing.md),
+                        data: (conversations) {
+                          // Tenant só pode ver as próprias conversas com
+                          // landlords — não pode aparecer conversa de outro
+                          // tenant. Landlord vê todas as próprias.
+                          final visible = isOwner
+                              ? conversations
+                              : conversations
+                                  .where((c) =>
+                                      c.linkedTenantId != null &&
+                                      c.linkedTenantId == currentUserId)
+                                  .toList();
+                          return visible.isEmpty
+                              ? _buildEmptyState(isDark, titleColor,
+                                  mutedColor, accentColor)
+                              : Column(
+                                  children: [
+                                    for (final c in visible) ...[
+                                      _ConversationCard(
+                                        conversation: c,
+                                        isDark: isDark,
+                                        titleColor: titleColor,
+                                        mutedColor: mutedColor,
+                                        accentColor: accentColor,
+                                        currentUserName: currentUserName,
+                                        isOwner: isOwner,
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+                                    ],
                                   ],
-                                ],
-                              ),
+                                );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.massive),
                     ],
@@ -134,6 +157,8 @@ class _ConversationCard extends StatelessWidget {
     required this.titleColor,
     required this.mutedColor,
     required this.accentColor,
+    required this.currentUserName,
+    required this.isOwner,
   });
 
   final ConversationSummary conversation;
@@ -142,13 +167,36 @@ class _ConversationCard extends StatelessWidget {
   final Color mutedColor;
   final Color accentColor;
 
+  /// Nome do usuário logado em lowercase. Usado para detectar quando o
+  /// backend devolveu o próprio nome do user como counterpart (acontece
+  /// quando dados de seed têm conflito ou quando `isUserLandlord` falha
+  /// no backend) e cair em um rótulo neutro nesse caso.
+  final String currentUserName;
+  final bool isOwner;
+
+  String _displayName() {
+    final raw = conversation.counterpartName.trim();
+    final lower = raw.toLowerCase();
+    final isRoleLabel = const {'landlord', 'tenant', 'admin'}.contains(lower);
+    final isSelf =
+        currentUserName.isNotEmpty && lower == currentUserName;
+    if (raw.isEmpty || isRoleLabel || isSelf) {
+      // Fallback: rótulo neutro de acordo com o lado em que o usuário
+      // logado está. Tenant vê chats com proprietários; landlord vê
+      // chats com interessados.
+      return isOwner ? 'Interessado' : 'Proprietário';
+    }
+    return raw;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
+    final displayName = _displayName();
 
     return GestureDetector(
-      onTap: () => context.push('/conversation/${conversation.id}', extra: conversation.counterpartName),
+      onTap: () => context.push('/conversation/${conversation.id}', extra: displayName),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -167,7 +215,7 @@ class _ConversationCard extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  conversation.initials,
+                  _initialsFor(displayName),
                   style: AppTypography.titleSmallBold
                       .copyWith(color: accentColor),
                 ),
@@ -182,7 +230,7 @@ class _ConversationCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          conversation.counterpartName,
+                          displayName,
                           style: AppTypography.titleLargeBold
                               .copyWith(color: titleColor),
                         ),
@@ -218,6 +266,18 @@ class _ConversationCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String _initialsFor(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) {
+      final w = parts.first;
+      return w.length == 1
+          ? w.toUpperCase()
+          : w.substring(0, 2).toUpperCase();
+    }
+    return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
   static String _formatTime(DateTime dt) {

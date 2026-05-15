@@ -38,7 +38,13 @@ class PropertyDetailRepositoryImpl implements PropertyDetailRepository {
 
   Future<Property> _getFromApi(String id) async {
     try {
-      final response = await dio.get<Map<String, dynamic>>('/properties/$id');
+      // inspectLandlord=true: backend grava ProfileView do landlord dono
+      // do imóvel quando um viewer abre a ficha (LL-001). Sem isso, o
+      // contador "Visitas ao perfil" no painel do landlord fica zerado.
+      final response = await dio.get<Map<String, dynamic>>(
+        '/properties/$id',
+        queryParameters: const {'inspectLandlord': 'true'},
+      );
       final body = response.data ?? const <String, dynamic>{};
       return propertyFromApiJson(body);
     } on DioException catch (e) {

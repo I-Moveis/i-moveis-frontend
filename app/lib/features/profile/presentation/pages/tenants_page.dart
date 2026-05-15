@@ -128,169 +128,76 @@ class TenantsPage extends ConsumerWidget {
       titleColor: titleColor,
       mutedColor: mutedColor,
       accentColor: accentColor,
-      onTap: () => _showTenantDetails(
-          context, data, index, isDark, titleColor, mutedColor, accentColor,
-        ),
+      onTap: () => _showTenantDetails(context, data, index, isDark),
     );
   }
 
-  void _showTenantDetails(
-    BuildContext context,
-    _TenantData tenant,
-    int index,
-    bool isDark,
-    Color titleColor,
-    Color mutedColor,
-    Color accentColor,
-  ) {
+  void _showTenantDetails(BuildContext context, _TenantData tenant, int index, bool isDark) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _TenantDetailsSheet(
-        tenant: tenant,
-        index: index,
-        isDark: isDark,
-        titleColor: titleColor,
-        mutedColor: mutedColor,
-        accentColor: accentColor,
-        onTap: () => Navigator.of(context).pop(),
-      ),
+      builder: (context) => _TenantDetailsSheet(tenant: tenant, index: index, isDark: isDark),
     );
   }
 }
 
-class _TenantEntry {
-  _TenantEntry({required this.property, this.conversation});
-
-  factory _TenantEntry.from({
-    required Property property,
-    required List<ConversationSummary> conversations,
-  }) {
-    final matched = conversations.cast<ConversationSummary?>().firstWhere(
-      (c) => c?.linkedTenantId == property.currentTenant!.id,
-      orElse: () => null,
-    );
-    return _TenantEntry(property: property, conversation: matched);
-  }
-
-  final Property property;
-  final ConversationSummary? conversation;
-
-  _TenantData toLegacyData() {
-    final tenant = property.currentTenant!;
-    final parts = tenant.name.trim().split(RegExp(r'\s+'));
-    final String initials;
-    if (parts.isEmpty || parts.first.isEmpty) {
-      initials = '?';
-    } else if (parts.length == 1) {
-      final word = parts.first;
-      initials = word.length == 1
-          ? word.toUpperCase()
-          : word.substring(0, 2).toUpperCase();
-    } else {
-      initials = (parts.first[0] + parts.last[0]).toUpperCase();
-    }
-
-    final String status;
-    switch (property.status) {
-      case 'RENTED':
-        status = 'Documentação OK';
-        break;
-      case 'NEGOTIATING':
-        status = 'Aguardando Assinatura';
-        break;
-      default:
-        status = 'Pendente';
-    }
-
-    return _TenantData(
-      tenantId: tenant.id,
-      propertyId: property.id,
-      name: tenant.name,
-      initials: initials,
-      property: property.title,
-      status: status,
-      lastMessage: conversation?.lastMessage ?? '—',
-      contractEnd: '—',
-      isVerified: property.status == 'RENTED',
-    );
-  }
-}
-
-class _TenantCard extends StatelessWidget {
-  const _TenantCard({
-    required this.tenant,
-    required this.index,
-    required this.isDark,
-    required this.titleColor,
-    required this.mutedColor,
-    required this.accentColor,
-    required this.onTap,
-  });
-
+class _TenantDetailsSheet extends StatelessWidget {
+  const _TenantDetailsSheet({required this.tenant, required this.index, required this.isDark});
   final _TenantData tenant;
   final int index;
   final bool isDark;
-  final Color titleColor;
-  final Color mutedColor;
-  final Color accentColor;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final surfaceBg = BrutalistPalette.surfaceBg(isDark);
-    final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final statusColor = _statusColor(tenant.status);
+    final bgColor = BrutalistPalette.surfaceBg(isDark);
+    final titleColor = BrutalistPalette.title(isDark);
+    final mutedColor = BrutalistPalette.muted(isDark);
+    final accentColor = isDark ? BrutalistPalette.warmOrange : BrutalistPalette.deepOrange;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: surfaceBg,
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(color: borderColor),
-          boxShadow: BrutalistPalette.subtleShadow(isDark),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: accentColor.withValues(alpha: 0.1),
-              ),
-              child: Center(
-                child: Text(
-                  tenant.initials,
-                  style: AppTypography.titleSmallBold
-                      .copyWith(color: accentColor),
-                ),
-              ),
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(color: BrutalistPalette.surfaceBorder(isDark)),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: mutedColor.withValues(alpha: 0.2), borderRadius: AppRadius.borderFull),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(
-                          tenant.name,
-                          style: AppTypography.titleMediumBold
-                              .copyWith(color: titleColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: accentColor.withValues(alpha: 0.1)),
+                        child: Center(child: Text(tenant.initials, style: AppTypography.headlineSmall.copyWith(color: accentColor))),
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(tenant.name, style: AppTypography.headlineMedium.copyWith(color: titleColor)),
+                            Text(tenant.property, style: AppTypography.bodyLarge.copyWith(color: mutedColor)),
+                          ],
                         ),
                       ),
-                      if (tenant.isVerified) ...[
-                        const SizedBox(width: 4),
-                        Icon(Icons.verified_rounded,
-                            size: 14, color: accentColor),
-                      ],
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxxl),
@@ -374,36 +281,40 @@ class _TenantCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: AppRadius.borderFull,
-                  ),
-                  child: Text(
-                    tenant.status,
-                    style: AppTypography.propertyTag
-                        .copyWith(color: statusColor, fontSize: 10),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  tenant.lastMessage,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: mutedColor,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: AppRadius.borderLg,
+              ),
+              child: Center(child: Text('Fechar', style: AppTypography.titleSmallBold.copyWith(color: isDark ? AppColors.black : AppColors.white))),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+
+  }
+
+  Widget _buildInfoRow(String label, String value, bool isDark) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTypography.bodyMedium.copyWith(color: BrutalistPalette.muted(isDark))),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: AppTypography.titleSmallBold.copyWith(color: BrutalistPalette.title(isDark)),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
         ),
       ],
     );
@@ -457,17 +368,6 @@ class _TenantEntry {
     required List<ConversationSummary> conversations,
     required Contract? contract,
   }) {
-    final matched = conversations.cast<ConversationSummary?>().firstWhere(
-      (c) => c?.linkedTenantId == property.currentTenant!.id,
-      orElse: () => null,
-    );
-    return _TenantEntry(property: property, conversation: matched);
-  }
-
-  final Property property;
-  final ConversationSummary? conversation;
-
-  _TenantData toLegacyData() {
     final tenant = property.currentTenant!;
     ConversationSummary? match;
     for (final c in conversations) {
@@ -476,20 +376,7 @@ class _TenantEntry {
         break;
       }
     }
-
-    final String status;
-    switch (property.status) {
-      case 'RENTED':
-        status = 'Documentação OK';
-        break;
-      case 'NEGOTIATING':
-        status = 'Aguardando Assinatura';
-        break;
-      default:
-        status = 'Pendente';
-    }
-
-    return _TenantData(
+    return _TenantEntry(
       tenantId: tenant.id,
       propertyId: property.id,
       tenantName: tenant.name,
@@ -552,178 +439,34 @@ class _TenantEntry {
       propertyId: propertyId,
       name: tenantName,
       initials: initials,
-      property: property.title,
+      property: propertyTitle,
       status: status,
       lastMessage: lastMessage.isEmpty ? 'Sem mensagens ainda.' : lastMessage,
       contractEnd: contractEnd,
       monthlyRent: monthlyRent,
       isVerified: isIdentityVerified,
     );
-      ),
-    );
-  }
-
-  Color _statusColor(String label) {
-    switch (label) {
-      case 'Documentação OK':
-        return AppColors.success;
-      case 'Aguardando Assinatura':
-        return AppColors.warning;
-      default:
-        return AppColors.error;
-    }
   }
 }
 
-class _TenantDetailsSheet extends StatelessWidget {
-  const _TenantDetailsSheet({
+class _TenantCard extends StatelessWidget {
+  const _TenantCard({
     required this.tenant,
     required this.index,
     required this.isDark,
     required this.titleColor,
     required this.mutedColor,
     required this.accentColor,
-    this.onTap,
+    required this.onTap,
   });
+
   final _TenantData tenant;
   final int index;
   final bool isDark;
   final Color titleColor;
   final Color mutedColor;
   final Color accentColor;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final surfaceBg = BrutalistPalette.surfaceBg(isDark);
-    final borderColor = BrutalistPalette.surfaceBorder(isDark);
-    final statusColor = _statusColor(tenant.status);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: surfaceBg,
-          borderRadius: AppRadius.borderLg,
-          border: Border.all(color: borderColor),
-          boxShadow: BrutalistPalette.subtleShadow(isDark),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: accentColor.withValues(alpha: 0.1),
-              ),
-              child: Center(
-                child: Text(
-                  tenant.initials,
-                  style: AppTypography.titleSmallBold
-                      .copyWith(color: accentColor),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          tenant.name,
-                          style: AppTypography.titleMediumBold
-                              .copyWith(color: titleColor),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (tenant.isVerified) ...[
-                        const SizedBox(width: 4),
-                        Icon(Icons.verified_rounded,
-                            size: 14, color: accentColor),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    tenant.property,
-                    style: AppTypography.bodySmall
-                        .copyWith(color: mutedColor),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: AppRadius.borderFull,
-                  ),
-                  child: Text(
-                    tenant.status,
-                    style: AppTypography.propertyTag
-                        .copyWith(color: statusColor, fontSize: 10),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  tenant.lastMessage,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: mutedColor,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _statusColor(String label) {
-    switch (label) {
-      case 'Documentação OK':
-        return AppColors.success;
-      case 'Aguardando Assinatura':
-        return AppColors.warning;
-      default:
-        return AppColors.error;
-    }
-  }
-}
-
-class _TenantDetailsSheet extends StatelessWidget {
-  const _TenantDetailsSheet({
-    required this.tenant,
-    required this.index,
-    required this.isDark,
-    required this.titleColor,
-    required this.mutedColor,
-    required this.accentColor,
-    this.onTap,
-  });
-  final _TenantData tenant;
-  final int index;
-  final bool isDark;
-  final Color titleColor;
-  final Color mutedColor;
-  final Color accentColor;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

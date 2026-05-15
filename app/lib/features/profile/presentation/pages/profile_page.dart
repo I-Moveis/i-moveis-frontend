@@ -86,7 +86,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.description_outlined,
                     label: 'Propostas Recebidas',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/received-proposals'),
                   ),
                   AppMenuGroupItem(
                     icon: Icons.calendar_today_outlined,
@@ -96,7 +96,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.assignment_turned_in_outlined,
                     label: 'Contratos Ativos',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/active-contracts'),
                   ),
                 ]),
                 const SizedBox(height: AppSpacing.xxl),
@@ -116,7 +116,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.folder_open_outlined,
                     label: 'Documentação e IPTU',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/documents-iptu'),
                   ),
                 ]),
                 const SizedBox(height: AppSpacing.xxl),
@@ -126,7 +126,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.payments_outlined,
                     label: 'Extrato de Repasses',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/payouts'),
                   ),
                 ]),
               ] else ...[
@@ -136,7 +136,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.description_outlined,
                     label: 'Minhas propostas',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/my-proposals'),
                   ),
                   AppMenuGroupItem(
                     icon: Icons.calendar_today_outlined,
@@ -146,7 +146,7 @@ class ProfilePage extends ConsumerWidget {
                   AppMenuGroupItem(
                     icon: Icons.article_outlined,
                     label: 'Meus contratos',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/my-contracts'),
                   ),
                 ]),
               ],

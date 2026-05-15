@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../property/presentation/providers/property_detail_provider.dart';
 import '../../domain/entities/visit.dart';
 import '../providers/my_visits_notifier.dart';
 import '../widgets/visit_calendar_view.dart';
@@ -70,7 +71,7 @@ class MyVisitsPage extends ConsumerWidget {
   }
 }
 
-class _VisitTile extends StatelessWidget {
+class _VisitTile extends ConsumerWidget {
   const _VisitTile({
     required this.visit,
     required this.isDark,
@@ -81,11 +82,22 @@ class _VisitTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
     final cardBg = BrutalistPalette.surfaceBg(isDark);
     final borderColor = BrutalistPalette.surfaceBorder(isDark);
+
+    // Resolve título do imóvel (e nome do landlord, quando o backend
+    // expõe na Property) via cache do `propertyDetailProvider`. Carrega
+    // sob demanda — o family deduplica entre tiles que apontam para o
+    // mesmo imóvel.
+    final propertyAsync =
+        ref.watch(propertyDetailProvider(visit.propertyId));
+    final propertyTitle = propertyAsync.maybeWhen(
+      data: (p) => p.title.isNotEmpty ? p.title : 'Imóvel',
+      orElse: () => 'Imóvel',
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -111,7 +123,14 @@ class _VisitTile extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    'Imóvel #${visit.propertyId} · ${visit.status.label}',
+                    propertyTitle,
+                    style: AppTypography.bodyMedium.copyWith(color: titleColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    visit.status.label,
                     style:
                         AppTypography.bodySmall.copyWith(color: mutedColor),
                   ),

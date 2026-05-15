@@ -21,6 +21,7 @@ class BrutalistPageHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.onBack,
     super.key,
   });
 
@@ -34,11 +35,42 @@ class BrutalistPageHeader extends StatelessWidget {
   /// chip de status...). Respeita a altura do header.
   final Widget? trailing;
 
+  /// Quando passado, substitui o logo por um botão de voltar circular
+  /// no mesmo slot esquerdo. Útil em subpáginas que não são raiz do
+  /// bottom nav. Padrão: null (mostra o logo).
+  final VoidCallback? onBack;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = BrutalistPalette.title(isDark);
     final mutedColor = BrutalistPalette.muted(isDark);
+    final borderColor = BrutalistPalette.surfaceBorder(isDark);
+
+    final leading = onBack != null
+        ? GestureDetector(
+            onTap: onBack,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: BrutalistPalette.surfaceBg(isDark),
+                border: Border.all(color: borderColor),
+              ),
+              child: Icon(
+                Icons.arrow_back_rounded,
+                color: titleColor,
+                size: 20,
+              ),
+            ),
+          )
+        : Image.asset(
+            'assets/images/logo.png',
+            width: 44,
+            height: 44,
+            fit: BoxFit.contain,
+          );
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -47,12 +79,7 @@ class BrutalistPageHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Image.asset(
-            'assets/images/logo.png',
-            width: 44,
-            height: 44,
-            fit: BoxFit.contain,
-          ),
+          leading,
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(

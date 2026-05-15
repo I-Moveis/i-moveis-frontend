@@ -22,6 +22,7 @@ class VisitCalendarView extends StatefulWidget {
     required this.visits,
     required this.tileBuilder,
     this.onRefresh,
+    this.scrollWholePage = false,
     super.key,
   });
 
@@ -33,6 +34,11 @@ class VisitCalendarView extends StatefulWidget {
 
   /// Opcional — pull-to-refresh. Quando nulo, a lista só rola.
   final Future<void> Function()? onRefresh;
+
+  /// Quando true, o calendário rola junto com a lista (uma única página
+  /// rolável). Quando false (default), o calendário fica fixo e só a
+  /// lista de visitas do dia rola — comportamento original.
+  final bool scrollWholePage;
 
   @override
   State<VisitCalendarView> createState() => _VisitCalendarViewState();
@@ -88,25 +94,55 @@ class _VisitCalendarViewState extends State<VisitCalendarView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final visitsOfSelectedDay = _eventsForDay(_selectedDay);
 
+    final calendar = _CalendarCard(
+      isDark: isDark,
+      focusedMonth: _focusedMonth,
+      selectedDay: _selectedDay,
+      eventsForDay: _eventsForDay,
+      onDaySelected: (selected, focused) {
+        setState(() {
+          _selectedDay = _stripTime(selected);
+          _focusedMonth = focused;
+        });
+      },
+      onPageChanged: (focused) {
+        // Só atualiza o mês sem mexer no dia selecionado — deixa o
+        // usuário navegar meses sem perder o dia que tava olhando.
+        _focusedMonth = focused;
+      },
+    );
+
+    if (widget.scrollWholePage) {
+      // Calendário + lista rolam juntos. Útil em telas estreitas, onde
+      // fixar o calendário no topo deixa pouco espaço para a lista.
+      final list = _DayList(
+        isDark: isDark,
+        day: _selectedDay,
+        visits: visitsOfSelectedDay,
+        tileBuilder: widget.tileBuilder,
+        onRefresh: null,
+        embedded: true,
+      );
+      final body = SingleChildScrollView(
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
+        child: Column(
+          children: [
+            calendar,
+            const SizedBox(height: AppSpacing.lg),
+            list,
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
+      );
+      return widget.onRefresh != null
+          ? RefreshIndicator(onRefresh: widget.onRefresh!, child: body)
+          : body;
+    }
+
     return Column(
       children: [
-        _CalendarCard(
-          isDark: isDark,
-          focusedMonth: _focusedMonth,
-          selectedDay: _selectedDay,
-          eventsForDay: _eventsForDay,
-          onDaySelected: (selected, focused) {
-            setState(() {
-              _selectedDay = _stripTime(selected);
-              _focusedMonth = focused;
-            });
-          },
-          onPageChanged: (focused) {
-            // Só atualiza o mês sem mexer no dia selecionado — deixa o
-            // usuário navegar meses sem perder o dia que tava olhando.
-            _focusedMonth = focused;
-          },
-        ),
+        calendar,
         const SizedBox(height: AppSpacing.lg),
         Expanded(
           child: _DayList(
@@ -219,6 +255,7 @@ class _DayList extends StatelessWidget {
     required this.visits,
     required this.tileBuilder,
     required this.onRefresh,
+    this.embedded = false,
   });
 
   final bool isDark;
@@ -226,6 +263,10 @@ class _DayList extends StatelessWidget {
   final List<Visit> visits;
   final Widget Function(BuildContext context, Visit visit) tileBuilder;
   final Future<void> Function()? onRefresh;
+
+  /// Quando true, renderiza como Column compacto (sem scroll próprio,
+  /// sem Expanded) para encaixar dentro de um SingleChildScrollView pai.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -274,6 +315,9 @@ class _DayList extends StatelessWidget {
           ),
         ),
       );
+      if (embedded) {
+        return Column(children: [header, empty]);
+      }
       final body = onRefresh != null
           ? RefreshIndicator(
               onRefresh: onRefresh!,
@@ -285,6 +329,31 @@ class _DayList extends StatelessWidget {
             )
           : empty;
       return Column(children: [header, Expanded(child: body)]);
+    }
+
+    if (embedded) {
+      return Column(
+        children: [
+          header,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenHorizontal,
+              0,
+              AppSpacing.screenHorizontal,
+              0,
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < visits.length; i++) ...[
+                  tileBuilder(context, visits[i]),
+                  if (i != visits.length - 1)
+                    const SizedBox(height: AppSpacing.sm),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
     }
 
     final list = ListView.separated(

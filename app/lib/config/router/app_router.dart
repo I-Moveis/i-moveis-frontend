@@ -33,6 +33,8 @@ import '../../features/listing/presentation/pages/property_management_dossier_pa
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/management/documents_iptu_page.dart';
+import '../../features/profile/presentation/pages/management/payouts_statement_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_contract_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_documents_page.dart';
 import '../../features/profile/presentation/pages/management/tenant_rent_history_page.dart';
@@ -43,6 +45,10 @@ import '../../features/property/presentation/pages/photo_gallery_page.dart';
 import '../../features/property/presentation/pages/property_detail_page.dart';
 import '../../features/proposal/presentation/pages/contract_page.dart';
 import '../../features/proposal/presentation/pages/make_proposal_page.dart';
+import '../../features/proposal/presentation/pages/my_proposals_page.dart';
+import '../../features/proposal/presentation/pages/received_proposals_page.dart';
+import '../../features/rentals/presentation/pages/active_contracts_page.dart';
+import '../../features/rentals/presentation/pages/my_contracts_page.dart';
 import '../../features/schedule/presentation/pages/schedule_visit_page.dart';
 import '../../features/search/presentation/pages/map_search_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
@@ -258,6 +264,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'landlord-visits',
                     builder: (_, _) => const LandlordVisitsPage(),
+                  ),
+                  GoRoute(
+                    path: 'my-proposals',
+                    builder: (_, _) => const MyProposalsPage(),
+                  ),
+                  GoRoute(
+                    path: 'received-proposals',
+                    builder: (_, _) => const ReceivedProposalsPage(),
+                  ),
+                  GoRoute(
+                    path: 'my-contracts',
+                    builder: (_, _) => const MyContractsPage(),
+                  ),
+                  GoRoute(
+                    path: 'active-contracts',
+                    builder: (_, _) => const ActiveContractsPage(),
+                  ),
+                  GoRoute(
+                    path: 'documents-iptu',
+                    builder: (_, _) => const DocumentsIptuPage(),
+                  ),
+                  GoRoute(
+                    path: 'payouts',
+                    builder: (_, _) => const PayoutsStatementPage(),
                   ),
                 ],
               ),
